@@ -276,6 +276,15 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         montado = render.assemble(jobs, g.fps, segdir / "montado.mp4", preview)
         vdur = probe(montado)["duracao"]
         log.info("  %d segmentos, vídeo montado %.2fs (timeline %.2fs)", len(jobs), vdur, total)
+    # ------------------------------------------------------------------ dinamismo (B-roll, fotos, cards)
+    dyn_events, creditos = [], []
+    if (cfg.get("dinamismo") or {}).get("ativo"):
+        with timer.etapa("Dinamismo: B-roll, fotos e cards de motion"):
+            from . import dinamismo
+            plano = dinamismo.plan(words_out, frases_out, cfg, total)
+            dyn_events, creditos = dinamismo.fetch_and_render(plano, cfg, g, montado, work)
+            rep["dinamismo"] = [{k: (str(v) if isinstance(v, Path) else v) for k, v in e.items()} for e in dyn_events]
+            rep["creditos"] = creditos
     faces = [(c.out_start, c.out_start + c.dur, render.face_in_canvas(c, c._win, g)) for c in clips]
     faces = [f for f in faces if f[2]]
     # ------------------------------------------------------------------ áudio: mix
@@ -290,7 +299,14 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             mtrack = music.render(mplan, total, vdb, vact, 0.02, smash_t, cfg, sr)
             rep["musica"] = {"humor": mplan["humor"], "trechos": [{k: v for k, v in s.items() if k != "entry"} for s in mplan["trechos"]],
                              "beats": len(mplan["beats"])}
-        events = sfx.plan(clips, decisions, words_out, frases_out, total, cfg, sr)
+        extras = []
+        for e in dyn_events:   # whoosh na entrada de cada sobreposição; impacto nos cards
+            extras.append((e["t"], "transicao", f"entrada {e['tipo']}", 2.5))
+            if e["tipo"] == "card":
+                extras.append((e["t"] + 0.12, "impacto", "card de impacto", 2.2))
+        zc = [c for c in clips if "jump_zoom" in c.tags]
+        extras += [(c.out_start, "transicao", "punch-in", 0.6) for c in zc[::2]]
+        events = sfx.plan(clips, decisions, words_out, frases_out, total, cfg, sr, extras)
         rep["sfx"] = [{k: v for k, v in e.items() if k != "audio"} for e in events]
         amaster, minfo = audio.mix_and_master(vtrack, mtrack, events, sr, cfg, plat, work)
         rep["audio_master"] = minfo
@@ -301,7 +317,11 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             c["t_out"] = next((w["s"] for w in words_out if w["i"] >= frases[c["sent"]]["w0"]), None)
         for nn in nres["numeros"]:
             nn["t_out"] = next((w["s"] for w in words_out if w["i"] == nn["i"]), None)
-        rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc)
+        card_spans = []
+        if dyn_events:
+            from . import dinamismo
+            card_spans = dinamismo.ass_cards(doc, dyn_events, words_out, g, cfg)
+        rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc, pular=card_spans)
         rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total)
         ass = work / "legendas.ass"
         doc.write(ass)
@@ -314,6 +334,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             t = src_to_out(clips, 0, b["s_src"])
             if t is not None:
                 broll_out.append({"t": t, "dur": min(cfg["motion"]["broll"]["duracao_s"], total - t), "arquivo": b["arquivo"]})
+        broll_out += [{"t": e["t"], "dur": e["dur"], "arquivo": e["arquivo"]} for e in dyn_events]
         rep["broll"] = [{"t": round(b["t"], 2), "arquivo": str(b["arquivo"])} for b in broll_out]
     # ------------------------------------------------------------------ composição final
     with timer.etapa("Composição final e exportação"):

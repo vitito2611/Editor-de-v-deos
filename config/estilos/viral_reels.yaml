@@ -1,18 +1,30 @@
-# Genérico viral: legendas word-by-word com destaque, rotação de estilo/posição,
-# zoom progressivo nos jump cuts, SFX e transições.
+# Viral (Reels/TikTok): ritmo alto — troca de cena a cada <= 3 s (punch-ins, B-roll, fotos,
+# cards de motion), legenda dinâmica SÓ EM BRANCO (varia fonte/peso/tamanho), SFX em toda
+# troca de cena, trilha energética.
 legendas:
-  estilo_base: karaoke
-  estilo_impacto: centro_impacto
-  rotacao: {ativo: true}
+  estilo_base: dinamico_branco
+  estilo_impacto: dinamico_branco
+  rotacao: {ativo: false}
+  destaque: {ativo: false}
 cor: {look: vibrante}
 cortes:
+  jump_zoom:
+    modo: variado
+    zoom_niveis: [1.0, 1.16, 1.06, 1.26, 1.10]
+    dividir_max_s: 2.6          # nenhum plano dura mais que isso
   transicoes:
-    whip_pan: {ativo: true}
+    whip_pan: {ativo: true, intervalo_min_s: 12}
     glitch: {ativo: true}
-musica: {humor: energetico}
-sfx: {humor: {ativo: true}}
+musica: {humor: energetico, volume_db: -17, ducking_db: -11}
+sfx:
+  humor: {ativo: true}
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
 silencio:
   # ritmo viral: pausas preservadas ficam bem curtas, e gesticular não segura a pausa
   pausa_preservada_s: 0.22
   contexto:
     continuidade_visual: {ativo: false}
+dinamismo:
+  ativo: true

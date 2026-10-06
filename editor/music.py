@@ -38,6 +38,11 @@ def library(cfg: dict) -> dict:
             continue
         key = f"{f.parent.name}/{f.name}"
         lib.setdefault(f.parent.name, []).append({"path": f, **meta.get(key, {})})
+    # faixas reais (baixadas/compradas) têm prioridade sobre as sintetizadas de teste
+    for mood, items in lib.items():
+        reais = [e for e in items if "gerado" not in str(e.get("licenca", ""))]
+        if reais:
+            lib[mood] = reais
     return lib
 
 

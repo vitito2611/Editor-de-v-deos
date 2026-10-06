@@ -1,0 +1,22 @@
+# Plano de dinamismo do vídeo "perfil pra empreender" (estilo viral_reels).
+# Uso: python editar.py bruto.MOV --estilo viral_reels --config config/planos/video1_empreender.yaml
+transcricao:
+  correcoes: {Zuckenberg: Zuckerberg}
+dinamismo:
+  ativo: true
+  intervalo_s: 3.2
+  cobertura_max: 0.55
+  plano:
+    - {contem: "adiar um sonho", tipo: video, busca: "pessoa amassando papel frustrada"}
+    - {contem: "empresários", tipo: video, busca: "empresários reunião escritório"}
+    - {contem: "Zuckerberg", tipo: foto, busca: "Mark Zuckerberg"}
+    - {contem: "Steve Jobs", tipo: foto, busca: "Steve Jobs"}
+    - {contem: "zona de conforto", tipo: video, busca: "pessoa deitada no sofá com celular"}
+    - {contem: "Y Combinator", tipo: foto, busca: "Y Combinator"}
+    - {contem: "aceleradoras de startups", tipo: video, busca: "startup equipe escritório"}
+    - {contem: "não existe perfil perfeito", tipo: card}
+    - {contem: "quietos", tipo: video, busca: "homem tímido pensativo"}
+    - {contem: "chegam longe", tipo: video, busca: "pessoa no topo da montanha"}
+    - {contem: "não desistir", tipo: video, busca: "atleta correndo na chuva"}
+    - {contem: "O que eu tenho a perder", tipo: card}
+    - {contem: "construindo minha startup", tipo: video, busca: "programando laptop noite"}

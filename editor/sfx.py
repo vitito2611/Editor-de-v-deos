@@ -21,14 +21,18 @@ from .utils import ROOT, load_audio, log
 def load_bank(cfg: dict, sr: int) -> dict[str, list[tuple[str, np.ndarray]]]:
     base = ROOT / cfg["sfx"]["pasta"]
     bank: dict[str, list] = {}
-    for f in sorted(base.glob("*/*")):
-        if f.suffix.lower() in (".wav", ".mp3", ".ogg", ".flac"):
-            bank.setdefault(f.parent.name, []).append((f.name, load_audio(f, sr, mono=False)))
+    files = [f for f in sorted(base.glob("*/*")) if f.suffix.lower() in (".wav", ".mp3", ".ogg", ".flac")]
+    for cat in {f.parent.name for f in files}:
+        cf = [f for f in files if f.parent.name == cat]
+        reais = [f for f in cf if not f.name.endswith(".wav") or f.name.startswith("mx_")]
+        # efeitos reais (ex.: Mixkit) têm prioridade; os sintetizados só entram se não houver
+        for f in (reais or cf):
+            bank.setdefault(cat, []).append((f.name, load_audio(f, sr, mono=False)))
     return bank
 
 
 def plan(clips, decisions: list[dict], words_out: list[dict], frases_out: list[dict], duration: float,
-         cfg: dict, sr: int) -> list[dict]:
+         cfg: dict, sr: int, extras: list[tuple] | None = None) -> list[dict]:
     sc = cfg["sfx"]
     if not sc["ativo"]:
         return []
@@ -59,6 +63,8 @@ def plan(clips, decisions: list[dict], words_out: list[dict], frases_out: list[d
             for f in frases_out:
                 if f.get("s") is not None and f.get("gatilhos", {}).get(cat):
                     cand.append((f["s"] - 0.05, sc[cat]["categoria"], f"gatilho '{f['gatilhos'][cat][0]}'", 1))
+    # --- eventos externos (sobreposições de B-roll/foto/card, punch-ins): (t, categoria, motivo, prio)
+    cand += list(extras or [])
     # --- seleção respeitando intervalo e densidade (prioridade maior primeiro)
     cand.sort(key=lambda x: (-x[3], x[0]))
     chosen: list[tuple] = []

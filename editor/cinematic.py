@@ -54,6 +54,21 @@ def build_clips(keeps: list[list[float]], words: list[dict], frases: list[dict],
                     cuts.append(t - 0.02)
                     last = t
         pts = [a] + sorted(set(round(c, 3) for c in cuts)) + [b]
+        # ritmo viral: nenhum plano passa de dividir_max_s — divide no espaço entre palavras
+        # (o áudio é contínuo; muda só o enquadramento: punch-in)
+        dmax = jz.get("dividir_max_s") or 0
+        if dmax > 0:
+            gaps = [((w1["e"] + w2["s"]) / 2) for w1, w2 in zip(words, words[1:]) if a < w1["e"] and w2["s"] < b]
+            refined = [pts[0]]
+            for nxt_pt in pts[1:]:
+                while nxt_pt - refined[-1] > dmax:
+                    lo_t, hi_t = refined[-1] + dmax * 0.55, refined[-1] + dmax
+                    cand = [g for g in gaps if lo_t <= g <= hi_t and nxt_pt - g >= 0.8]
+                    if not cand:
+                        break
+                    refined.append(round(max(cand), 3))
+                refined.append(nxt_pt)
+            pts = refined
         for i in range(len(pts) - 1):
             s, e = pts[i], pts[i + 1]
             nxt = keeps[k + 1][0] if (i == len(pts) - 2 and k + 1 < len(keeps)) else (e if i < len(pts) - 2 else dur)
@@ -147,6 +162,11 @@ def decide(clips: list[Clip], words: list[dict], frases: list[dict], cfg: dict, 
                 if cc["jump_zoom"]["resetar_em_topico"] and new_topic:
                     zoom_level, alt = 1.0, False
                     add("jump_zoom", k, "troca de tópico → volta ao plano aberto", zoom=1.0, reset=True)
+                elif cc["jump_zoom"]["modo"] == "variado":
+                    niveis = cc["jump_zoom"].get("zoom_niveis") or [1.0, 1.15]
+                    alt = (alt + 1) if isinstance(alt, int) and not isinstance(alt, bool) else 1
+                    zoom_level = niveis[alt % len(niveis)]
+                    add("jump_zoom", k, f"troca de plano (ritmo viral) → zoom {zoom_level:.2f}", zoom=zoom_level)
                 elif cc["jump_zoom"]["modo"] == "alternado":
                     alt = not alt
                     zoom_level = cc["jump_zoom"]["zoom_alternado"] if alt else 1.0

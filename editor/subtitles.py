@@ -140,7 +140,8 @@ class Placer:
             p = (W / 2, cy0 + ch * 0.5)
         elif pos == "peito":
             y = (f[1] * H + f[3] * H * 1.25) if f else cy0 + ch * 0.68
-            p = (W / 2, min(y, cy0 + ch * 0.9))
+            lo_y, hi_y = (0.56, 0.80) if self.vertical else (0.55, 0.9)
+            p = (W / 2, min(max(y, cy0 + ch * lo_y), cy0 + ch * hi_y))
         elif pos == "lateral":
             if f:
                 side = 1 if f[0] < 0.5 else -1
@@ -221,6 +222,10 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
             parts.append(("{" + tags + "}" if tags else "") + t + ("{" + reset + "}" if tags else ""))
         return " ".join(parts)
 
+    # ---------- dinâmico SEM cor: varia só fonte, peso, tamanho e itálico (pedido do cliente)
+    if anim == "dinamico":
+        render_dinamico(doc, grp, start, end, st, lc, placer, size, txts)
+        return
     # ---------- estilos de layout especial
     if anim == "palavra_misto":       # ref2/ref3 — linhas com pesos/tamanhos diferentes
         kw_i = max(range(len(grp)), key=lambda i: grp[i].get("kw", 0))
@@ -322,7 +327,85 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
     doc.add(start, end, "{" + tags + "}" + styled_words(), layer=2, style=style)
 
 
-def build(words_out: list[dict], frases_out: list[dict], g, faces, cfg: dict, doc: AssDoc) -> list[dict]:
+_DIN = {"n": 0}
+# esconder/mostrar palavra sem perder a translucidez do contorno e da sombra
+HIDE = "\\1a&HFF&\\3a&HFF&\\4a&HFF&"
+
+
+def show_tags(st) -> str:
+    return "\\1a&H00&\\3a&H%02X&\\4a&H90&" % st.get("contorno_alpha", 0x70)
+
+
+def render_dinamico(doc: AssDoc, grp, start, end, st, lc, placer, size, txts):
+    """Legenda dinâmica monocromática (branco + contorno/sombra discretos para leitura).
+
+    Alterna 3 variações conforme o conteúdo:
+      revelar   palavras surgem uma a uma; a palavra falada fica em Black e "pula" (escala)
+      empilhado linha pequena regular + palavra-chave GIGANTE em Black + linha em itálico
+      impacto   palavra-chave sozinha, caixa alta, enorme, com pop
+    """
+    _DIN["n"] += 1
+    kw_i = max(range(len(grp)), key=lambda i: grp[i].get("kw", 0))
+    kw = grp[kw_i].get("kw", 0)
+    big = size * st.get("escala_destaque", 1.9)
+    stroke = f"\\bord{st.get('contorno', 3)}\\3c&H000000&\\3a&H{st.get('contorno_alpha', 0x70):02X}&" \
+             f"\\shad{st.get('sombra', 3)}\\4c&H000000&\\4a&H90&\\1c&HFFFFFF&"
+
+    def ft(sz, weight, italic=False):
+        return "\\fn%s\\b%d\\i%d\\fs%d" % (st.get("fonte", "Inter"), WEIGHTS[weight], 1 if italic else 0, int(sz)) + stroke
+
+    if kw >= st.get("impacto_kw_min", 0.78) and len(grp) <= 2 and _DIN["n"] % 3 == 0:
+        variant = "impacto"
+    elif kw >= st.get("empilhado_kw_min", 0.6) and len(grp) >= 2:
+        variant = "empilhado"
+    else:
+        variant = "revelar"
+    x, y = placer.anchor(st.get("posicao", "inferior"), start, size, sum(len(t) + 1 for t in txts),
+                         2 if variant == "empilhado" else 1)
+    if variant == "impacto":
+        t = txts[kw_i].upper().strip(".,!?;:")
+        doc.add(start, end, "{\\an5\\pos(%d,%d)\\fad(30,80)\\fscx30\\fscy30\\t(0,90,\\fscx118\\fscy118)"
+                "\\t(90,160,\\fscx100\\fscy100)%s}%s" % (x, y, ft(big * 1.15, "Black"), t), layer=3)
+        return
+    if variant == "empilhado":
+        before = [i for i in range(len(grp)) if i < kw_i]
+        after = [i for i in range(len(grp)) if i > kw_i]
+        for wi in range(len(grp)):
+            s0 = start if wi == 0 else grp[wi]["s"]
+            e0 = grp[wi + 1]["s"] if wi + 1 < len(grp) else end
+            def seg(ids, sz, weight, italic=False):
+                return "{%s}" % ft(sz, weight, italic) + " ".join(
+                    ("{%s}" % HIDE if i > wi else "{%s}" % show_tags(st)) + txts[i] for i in ids)
+            lines = []
+            if before:
+                lines.append(seg(before, size * 0.78, "Medium"))
+            kalpha = "{%s}" % HIDE if kw_i > wi else ""
+            pop = "\\fscx70\\fscy70\\t(0,100,\\fscx108\\fscy108)\\t(100,160,\\fscx100\\fscy100)" if wi == kw_i else ""
+            lines.append("{%s%s}%s%s" % (ft(big, "Black"), pop, kalpha, txts[kw_i].upper()))
+            if after:
+                lines.append(seg(after, size * 0.82, "SemiBold", italic=True))
+            fade = "\\fad(60,0)" if wi == 0 else ("\\fad(0,90)" if wi == len(grp) - 1 else "")
+            doc.add(s0, e0, "{\\an5\\pos(%d,%d)%s}" % (x, y, fade) + "\\N".join(lines), layer=3)
+        return
+    # revelar: palavra a palavra; a atual em Black maior, as anteriores em Bold
+    for wi in range(len(grp)):
+        s0 = start if wi == 0 else grp[wi]["s"]
+        e0 = grp[wi + 1]["s"] if wi + 1 < len(grp) else end
+        parts = []
+        for i, t in enumerate(txts):
+            if i > wi:
+                parts.append("{%s%s}%s" % (ft(size, "Bold"), HIDE, t))
+            elif i == wi:
+                parts.append("{%s\\fscx85\\fscy85\\t(0,90,\\fscx112\\fscy112)\\t(90,150,\\fscx104\\fscy104)}%s"
+                             % (ft(size * 1.12, "Black"), t))
+            else:
+                parts.append("{%s}%s" % (ft(size, "Bold"), t))
+        fade = "\\fad(0,80)" if wi == len(grp) - 1 else ""
+        doc.add(s0, e0, "{\\an5\\pos(%d,%d)%s}" % (x, y, fade) + " ".join(parts), layer=3)
+
+
+def build(words_out: list[dict], frases_out: list[dict], g, faces, cfg: dict, doc: AssDoc,
+          pular: list[tuple[float, float]] | None = None) -> list[dict]:
     lc = dict(cfg["legendas"])
     lc["evitar_rosto"] = cfg["legendas"]["evitar_rosto"]
     if not lc["ativo"] or not words_out:
@@ -341,6 +424,9 @@ def build(words_out: list[dict], frases_out: list[dict], g, faces, cfg: dict, do
         end = min(groups[gi + 1][0]["s"] if gi + 1 < len(groups) else grp[-1]["e"] + 0.6, grp[-1]["e"] + 0.5)
         end = max(end, start + 0.3)
         f = frases_out[grp[0]["sent"]] if grp[0].get("sent") is not None and grp[0]["sent"] < len(frases_out) else {}
+        # trechos cobertos por cards de texto (motion) não repetem a legenda
+        if pular and any(a <= (start + end) / 2 < b for a, b in pular):
+            continue
         name = cur_style
         # rotação por tempo ou tópico
         if rot.get("ativo"):

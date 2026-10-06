@@ -257,6 +257,20 @@ legendas:
       animacao: nenhuma
       palavras_max: 9
       caracteres_max: 48
+    dinamico_branco:            # viral sem cor: só branco, variando fonte/peso/tamanho/itálico
+      fonte: Inter
+      peso: Bold
+      tamanho: 70
+      escala_destaque: 1.85     # palavra-chave no modo "empilhado"
+      cor: "#FFFFFF"
+      contorno: 3               # contorno preto translúcido só para leitura em fundo claro
+      contorno_alpha: 112       # 0 = opaco, 255 = invisível
+      sombra: 3
+      posicao: peito            # logo abaixo do rosto (segue o enquadramento)
+      animacao: dinamico
+      palavras_max: 4
+      impacto_kw_min: 0.78
+      empilhado_kw_min: 0.62
     mono_dividido:              # ref5 — monoespaçada, frase dividida esquerda/direita
       fonte: JetBrains Mono
       peso: Regular
@@ -419,6 +433,26 @@ motion:
     duracao_s: 2.2
     intervalo_min_s: 8
     tipo_corte: l_cut           # B-roll entra com a voz continuando por baixo
+
+# -----------------------------------------------------------------------------
+# DINAMISMO — B-roll de banco, fotos com Ken Burns e cards de motion (editor/dinamismo.py)
+# Fontes: Pexels (chave grátis: env PEXELS_API_KEY), Openverse/Wikimedia (sem chave).
+# Sem rede, só os cards (frase de impacto sobre o vídeo desfocado) são gerados.
+# -----------------------------------------------------------------------------
+dinamismo:
+  ativo: false
+  intervalo_s: 4.0              # espaçamento médio entre sobreposições
+  gap_min_s: 1.2                # mínimo de rosto entre duas sobreposições
+  dur_min_s: 1.3
+  dur_max_s: 2.4
+  inicio_livre_s: 1.0           # o gancho mostra o rosto
+  cobertura_max: 0.5            # fração máxima do vídeo coberta
+  cards_max: 5
+  card_impacto_min: 0.6
+  card_palavras: [3, 9]
+  fotos_entidades: true         # pessoas/marcas citadas viram foto
+  pexels_api_key: null          # prefira a variável de ambiente PEXELS_API_KEY
+  plano: []                     # ex.: [{contem: "Steve Jobs", tipo: foto, busca: "Steve Jobs"}]
 
 # -----------------------------------------------------------------------------
 # ENQUADRAMENTO / LAYOUT DE SAÍDA
