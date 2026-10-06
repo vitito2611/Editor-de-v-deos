@@ -128,6 +128,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         else:
             words = transcribe.transcribe(load_audio(src, 16000), cfg["transcricao"], threads)
             write_json(tfile, {"chave": key, "palavras": words})
+        words = transcribe.apply_corrections(words, cfg["transcricao"].get("correcoes"))
         transcribe.to_srt(words, work / "transcricao.srt")
     with timer.etapa("Análise de linguagem (NLP)"):
         nres = nlp.annotate(words, cfg)

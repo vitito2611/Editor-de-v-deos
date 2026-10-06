@@ -75,3 +75,9 @@ def test_lut_identity_when_neutral():
 def test_ass_color_and_time():
     assert subtitles.ass_color("#FF8000") == "&H000080FF&"
     assert subtitles.ass_time(3725.456) == "1:02:05.46"
+
+
+def test_glossary_corrections():
+    from editor.transcribe import apply_corrections
+    ws = apply_corrections([{"w": "Paranoia."}, {"w": "paranoia,"}, {"w": "outra"}], {"Paranoia": "pronoia"})
+    assert [w["w"] for w in ws] == ["Pronoia.", "pronoia,", "outra"]

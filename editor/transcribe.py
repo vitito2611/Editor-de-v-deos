@@ -122,6 +122,21 @@ def transcribe(audio16k: np.ndarray, cfg: dict, threads: int = 4) -> list[dict]:
     return eng.transcribe(audio16k, cfg["bloco_max_s"], cfg["duracao_palavra_max_s"])
 
 
+def apply_corrections(words: list[dict], corr: dict) -> list[dict]:
+    """Aplica o glossário (sem diferenciar maiúsculas; preserva pontuação e capitalização)."""
+    if not corr:
+        return words
+    low = {str(k).lower(): str(v) for k, v in corr.items()}
+    for w in words:
+        core = w["w"].strip(".,!?;:…")
+        rep = low.get(core.lower())
+        if rep:
+            if core[:1].isupper():
+                rep = rep[:1].upper() + rep[1:]
+            w["w"] = w["w"].replace(core, rep, 1)
+    return words
+
+
 def to_srt(words: list[dict], path: Path, per_line: int = 7) -> None:
     """Exporta SRT simples (útil para revisão / upload nas plataformas)."""
     import srt

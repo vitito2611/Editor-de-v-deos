@@ -113,7 +113,8 @@ def decide(clips: list[Clip], words: list[dict], frases: list[dict], cfg: dict, 
     zoom_level, alt = 1.0, False
 
     def add(tec, k, motivo, **params):
-        dec.append({"id": len(dec), "tecnica": tec, "limite": k, "t_saida": round(clips[k + 1].out_start if k + 1 < len(clips) else 0, 2),
+        dec.append({"id": len(dec), "tecnica": tec, "limite": k, "t_fonte": round(clips[k].a_out, 2),
+                    "t_saida": round(clips[k + 1].out_start if k + 1 < len(clips) else 0, 2),
                     "motivo": motivo, "params": params, "aplicar": True})
 
     for k in range(len(clips) - 1):
@@ -199,7 +200,7 @@ def decide(clips: list[Clip], words: list[dict], frases: list[dict], cfg: dict, 
                     sp.mark("j_cut", T)
                     add("j_cut", k, motivo, overlap=round(d, 3))
                 else:
-                    dec.append({"id": len(dec), "tecnica": "j_cut", "limite": k, "t_saida": round(T, 2),
+                    dec.append({"id": len(dec), "tecnica": "j_cut", "limite": k, "t_fonte": round(A.a_out, 2), "t_saida": round(T, 2),
                                 "motivo": motivo + " → NÃO aplicado", "params": {"overlap": round(d, 3)}, "aplicar": False})
         if cc["l_cut"]["ativo"] and sa and (sa["pergunta"] or sa["exclamacao"] or sa["impacto"] >= 0.85) \
                 and last_w and last_w["i"] == sa["w1"] and sp.ok("l_cut", T, cc["l_cut"]["intervalo_min_s"]) \
@@ -213,7 +214,7 @@ def decide(clips: list[Clip], words: list[dict], frases: list[dict], cfg: dict, 
                 sp.mark("l_cut", T)
                 add("l_cut", k, motivo, overlap=round(d, 3))
             else:
-                dec.append({"id": len(dec), "tecnica": "l_cut", "limite": k, "t_saida": round(T, 2),
+                dec.append({"id": len(dec), "tecnica": "l_cut", "limite": k, "t_fonte": round(A.a_out, 2), "t_saida": round(T, 2),
                             "motivo": motivo + " → NÃO aplicado", "params": {"overlap": round(d, 3)}, "aplicar": False})
 
         # ---------------- REACTION CUT (freeze antes de revelação/número)
@@ -358,10 +359,14 @@ def write_review(decisions: list[dict], path: Path) -> None:
 
 
 def load_review(path: Path, decisions: list[dict]) -> list[dict]:
-    rev = {d["id"]: d for d in yaml.safe_load(path.read_text(encoding="utf-8")) or []}
+    """Casa cada decisão com a revisada pela técnica + tempo na FONTE (estável mesmo se os
+    cortes de silêncio mudarem e os índices dos clipes se deslocarem)."""
+    rev = yaml.safe_load(path.read_text(encoding="utf-8")) or []
     for d in decisions:
-        if d["id"] in rev and rev[d["id"]]["tecnica"] == d["tecnica"]:
-            d["aplicar"] = bool(rev[d["id"]]["aplicar"])
+        cands = [r for r in rev if r["tecnica"] == d["tecnica"] and "t_fonte" in r and "t_fonte" in d
+                 and abs(r["t_fonte"] - d["t_fonte"]) < 0.35]
+        if cands:
+            d["aplicar"] = bool(min(cands, key=lambda r: abs(r["t_fonte"] - d["t_fonte"]))["aplicar"])
     log.info("  revisão de técnicas aplicada (%s)", path.name)
     return decisions
 

@@ -27,6 +27,8 @@ transcricao:
   faster_whisper_compute: int8
   bloco_max_s: 24               # áudio é fatiado em blocos <= isso, cortando em pausas
   duracao_palavra_max_s: 1.2    # limita o "fim" de uma palavra quando o motor não informa
+  # Glossário: corrige palavras que o ASR erra (nomes, marcas, termos). Ex.: {Paranoia: Pronoia}
+  correcoes: {}
 
 # -----------------------------------------------------------------------------
 # CORTE INTELIGENTE DE SILÊNCIOS (Etapa 3)
@@ -233,8 +235,8 @@ legendas:
     lateral_misto:              # ref2/ref3 — espaço negativo ao lado do rosto, regular/bold/itálico
       fonte: Inter
       peso: Medium
-      tamanho: 58
-      tamanho_destaque: 90
+      tamanho: 62
+      tamanho_destaque: 104
       cor: "#FFFFFF"
       cor_futura: "#9A9A9A"     # palavras ainda não ditas em cinza
       sombra: 2
