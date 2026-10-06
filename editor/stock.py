@@ -111,6 +111,56 @@ def pexels_photo(query: str, cfg: dict, skip: int = 0) -> Path | None:
     return _download(p["src"].get("portrait") or p["src"]["large2x"], CACHE / "pexels" / f"p_{p['id']}.jpg")
 
 
+# ----------------------------------------------------------------------------- Mixkit (vídeos, sem chave)
+def mixkit_videos(query: str) -> list[dict]:
+    """Resultados da busca de vídeos do Mixkit (em inglês): id, título, vertical?, url 360p."""
+    slug = re.sub(r"[^a-z0-9]+", "-", query.lower()).strip("-")
+    meta = CACHE / "mixkit" / f"busca_{slug}.json"
+    if meta.exists():
+        return json.loads(meta.read_text())
+    try:
+        html = _get(f"https://mixkit.co/free-stock-video/discover/{slug}/").decode("utf-8", "ignore")
+    except Exception as e:  # noqa: BLE001
+        log.warning("  Mixkit indisponível (%s)", type(e).__name__)
+        return []
+    out = []
+    for blk in re.split(r'class="item-grid-card[ "]', html)[1:]:
+        v = re.search(r'<video src="(https://assets\.mixkit\.co/[^"]+?-360\.mp4)"', blk)
+        dims = re.search(r'class="item-grid-video-player__thumb"[^>]*width="(\d+)" height="(\d+)"', blk)
+        title = re.search(r'item-grid-card__title">\s*<a [^>]+>([^<]+)<', blk)
+        if not v:
+            continue
+        w, h = (int(dims.group(1)), int(dims.group(2))) if dims else (16, 9)
+        out.append({"url360": v.group(1), "vertical": h > w, "titulo": title.group(1).strip() if title else ""})
+    if out:   # não cacheia busca vazia
+        meta.parent.mkdir(parents=True, exist_ok=True)
+        meta.write_text(json.dumps(out))
+    return out
+
+
+def mixkit_video(query: str, skip: int = 0, prefer_vertical: bool = True) -> Path | None:
+    words = query.split()
+    res = []
+    # busca composta sem resultado → tira palavras do fim ("shy man thinking" → "shy man" → "shy")
+    for n in range(len(words), 0, -1):
+        res = mixkit_videos(" ".join(words[:n]))
+        if res:
+            break
+    if not res:
+        return None
+    if prefer_vertical:   # verticais primeiro, mas só entre os 8 mais relevantes
+        top = res[:8]
+        res = sorted(top, key=lambda r: not r["vertical"]) + res[8:]
+    r = res[skip % len(res)]
+    for q in ("1080", "720", "360"):
+        url = r["url360"].replace("-360.mp4", f"-{q}.mp4")
+        f = _download(url, CACHE / "mixkit" / (Path(urllib.parse.urlparse(url).path).name))
+        if f:
+            log.info("  B-roll Mixkit '%s' → %s%s", query, r["titulo"][:50], " (vertical)" if r["vertical"] else "")
+            return f
+    return None
+
+
 # ----------------------------------------------------------------------------- Openverse (CC / Wikimedia)
 def openverse_photo(query: str, skip: int = 0) -> tuple[Path, dict] | None:
     """Foto CC com uso comercial permitido (by, by-sa, cc0, pdm). Retorna (arquivo, créditos)."""
@@ -120,9 +170,22 @@ def openverse_photo(query: str, skip: int = 0) -> tuple[Path, dict] | None:
     except Exception as e:  # noqa: BLE001
         log.warning("  Openverse indisponível (%s)", type(e).__name__)
         return None
-    res = [r for r in data.get("results", []) if (r.get("height") or 0) >= 600]
+    res = [r for r in data.get("results", []) if (r.get("height") or 0) >= 500]
     if not res:
         return None
+    qw = [w.lower() for w in query.split()]
+    ruim = ("fake", "render", "art", "drawing", "cartoon", "illustration", "poster", "logo", "mural",
+            "painting", "sketch", "caricature", "statue", "graffiti", "memorial", "tribute", "applesoft",
+            "tattoo", "figurine", "cosplay", "case", "icon", "doll", "toy")
+
+    def score(r):
+        t = (r.get("title") or "").lower()
+        tags = " ".join(x.get("name", "") for x in (r.get("tags") or [])).lower()
+        sc = 3 * all(w in t for w in qw) + 1 * all(w in t + " " + tags for w in qw)
+        sc += 1 if (r.get("height") or 0) >= 800 else 0
+        sc -= 4 * any(b in t for b in ruim)
+        return sc
+    res = sorted(res, key=score, reverse=True)
     r = res[skip % len(res)]
     ext = Path(urllib.parse.urlparse(r["url"]).path).suffix.lower() or ".jpg"
     if ext not in (".jpg", ".jpeg", ".png", ".webp"):
@@ -136,7 +199,7 @@ def openverse_photo(query: str, skip: int = 0) -> tuple[Path, dict] | None:
 
 
 # ----------------------------------------------------------------------------- Mixkit (trilhas e SFX)
-MIXKIT_SFX = {
+MIXKIT_SFX = {   # categoria do pipeline → páginas de efeitos do Mixkit (ordem = popularidade)
     "transicao": ["whoosh", "swoosh", "transition"],
     "impacto": ["impact", "hit", "boom"],
     "atencao": ["pop", "click", "notification"],
@@ -144,12 +207,12 @@ MIXKIT_SFX = {
     "riser": ["riser", "cinematic"],
     "glitch": ["glitch"],
 }
-MIXKIT_MUSIC = {
-    "energetico": ["upbeat", "hip-hop", "energetic"],
-    "informativo": ["corporate", "technology"],
-    "emocional": ["inspiring", "emotional"],
-    "dramatico": ["cinematic", "epic"],
-    "sombrio": ["suspense", "dark"],
+MIXKIT_MUSIC = {   # humor do pipeline → páginas de trilhas do Mixkit
+    "energetico": ["hip-hop", "mood/energetic", "genre/electronica"],
+    "informativo": ["mood/inspiring", "corporate", "technology"],
+    "emocional": ["mood/inspiring", "mood/emotional", "piano"],
+    "dramatico": ["cinematic", "mood/dramatic", "epic"],
+    "sombrio": ["mood/dark", "suspense"],
 }
 
 
@@ -157,43 +220,41 @@ def _mixkit_mp3s(page: str) -> list[str]:
     try:
         html = _get(page).decode("utf-8", "ignore")
     except Exception as e:  # noqa: BLE001
-        log.warning("  Mixkit indisponível (%s): %s", type(e).__name__, page)
+        log.warning("  Mixkit: página indisponível (%s): %s", type(e).__name__, page)
         return []
     urls = re.findall(r"https://assets\.mixkit\.co/[^\"'\s<>]+?\.mp3", html)
     return list(dict.fromkeys(urls))
 
 
-def mixkit_sfx(dest: Path, per_cat: int = 6) -> int:
+def _mixkit_pull(base: str, mapping: dict, dest: Path, per: int, label: str) -> int:
     n = 0
-    for cat, tags in MIXKIT_SFX.items():
-        got = 0
-        for tag in tags:
-            for u in _mixkit_mp3s(f"https://mixkit.co/free-sound-effects/{tag}/"):
-                if got >= per_cat:
+    seen = set()
+    for cat, pages in mapping.items():
+        got = len(list((dest / cat).glob("mx_*.mp3"))) if (dest / cat).exists() else 0
+        for pg in pages:
+            if got >= per:
+                break
+            for u in _mixkit_mp3s(f"https://mixkit.co/{base}/{pg}/"):
+                if got >= per:
                     break
-                name = "mx_" + re.sub(r"[^a-z0-9]+", "_", Path(urllib.parse.urlparse(u).path).stem.lower())
-                if _download(u, dest / cat / f"{name}.mp3"):
+                if u in seen:
+                    continue
+                seen.add(u)
+                ident = re.findall(r"/(\d+)/", u)
+                name = f"mx_{pg.split('/')[-1]}_{ident[-1] if ident else len(seen)}.mp3"
+                if _download(u, dest / cat / name):
                     got += 1
         n += got
-        log.info("  SFX Mixkit %-10s %d", cat, got)
+        log.info("  %s Mixkit %-11s %d", label, cat, got)
     return n
 
 
-def mixkit_music(dest: Path, per_mood: int = 4) -> int:
-    n = 0
-    for mood, tags in MIXKIT_MUSIC.items():
-        got = 0
-        for tag in tags:
-            for page in (f"https://mixkit.co/free-stock-music/tag/{tag}/", f"https://mixkit.co/free-stock-music/{tag}/"):
-                for u in _mixkit_mp3s(page):
-                    if got >= per_mood:
-                        break
-                    name = "mx_" + re.sub(r"[^a-z0-9]+", "_", Path(urllib.parse.urlparse(u).path).stem.lower())
-                    if _download(u, dest / mood / f"{name}.mp3"):
-                        got += 1
-        n += got
-        log.info("  trilhas Mixkit %-12s %d", mood, got)
-    return n
+def mixkit_sfx(dest: Path, per_cat: int = 8) -> int:
+    return _mixkit_pull("free-sound-effects", MIXKIT_SFX, dest, per_cat, "SFX")
+
+
+def mixkit_music(dest: Path, per_mood: int = 6) -> int:
+    return _mixkit_pull("free-stock-music", MIXKIT_MUSIC, dest, per_mood, "trilhas")
 
 
 def main():

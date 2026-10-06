@@ -84,6 +84,7 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
         if t is None:
             continue
         cands.append({"t": max(0, t - 0.1), "tipo": item.get("tipo", "video"), "busca": item.get("busca") or item.get("contem"),
+                      "busca_en": item.get("busca_en"), "escolha": item.get("escolha", 0),
                       "texto": item.get("texto"), "prio": 5, "dur": item.get("dur"), "motivo": "plano manual"})
     # 2) cards de frases de impacto
     pmin, pmax = dc["card_palavras"]
@@ -95,7 +96,7 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
             cands.append({"t": f["s"] - 0.05, "tipo": "card", "texto": f["texto"], "dur": f["e"] - f["s"] + 0.25,
                           "prio": 3 + f["impacto"], "sent": f["id"], "motivo": f"frase de impacto ({f['impacto']:.2f})"})
     # 3) entidades → foto
-    if dc["fotos_entidades"]:
+    if dc["fotos_entidades"] and dc.get("auto_palavras", True):
         for ent in _entities(words_out):
             name = " ".join(words_out[i]["w"].strip(".,!?;:") for i in ent)
             if name.lower() in ("eu", "então", "pô"):
@@ -103,7 +104,7 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
             cands.append({"t": words_out[ent[0]]["s"] - 0.1, "tipo": "foto", "busca": name, "prio": 3.5,
                           "entidade": True, "motivo": f"nome próprio '{name}'"})
     # 4) palavra-chave mais forte de cada frase → B-roll em vídeo
-    for f in frases_out:
+    for f in (frases_out if dc.get("auto_palavras", True) else []):
         if f.get("s") is None:
             continue
         ws = [w for w in words_out if w.get("sent") == f["id"] and w.get("pos") == "NOUN"
@@ -122,14 +123,21 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
         a, b = max(dc["inicio_livre_s"], c["t"]), min(total - 0.3, c["t"] + d)
         if b - a < dc["dur_min_s"] * 0.8:
             continue
-        if any(a < o["t"] + o["dur"] + dc["gap_min_s"] and o["t"] < b + dc["gap_min_s"] for o in chosen):
+        manual = c.get("motivo") == "plano manual"
+        gap = 0.0 if manual else dc["gap_min_s"]   # itens do plano podem encadear (ex.: duas fotos seguidas)
+        if manual:   # encaixa no espaço livre: começa depois do que já está escolhido, se encostar
+            for o in sorted(chosen, key=lambda o: o["t"]):
+                if o["t"] <= a < o["t"] + o["dur"]:
+                    a = o["t"] + o["dur"]
+            b = max(b, a + dc["dur_min_s"])
+        if any(a < o["t"] + o["dur"] + gap and o["t"] < b + gap for o in chosen):
             continue
         if c["tipo"] == "card" and sum(o["tipo"] == "card" for o in chosen) >= dc["cards_max"]:
             continue
         if covered + (b - a) > dc["cobertura_max"] * total:
             continue
         # densidade: não mais que 1 a cada intervalo_s * 0.6
-        if any(abs(a - o["t"]) < dc["intervalo_s"] * 0.6 for o in chosen):
+        if not manual and any(abs(a - o["t"]) < dc["intervalo_s"] * 0.6 for o in chosen):
             continue
         c = dict(c, t=round(a, 3), dur=round(b - a, 3))
         chosen.append(c)
@@ -146,6 +154,8 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
     Eventos sem mídia disponível viram card (se tiverem texto curto) ou são descartados."""
     out_dir = work / "dinamismo"
     out_dir.mkdir(exist_ok=True)
+    for old in out_dir.glob("*.mp4"):
+        old.unlink()
     W, H = g.content_w, g.content_h
     fps = float(g.fps)
     final, creditos = [], []
@@ -157,6 +167,8 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
             n = vid_used.get(ev["busca"], 0)
             vid_used[ev["busca"]] = n + 1
             src = stock.pexels_video(ev["busca"], cfg, min_dur=ev["dur"] + 0.6, skip=n)
+            if not src:   # sem chave do Pexels → Mixkit (busca em inglês: campo busca_en do plano)
+                src = stock.mixkit_video(ev.get("busca_en") or ev["busca"], skip=n)
             if src:
                 ffmpeg("-ss", "0.4", "-i", str(src), "-t", f"{ev['dur']:.3f}", "-an", "-vf",
                        f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={fps:.6f},setsar=1,"
@@ -165,12 +177,12 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
                 ok = True
         elif ev["tipo"] == "foto":
             img, cred = None, None
-            if ev.get("entidade"):
-                r = stock.openverse_photo(ev["busca"])
+            if not ev.get("entidade"):
+                img = stock.pexels_photo(ev["busca"], cfg)
+            if img is None:   # pessoas/marcas e fallback: Openverse (CC, inclui Wikimedia/Flickr)
+                r = stock.openverse_photo(ev["busca"], skip=ev.get("escolha", 0))
                 if r:
                     img, cred = r
-            if img is None:
-                img = stock.pexels_photo(ev["busca"], cfg)
             if img:
                 n = max(2, int(ev["dur"] * fps))
                 # Ken Burns: zoom lento 1.00 → 1.12 centrado; foto cobre o quadro
