@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+models/sherpa-onnx-*/
+work/
+output/
+assets/music/
+assets/sfx/
+assets/luts/
+assets/broll/*
+!assets/broll/LEIAME.md
+*.mp4
+*.mov
+*.wav

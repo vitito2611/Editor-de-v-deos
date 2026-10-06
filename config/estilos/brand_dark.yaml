@@ -1,0 +1,19 @@
+# ref5 — brand film escuro: legenda monoespaçada dividida, keyword verde/vermelha,
+# flash branco nas transições, low-key teal & orange.
+legendas:
+  estilo_base: mono_dividido
+  estilo_impacto: mono_dividido
+  rotacao: {ativo: false}
+  destaque: {ativo: true, score_min: 0.7}
+  evitar_rosto: false
+cor: {look: dark_ref5}
+cortes:
+  jump_zoom: {ativo: false}
+  transicoes:
+    flash_branco: {ativo: true}
+    glitch: {ativo: false}
+motion:
+  grao: 6
+  vinheta: true
+  callout: {ativo: false}
+musica: {humor: sombrio}

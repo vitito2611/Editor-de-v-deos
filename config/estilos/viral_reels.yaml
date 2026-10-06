@@ -1,0 +1,13 @@
+# Genérico viral: legendas word-by-word com destaque, rotação de estilo/posição,
+# zoom progressivo nos jump cuts, SFX e transições.
+legendas:
+  estilo_base: karaoke
+  estilo_impacto: centro_impacto
+  rotacao: {ativo: true}
+cor: {look: vibrante}
+cortes:
+  transicoes:
+    whip_pan: {ativo: true}
+    glitch: {ativo: true}
+musica: {humor: energetico}
+sfx: {humor: {ativo: true}}

@@ -1,0 +1,17 @@
+# ref1 — talking-head + B-roll emocional, legenda pequena no peito, frases de impacto
+# cinéticas, título de conceito manuscrito verde, look quente.
+legendas:
+  estilo_base: minimal_peito
+  estilo_impacto: cinetico
+  impacto_score_min: 0.8
+  palavras_max: 3
+  rotacao: {ativo: false}
+  destaque: {ativo: false}
+cor: {look: quente_ref1}
+cortes:
+  jump_zoom: {modo: progressivo, incremento: 0.02}
+  reaction_cut: {ativo: true}
+motion:
+  callout: {ativo: true, fonte: Permanent Marker, cor: "#B6F23A"}
+musica: {humor: emocional}
+layout: {modo: auto}

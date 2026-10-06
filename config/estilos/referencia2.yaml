@@ -1,0 +1,16 @@
+# ref2 + ref3 — vídeo 16:9 dentro de canvas 9:16, legendas laterais no espaço negativo,
+# mistura regular/bold/itálico, palavra futura em cinza, punch-in alternado, look frio.
+legendas:
+  estilo_base: lateral_misto
+  estilo_impacto: lateral_misto
+  palavras_max: 4
+  rotacao: {ativo: false}
+  destaque: {ativo: true, score_min: 0.55}
+cor: {look: frio_ref2}
+cortes:
+  jump_zoom: {modo: alternado, zoom_alternado: 1.16}
+  smash_cut: {zoom: 1.25}
+layout: {modo: letterbox}
+musica: {humor: informativo}
+motion:
+  callout: {ativo: false}

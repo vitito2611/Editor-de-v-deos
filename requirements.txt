@@ -1,0 +1,23 @@
+# Núcleo
+numpy>=1.26
+scipy>=1.11
+PyYAML>=6.0
+rich>=13.0
+# Vídeo / visão computacional
+opencv-python-headless>=4.9
+moviepy>=2.0
+Pillow>=10.0
+# Áudio
+librosa>=0.10
+soundfile>=0.12
+pydub>=0.25
+noisereduce>=3.0
+pyloudnorm>=0.1.1
+# Transcrição e legendas
+faster-whisper>=1.0
+pysubs2>=1.7
+srt>=3.5
+# NLP (tom, palavras-chave)
+spacy>=3.7
+# Cor
+colour-science>=0.4.4

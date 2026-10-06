@@ -1,0 +1,438 @@
+# =============================================================================
+#  CONFIGURAÇÃO PADRÃO DO PIPELINE DE EDIÇÃO
+#  -----------------------------------------------------------------------------
+#  Todo parâmetro do pipeline vive aqui. Os presets de estilo (config/estilos/*.yaml)
+#  e o arquivo passado em --config sobrescrevem apenas as chaves que declararem
+#  (merge profundo). Tempos em segundos, volumes em dB, salvo indicação.
+# =============================================================================
+
+geral:
+  pasta_trabalho: work          # arquivos intermediários (um subdiretório por vídeo)
+  pasta_saida: output           # vídeos finais e relatórios
+  threads: 4                    # renders de segmentos em paralelo
+  manter_intermediarios: true   # false = apaga work/<video>/segmentos após exportar
+  fps_saida: null               # null = mantém o FPS da fonte
+
+# -----------------------------------------------------------------------------
+# TRANSCRIÇÃO (Etapa 5 / base de todas as decisões de contexto)
+# -----------------------------------------------------------------------------
+transcricao:
+  motor: auto                   # auto | parakeet | faster_whisper
+  idioma: pt
+  # Parakeet TDT v3 (NVIDIA, CC-BY-4.0) via sherpa-onnx — roda offline, multilíngue
+  parakeet_dir: models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8
+  # faster-whisper (CTranslate2). Baixa do HuggingFace na 1ª execução.
+  faster_whisper_modelo: small  # tiny | base | small | medium | large-v3 | turbo
+  faster_whisper_compute: int8
+  bloco_max_s: 24               # áudio é fatiado em blocos <= isso, cortando em pausas
+  duracao_palavra_max_s: 1.2    # limita o "fim" de uma palavra quando o motor não informa
+
+# -----------------------------------------------------------------------------
+# CORTE INTELIGENTE DE SILÊNCIOS (Etapa 3)
+# -----------------------------------------------------------------------------
+silencio:
+  ativo: true
+  # energia    = só RMS do áudio
+  # transcricao = lacunas entre palavras do ASR
+  # hibrido    = silêncio só onde AMBOS concordam (robusto com música de fundo)
+  fonte_vad: hibrido
+  limiar_db: -35                # RMS abaixo disso (dBFS) = silêncio
+  limiar_adaptativo: true       # usa max(limiar_db, piso_de_ruído + margem)
+  margem_sobre_ruido_db: 9
+  janela_ms: 20                 # janela da análise RMS
+  banda_voz_hz: [120, 4000]     # filtra a análise de energia para a faixa da voz
+  duracao_minima_s: 0.4         # silêncios menores que isso nunca são cortados
+  folga_antes_s: 0.06           # quanto de "ar" manter antes da fala retomar
+  folga_depois_s: 0.10          # quanto manter depois que a fala termina
+  pausa_preservada_s: 0.45      # duração mantida quando uma regra de contexto preserva a pausa
+  contexto:
+    pausa_antes_importante:     # energia sobe depois da pausa / próxima palavra é número ou revelação
+      ativo: true
+      aumento_energia_db: 5.0
+    continuidade_visual:        # orador gesticulando durante o silêncio (diferença de frames)
+      ativo: true
+      limiar_movimento: 7.0     # média de diferença absoluta entre frames (0-255)
+    efeito_dramatico:           # pausa logo após conectivos de suspense
+      ativo: true
+      palavras: ["então", "mas", "e aí", "aí", "só que", "porém", "e", "e o", "sabe o que"]
+    transicao_topico:           # pausa entre frases de tópicos diferentes
+      ativo: true
+      similaridade_max: 0.12
+  revisao_manual: false         # true = para após gerar revisao/cortes_silencio.yaml
+
+# -----------------------------------------------------------------------------
+# TÉCNICAS DE CORTE CINEMATOGRÁFICO E VIRAL (Etapa 4)
+# Cada técnica tem "ativo" individual e intervalo mínimo entre aplicações.
+# -----------------------------------------------------------------------------
+cortes:
+  modo: automatico              # automatico | sugestao (gera revisao/tecnicas.yaml e para)
+  j_cut:
+    ativo: true
+    overlap_min_s: 0.5
+    overlap_max_s: 1.5
+    intervalo_min_s: 15
+    similaridade_min: 0.18      # sobreposição temática mínima entre as duas falas
+    conectivos: ["e", "porque", "então", "por isso", "inclusive", "ou seja", "aliás"]
+    # Em um único plano, J/L-cut mostra a boca do orador fora de sincronia.
+    # false = só aplica quando o trecho sobreposto é B-roll, outro plano ou sem rosto.
+    permitir_mesmo_plano: false
+  l_cut:
+    ativo: true
+    overlap_min_s: 0.3
+    overlap_max_s: 1.0
+    intervalo_min_s: 12
+    permitir_mesmo_plano: false
+  match_cut:
+    ativo: true
+    similaridade_min: 0.80      # correlação de histograma HSV entre fim de A e início de B
+    distancia_rosto_max: 0.08   # distância normalizada entre posições do rosto
+    alinhar_rosto: true         # reposiciona B para o rosto cair no mesmo ponto de A
+  smash_cut:
+    ativo: true
+    intervalo_min_s: 10
+    zoom: 1.22                  # salto de enquadramento no corte seco
+    corte_musica_s: 0.5         # silencia a trilha logo antes do impacto (0 = não)
+  jump_zoom:
+    ativo: true
+    modo: progressivo           # progressivo (+incremento por corte) | alternado (aberto/fechado)
+    incremento: 0.025           # 2,5% por corte consecutivo do mesmo plano
+    zoom_max: 1.15
+    zoom_alternado: 1.14        # usado no modo alternado
+    resetar_em_topico: true
+  beat_cut:
+    ativo: true
+    aplicar_em: impacto         # impacto | todos
+    tolerancia_s: 0.18          # distância máxima até o beat para mover o corte
+    energia_beat_min: 0.6       # 0-1, só beats fortes (percentil) contam
+  reaction_cut:
+    ativo: true
+    frames_min: 3
+    frames_max: 6
+    intervalo_min_s: 12
+  transicoes:                   # efeitos visuais de corte (Etapa 10)
+    whip_pan: {ativo: false, duracao_s: 0.2, intervalo_min_s: 25}
+    flash_branco: {ativo: false, duracao_s: 0.16, intervalo_min_s: 20}
+    glitch: {ativo: false, frames: 4, intervalo_min_s: 15}
+
+# Palavras-gatilho usadas pelas técnicas (NLP leve, editável)
+gatilhos:
+  revelacao: ["segredo", "verdade", "descobri", "resultado", "na real", "o problema",
+              "a resposta", "o motivo", "acontece que", "sabe o quê", "olha só",
+              "imagina", "o pior", "o melhor", "simplesmente", "nunca", "ninguém"]
+  climax: ["!", "nunca", "ninguém", "jamais", "absurdo", "inacreditável", "simplesmente",
+           "gênio", "acabou", "parou", "mudou tudo", "explodiu", "faliu", "milhões"]
+  humor: ["kkk", "haha", "brincadeira", "zoeira", "piada"]
+  atencao: ["primeiro", "segundo", "terceiro", "dica", "atenção", "importante", "regra",
+            "passo", "anota", "lembra"]
+
+# -----------------------------------------------------------------------------
+# LEGENDAS DINÂMICAS (Etapa 5)
+# -----------------------------------------------------------------------------
+legendas:
+  ativo: true
+  palavras_min: 2
+  palavras_max: 4
+  caracteres_max: 22            # por linha/bloco
+  pausa_quebra_s: 0.30          # pausa que força novo bloco
+  respeitar_pontuacao: true
+  minusculas: false
+  # Estilo base e estilo de impacto (nomes de legendas.estilos)
+  estilo_base: caixa_inferior
+  estilo_impacto: centro_impacto
+  impacto_score_min: 0.82       # frases com score >= isso usam o estilo de impacto
+  impacto_intervalo_min_s: 6
+  # Rotação automática: alterna estilos/posições
+  rotacao:
+    ativo: true
+    a_cada_s: 7                 # troca posição a cada X s ...
+    em_topico: true             # ... ou a cada troca de tópico
+    estilos: [caixa_inferior, contorno_duplo, karaoke, topo]
+  evitar_rosto: true
+  destaque:
+    ativo: true
+    cor: "#FFD400"
+    escala: 1.18
+    score_min: 0.62
+  margem_px: 90
+  estilos:
+    caixa_inferior:             # Estilo 1
+      fonte: Inter
+      peso: Bold
+      tamanho: 64
+      cor: "#FFFFFF"
+      fundo: "#000000"
+      fundo_alpha: 0.55
+      contorno: 0
+      sombra: 0
+      posicao: inferior
+      animacao: pop
+    contorno_duplo:             # Estilo 2
+      fonte: Inter
+      peso: Black
+      tamanho: 70
+      cor: "#FFFFFF"
+      contorno: 5
+      contorno_cor: "#000000"
+      contorno_externo: 10
+      contorno_externo_cor: "#FFFFFF"
+      posicao: inferior
+      animacao: slide
+    karaoke:                    # Estilo 3 — palavra atual em outra cor
+      fonte: Inter
+      peso: ExtraBold
+      tamanho: 68
+      cor: "#FFFFFF"
+      cor_ativa: "#22E06B"
+      contorno: 4
+      contorno_cor: "#000000"
+      sombra: 2
+      posicao: inferior
+      animacao: palavra
+    centro_impacto:             # Estilo 4 — momentos de impacto
+      fonte: Inter
+      peso: Black
+      tamanho: 110
+      cor: "#FFFFFF"
+      contorno: 6
+      contorno_cor: "#000000"
+      sombra: 3
+      posicao: centro
+      animacao: pop
+      caixa_alta: true
+    topo:                       # Estilo 5 — variação de posição
+      fonte: Inter
+      peso: Bold
+      tamanho: 62
+      cor: "#FFFFFF"
+      contorno: 4
+      contorno_cor: "#000000"
+      sombra: 2
+      posicao: superior
+      animacao: fade
+    minimal_peito:              # ref1 — pequena, branca, sem fundo, na altura do peito
+      fonte: Inter
+      peso: Medium
+      tamanho: 46
+      cor: "#FFFFFF"
+      contorno: 0
+      sombra: 2
+      sombra_alpha: 0.6
+      posicao: peito
+      animacao: fade
+    cinetico:                   # ref1 — frase de impacto com tamanhos misturados
+      fonte: Inter
+      peso: Bold
+      tamanho: 96
+      cor: "#FFFFFF"
+      sombra: 3
+      sombra_alpha: 0.5
+      posicao: centro
+      animacao: cinetico
+    lateral_misto:              # ref2/ref3 — espaço negativo ao lado do rosto, regular/bold/itálico
+      fonte: Inter
+      peso: Medium
+      tamanho: 50
+      tamanho_destaque: 76
+      cor: "#FFFFFF"
+      cor_futura: "#9A9A9A"     # palavras ainda não ditas em cinza
+      sombra: 2
+      sombra_alpha: 0.55
+      posicao: lateral
+      animacao: palavra_misto
+    cinema:                     # ref4 — legenda de cinema com fundo cinza
+      fonte: Inter
+      peso: Medium
+      tamanho: 34
+      cor: "#FFFFFF"
+      fundo: "#3A3A3A"
+      fundo_alpha: 0.7
+      posicao: cinema
+      animacao: nenhuma
+      palavras_max: 9
+      caracteres_max: 48
+    mono_dividido:              # ref5 — monoespaçada, frase dividida esquerda/direita
+      fonte: JetBrains Mono
+      peso: Regular
+      tamanho: 30
+      cor: "#F2F2F2"
+      cor_destaque_lista: ["#3BE36B", "#FF3B30"]
+      posicao: dividida
+      animacao: digitacao
+      minusculas: true
+      palavras_max: 6
+      caracteres_max: 40
+
+# -----------------------------------------------------------------------------
+# CORREÇÃO DE COR (Etapa 6)
+# -----------------------------------------------------------------------------
+cor:
+  ativo: true
+  primaria:
+    balanco_branco: true        # gray-world limitado
+    ganho_wb_max: 0.18          # ganho máximo por canal (+-18%)
+    exposicao: true
+    luma_alvo: 0.42             # média de luma desejada (0-1) para normalizar planos
+    ajuste_exposicao_max: 0.25
+    contraste_auto: true        # estica pretos/brancos (percentis 0.5 / 99.5)
+    pele: true                  # aproxima o tom de pele da "skin tone line"
+    pele_forca: 0.5
+    normalizar_entre_planos: true
+    amostras_por_plano: 6
+  look: limpo                   # nome do LUT em cor.looks
+  intensidade_look: 1.0         # 0-1 mistura do LUT
+  looks:                        # LUTs geradas proceduralmente em assets/luts/<nome>.cube
+    limpo:      {contraste: 0.08, saturacao: 1.05, temperatura: 0.0,  tint: 0.0, sombras: [0, 0, 0],       luzes: [0, 0, 0],        pretos: 0.0,  vibrance: 0.10}
+    quente_ref1: {contraste: 0.06, saturacao: 0.95, temperatura: 0.07, tint: 0.01, sombras: [0.02, 0.0, -0.02], luzes: [0.03, 0.01, -0.03], pretos: 0.05, vibrance: 0.0}
+    frio_ref2:  {contraste: 0.14, saturacao: 0.88, temperatura: -0.05, tint: -0.01, sombras: [-0.03, 0.01, 0.04], luzes: [0.02, 0.01, -0.01], pretos: 0.0, vibrance: 0.05}
+    doc_ref4:   {contraste: 0.12, saturacao: 0.92, temperatura: 0.03, tint: 0.0, sombras: [-0.02, 0.01, 0.03], luzes: [0.04, 0.015, -0.03], pretos: 0.03, vibrance: 0.08}
+    dark_ref5:  {contraste: 0.22, saturacao: 1.10, temperatura: 0.0, tint: 0.0, sombras: [-0.04, 0.01, 0.05], luzes: [0.06, 0.02, -0.05], pretos: -0.03, vibrance: 0.15}
+    vibrante:   {contraste: 0.12, saturacao: 1.22, temperatura: 0.01, tint: 0.0, sombras: [0, 0, 0.01],    luzes: [0.01, 0, -0.01],  pretos: 0.0,  vibrance: 0.25}
+  relatorio_histograma: true
+
+# -----------------------------------------------------------------------------
+# ÁUDIO — LIMPEZA, DINÂMICA E MASTER (Etapa 7)
+# -----------------------------------------------------------------------------
+audio:
+  taxa_amostragem: 48000
+  limpeza:
+    reducao_ruido: true
+    reducao_ruido_forca: 0.75   # prop_decrease do noisereduce
+    passa_altas_hz: 80
+    remover_hum: auto           # auto | 50 | 60 | false
+    harmonicos_hum: 4
+    declip: auto                # auto = só se detectar clipping
+    deesser: true
+    deesser_intensidade: 0.45
+  eq:
+    corte_grave_hz: 90
+    lama_hz: 300
+    lama_db: -2.5
+    presenca_hz: 4000
+    presenca_db: 2.5
+    ar_hz: 10000
+    ar_db: 1.5
+  compressor:
+    limiar_db: -22
+    razao: 3.0
+    ataque_ms: 8
+    release_ms: 120
+    makeup_db: 3
+  voz_lufs: -16                 # loudness da voz antes do mix
+  master:
+    lufs: -14
+    true_peak_db: -1.0
+    lra: 7
+  crossfade_corte_ms: 10        # micro-fade em cada corte para evitar cliques
+
+# -----------------------------------------------------------------------------
+# EFEITOS SONOROS (Etapa 8)
+# -----------------------------------------------------------------------------
+sfx:
+  ativo: true
+  pasta: assets/sfx
+  volume_rel_voz_db: -14        # SFX ficam este tanto abaixo da voz
+  variacao_volume_db: 2.0
+  intervalo_min_s: 2.5
+  max_por_minuto: 10
+  transicao:
+    ativo: true
+    em: [smash, topico, zoom_reset, transicao]
+    categoria: transicao
+  impacto:
+    ativo: true
+    score_min: 0.85
+    categoria: impacto
+  atencao:
+    ativo: true
+    categoria: atencao
+  humor:
+    ativo: false
+    categoria: humor
+  ambiente:
+    ativo: false                # room tone por baixo de todo o vídeo
+    categoria: ambiente
+    volume_db: -42
+
+# -----------------------------------------------------------------------------
+# TRILHA SONORA (Etapa 9)
+# -----------------------------------------------------------------------------
+musica:
+  ativo: true
+  pasta: assets/music           # <pasta>/<humor>/*.wav|mp3 (+ library.yaml opcional)
+  humor: auto                   # auto | energetico | informativo | emocional | dramatico | sombrio
+  trocar_a_cada_s: [60, 90]
+  crossfade_s: 2.5
+  volume_db: -20                # nível da trilha nos trechos sem voz (relativo a 0 dBFS antes do master)
+  ducking_db: -14               # quanto a trilha abaixa sob a voz (-12 a -18)
+  ducking_ataque_s: 0.08
+  ducking_release_s: 0.45
+  fade_in_s: 1.0
+  fade_out_s: 2.0
+  dinamica_energia: true        # +dB nos trechos de maior energia
+  dinamica_max_db: 3
+  freesound_api_key: null       # opcional — busca faixas CC0 quando a pasta não tiver o humor
+  semente: 7                    # escolha reprodutível
+
+# -----------------------------------------------------------------------------
+# MOTION GRAPHICS E EFEITOS VISUAIS (Etapa 10)
+# -----------------------------------------------------------------------------
+motion:
+  ativo: true
+  lower_third:
+    ativo: auto                 # auto = só se o orador se apresentar ("meu nome é...") ou nome definido
+    nome: null
+    descricao: null
+    inicio_s: 1.5
+    duracao_s: 4.0
+    cor: "#FFFFFF"
+    cor_barra: "#22E06B"
+  callout:                      # título de conceito (ex.: "PRONOIA" do ref1)
+    ativo: true
+    fonte: Permanent Marker
+    cor: "#B6F23A"
+    tamanho: 96
+    max: 3
+    duracao_s: 2.6
+  contador:                     # números falados viram contador animado
+    ativo: true
+    min_valor: 10
+    duracao_s: 1.6
+    max: 3
+  gancho:                       # texto de gancho no início (ref4)
+    ativo: false
+    texto: null                 # null = 1ª frase da transcrição
+    duracao_s: 3.5
+  grao: 0                       # 0-30 intensidade de grão de filme
+  vinheta: false
+  borda_filme: false            # moldura de película Super 8 (ref4)
+  broll:
+    ativo: true
+    pasta: assets/broll         # clipes nomeados por palavra-chave: "dinheiro_1.mp4"
+    duracao_s: 2.2
+    intervalo_min_s: 8
+    tipo_corte: l_cut           # B-roll entra com a voz continuando por baixo
+
+# -----------------------------------------------------------------------------
+# ENQUADRAMENTO / LAYOUT DE SAÍDA
+# -----------------------------------------------------------------------------
+layout:
+  modo: auto                    # auto | crop_rosto | letterbox | blur_fill | original
+  # auto: fonte horizontal -> vertical usa crop_rosto; mesma orientação usa original
+  letterbox_largura: 1.0        # fração da largura ocupada pelo quadro 16:9 no letterbox
+  suavizar_rosto: 0.6
+
+# -----------------------------------------------------------------------------
+# PLATAFORMAS / PERFIS DE EXPORTAÇÃO (Etapa 11)
+# -----------------------------------------------------------------------------
+plataformas:
+  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
+  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
+  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
+  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: slow, audio_kbps: 256}
+  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: slow, audio_kbps: 256}
+  ao_exceder_duracao: avisar    # avisar | cortar (corta no fim de frase mais próximo)
+
+preview:
+  altura: 640
+  crf: 30
+  preset: ultrafast

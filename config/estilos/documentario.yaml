@@ -1,0 +1,23 @@
+# ref4 — mini-documentário: gancho vertical com texto, letterbox, legenda de cinema,
+# grão + borda de película, beat cuts no clímax, look terroso.
+legendas:
+  estilo_base: cinema
+  estilo_impacto: cinema
+  rotacao: {ativo: false}
+  destaque: {ativo: false}
+  evitar_rosto: false
+cor: {look: doc_ref4}
+cortes:
+  jump_zoom: {ativo: false}
+  smash_cut: {zoom: 1.0}
+  beat_cut: {aplicar_em: todos}
+motion:
+  grao: 12
+  vinheta: true
+  borda_filme: false
+  gancho: {ativo: true}
+  callout: {ativo: false}
+  contador: {ativo: false}
+sfx: {transicao: {ativo: false}, impacto: {ativo: false}, atencao: {ativo: false}}
+musica: {humor: emocional}
+layout: {modo: letterbox}
