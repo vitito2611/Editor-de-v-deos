@@ -11,3 +11,8 @@ cortes:
     glitch: {ativo: true}
 musica: {humor: energetico}
 sfx: {humor: {ativo: true}}
+silencio:
+  # ritmo viral: pausas preservadas ficam bem curtas, e gesticular não segura a pausa
+  pausa_preservada_s: 0.22
+  contexto:
+    continuidade_visual: {ativo: false}

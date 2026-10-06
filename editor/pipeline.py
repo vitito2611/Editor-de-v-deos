@@ -31,6 +31,53 @@ class Parada(Exception):
     """Interrupção intencional (revisão manual / modo sugestão)."""
 
 
+def _normalize_source(src: Path, g: dict) -> Path:
+    """Fonte intermediária ("mezanino") quando necessário:
+    • HDR (HLG / PQ, ex.: iPhone Dolby Vision) → SDR Rec.709 com tone mapping (hable)
+    • resolução acima de fonte_max_altura → reduz (mantém margem para zoom) e
+    • FPS acima de fps_max → reduz (renders muito mais rápidos)
+    Sem isso, vídeo HDR fica lavado/estourado e 4K60 deixa o render lento."""
+    from .utils import run as _run
+    p = _run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+              "stream=color_transfer,width,height,r_frame_rate", "-of", "json", str(src)])
+    import json as _json
+    st = _json.loads(p.stdout)["streams"][0]
+    trc = st.get("color_transfer", "")
+    hdr = g.get("hdr_para_sdr", True) and trc in ("arib-std-b67", "smpte2084")
+    w, h = int(st["width"]), int(st["height"])
+    num, den = map(int, st["r_frame_rate"].split("/"))
+    fps = num / den
+    maxh = g.get("fonte_max_lado", 2560)
+    fmax = g.get("fps_max", 30)
+    scale = max(w, h) > maxh
+    slow = fmax and fps > fmax + 0.5
+    if not (hdr or scale or slow):
+        return src
+    dst = src.with_name("fonte_mezanino.mp4")
+    if dst.exists():
+        return dst
+    vf = []
+    if slow:
+        vf.append(f"fps={fmax}")
+    sw, sh = (w, h)
+    if scale:
+        k = maxh / max(w, h)
+        sw, sh = int(round(w * k / 2) * 2), int(round(h * k / 2) * 2)
+    if hdr:
+        npl = 203 if trc == "arib-std-b67" else 100
+        vf.append(f"zscale=w={sw}:h={sh}:tin={trc}:min=bt2020nc:pin=bt2020:rin=tv:t=linear:npl={npl},"
+                  "format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,"
+                  "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+    else:
+        vf.append(f"scale={sw}:{sh}:flags=lanczos,format=yuv420p")
+    log.info("  fonte normalizada: %s%s%s → %dx%d", "HDR→SDR " if hdr else "", f"{w}x{h} " if scale else "",
+             f"{fps:.0f}→{fmax} fps" if slow else "", sw, sh)
+    ffmpeg("-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "14", "-preset", "fast",
+           "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
+           "-c:a", "aac", "-b:a", "256k", "-map_metadata", "-1", str(dst))
+    return dst
+
+
 def _remove_bars(src: Path, enabled: bool) -> Path:
     """Detecta tarjas pretas embutidas (ex.: 16:9 dentro de 9:16) e gera uma cópia só com a
     área ativa. Sem isso o reframe/zoom trataria as tarjas como imagem."""
@@ -112,6 +159,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
     # ------------------------------------------------------------------ análise
     with timer.etapa("Análise inicial"):
         src, joins = _prepare_sources(inputs, work, cfg["geral"].get("remover_tarjas", True))
+        src = _normalize_source(src, cfg["geral"])
         an = analysis.analyze(src)
         an["planos"] = sorted(set(an["planos"] + joins))
         meta = an["meta"]

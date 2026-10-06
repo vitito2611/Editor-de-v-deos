@@ -12,3 +12,6 @@ assets/broll/*
 *.mp4
 *.mov
 *.wav
+entrada/
+entrada_drive/
+*.MOV

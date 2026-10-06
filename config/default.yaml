@@ -13,6 +13,9 @@ geral:
   manter_intermediarios: true   # false = apaga work/<video>/segmentos após exportar
   fps_saida: null               # null = mantém o FPS da fonte
   remover_tarjas: true          # detecta e remove tarjas pretas embutidas na fonte
+  hdr_para_sdr: true            # converte HDR (HLG/PQ, ex.: iPhone) para SDR Rec.709 com tone mapping
+  fonte_max_lado: 2560          # fontes maiores (ex.: 4K) viram mezanino 1440p — mantém margem p/ zoom
+  fps_max: 30                   # fontes 60 fps são renderizadas em 30 fps (Reels/TikTok)
 
 # -----------------------------------------------------------------------------
 # TRANSCRIÇÃO (Etapa 5 / base de todas as decisões de contexto)
@@ -123,7 +126,7 @@ gatilhos:
   revelacao: ["segredo", "verdade", "descobri", "resultado", "na real", "o problema",
               "a resposta", "o motivo", "acontece que", "sabe o quê", "olha só",
               "imagina", "o pior", "o melhor", "simplesmente", "nunca", "ninguém"]
-  climax: ["!", "nunca", "ninguém", "jamais", "absurdo", "inacreditável", "simplesmente",
+  climax: ["!", "jamais", "absurdo", "inacreditável", "simplesmente",
            "gênio", "acabou", "parou", "mudou tudo", "explodiu", "faliu", "milhões"]
   humor: ["kkk", "haha", "brincadeira", "zoeira", "piada"]
   atencao: ["primeiro", "segundo", "terceiro", "dica", "atenção", "importante", "regra",
@@ -276,6 +279,7 @@ cor:
     ganho_wb_max: 0.18          # ganho máximo por canal (+-18%)
     exposicao: true
     luma_alvo: 0.42             # média de luma desejada (0-1) para normalizar planos
+    luma_faixa: [0.30, 0.62]    # dentro desta faixa a exposição não é mexida
     ajuste_exposicao_max: 0.25
     contraste_auto: true        # estica pretos/brancos (percentis 0.5 / 99.5)
     pele: true                  # aproxima o tom de pele da "skin tone line"
@@ -290,7 +294,7 @@ cor:
     frio_ref2:  {contraste: 0.14, saturacao: 0.88, temperatura: -0.05, tint: -0.01, sombras: [-0.03, 0.01, 0.04], luzes: [0.02, 0.01, -0.01], pretos: 0.0, vibrance: 0.05}
     doc_ref4:   {contraste: 0.12, saturacao: 0.92, temperatura: 0.03, tint: 0.0, sombras: [-0.02, 0.01, 0.03], luzes: [0.04, 0.015, -0.03], pretos: 0.03, vibrance: 0.08}
     dark_ref5:  {contraste: 0.22, saturacao: 1.10, temperatura: 0.0, tint: 0.0, sombras: [-0.04, 0.01, 0.05], luzes: [0.06, 0.02, -0.05], pretos: -0.03, vibrance: 0.15}
-    vibrante:   {contraste: 0.12, saturacao: 1.22, temperatura: 0.01, tint: 0.0, sombras: [0, 0, 0.01],    luzes: [0.01, 0, -0.01],  pretos: 0.0,  vibrance: 0.25}
+    vibrante:   {contraste: 0.08, saturacao: 1.08, temperatura: 0.0, tint: 0.0, sombras: [0, 0, 0.01], luzes: [0, 0, 0], pretos: 0.0, vibrance: 0.15}
   relatorio_histograma: true
 
 # -----------------------------------------------------------------------------

@@ -82,14 +82,20 @@ def primary_filters(shot_stats: dict, cfg: dict) -> dict:
         if pc["contraste_auto"]:
             lo, hi = s["p_low"], s["p_high"]
             imin = float(np.clip(lo * 0.85, 0, 0.12)) if lo > 0.03 else 0.0
-            imax = float(np.clip(hi + (1 - hi) * 0.15, 0.85, 1)) if hi < 0.93 else 1.0
+            imax = float(np.clip(hi + (1 - hi) * 0.15, 0.85, 1)) if hi < 0.8 else 1.0
             if imin > 0 or imax < 1:
                 parts.append(f"colorlevels=rimin={imin:.3f}:gimin={imin:.3f}:bimin={imin:.3f}:"
                              f"rimax={imax:.3f}:gimax={imax:.3f}:bimax={imax:.3f}")
                 adj["niveis"] = [round(imin, 3), round(imax, 3)]
         if pc["exposicao"]:
             l = float(np.clip(s["luma"], 0.03, 0.97))
-            gamma = float(np.log(l) / np.log(target)) if 0 < target < 1 else 1.0
+            # só corrige fora da faixa aceitável: cenas high-key (parede branca) não devem
+            # ser escurecidas até a "média"; vai só até a borda da faixa
+            lo_b, hi_b = pc.get("luma_faixa", [target, target])
+            tgt = min(max(l, lo_b), hi_b)
+            if len(lumas) > 1 and pc["normalizar_entre_planos"]:
+                tgt = 0.5 * tgt + 0.5 * target
+            gamma = float(np.log(l) / np.log(tgt)) if 0 < tgt < 1 else 1.0
             gamma = float(np.clip(gamma, 1 - pc["ajuste_exposicao_max"], 1 + pc["ajuste_exposicao_max"]))
             if abs(gamma - 1) > 0.02:
                 # eq aplica v^(1/gamma): gamma > 1 clareia. gamma = ln(luma)/ln(alvo)

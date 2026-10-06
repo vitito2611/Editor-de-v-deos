@@ -232,7 +232,7 @@ def decide(clips: list[Clip], words: list[dict], frases: list[dict], cfg: dict, 
 
         # ---------------- TRANSIÇÕES VISUAIS (Etapa 10)
         tr = cc.get("transicoes", {})
-        if new_topic:
+        if new_topic and not smash:   # smash cut já é o "impacto" do corte: não empilha transição
             for nome, chave in (("whip", "whip_pan"), ("flash", "flash_branco")):
                 o = tr.get(chave, {})
                 if o.get("ativo") and sp.ok(chave, T, o["intervalo_min_s"]) and A.dur > 0.6 and B.dur > 0.6:

@@ -140,7 +140,8 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
             steps = 24
             st = {"fonte": "Inter", "peso": "Black", "tamanho": 120 * k, "cor": "#FFFFFF", "contorno": 0, "sombra": 4, "sombra_alpha": 0.6}
             stu = dict(st, peso="Bold", tamanho=48 * k)
-            y = cy0 + ch * 0.22 if not (g.mode == "letterbox" and H > W) else cy0 - 150 * k
+            # abaixo da faixa de legenda do topo (0.18H) e acima do rosto
+            y = cy0 + ch * 0.30 if not (g.mode == "letterbox" and H > W) else cy0 - 150 * k
             for i in range(steps):
                 a = t0 + d * i / steps
                 b = t0 + d * (i + 1) / steps if i < steps - 1 else t0 + d + 1.2
