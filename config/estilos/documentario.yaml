@@ -12,7 +12,7 @@ cortes:
   smash_cut: {zoom: 1.0}
   beat_cut: {aplicar_em: todos}
 motion:
-  grao: 12
+  grao: 7
   vinheta: true
   borda_filme: false
   gancho: {ativo: true}

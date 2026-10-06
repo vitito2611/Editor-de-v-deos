@@ -243,8 +243,10 @@ def compose(video: Path, audio: Path, ass: Path | None, g: Geometry, cfg: dict, 
         cur = "[sub]"
     fc.append(f"{cur}format=yuv420p[vout]")
     crf, preset = (cfg["preview"]["crf"], cfg["preview"]["preset"]) if preview else (plat["crf"], plat["preset"])
+    # teto de bitrate (as plataformas recomprimem acima disso; grão de filme estouraria o arquivo)
+    rate = ["-maxrate", f"{plat['maxrate_kbps']}k", "-bufsize", f"{plat['maxrate_kbps'] * 2}k"] if plat.get("maxrate_kbps") else []
     ffmpeg(*inputs, "-filter_complex", ";".join(fc), "-map", "[vout]", "-map", "1:a", "-c:v", "libx264",
-           "-preset", preset, "-crf", str(crf), "-profile:v", "high", "-pix_fmt", "yuv420p", "-r", str(g.fps),
+           "-preset", preset, "-crf", str(crf), *rate, "-profile:v", "high", "-pix_fmt", "yuv420p", "-r", str(g.fps),
            "-c:a", "aac", "-b:a", f"{plat['audio_kbps']}k", "-ar", "48000", "-movflags", "+faststart",
            "-t", f"{duration:.3f}", str(out))
     return out

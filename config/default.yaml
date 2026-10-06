@@ -406,7 +406,7 @@ motion:
     ativo: false
     texto: null                 # null = 1ª frase da transcrição
     duracao_s: 3.5
-  grao: 0                       # 0-30 intensidade de grão de filme
+  grao: 0                       # 0-30 intensidade de grão de filme (aumenta muito o bitrate)
   vinheta: false
   borda_filme: false            # moldura de película Super 8 (ref4)
   broll:
@@ -429,11 +429,11 @@ layout:
 # PLATAFORMAS / PERFIS DE EXPORTAÇÃO (Etapa 11)
 # -----------------------------------------------------------------------------
 plataformas:
-  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
-  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
-  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
-  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256}
-  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256}
+  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
+  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
+  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
+  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256, maxrate_kbps: 20000}
+  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256, maxrate_kbps: 16000}
   ao_exceder_duracao: avisar    # avisar | cortar (corta no fim de frase mais próximo)
 
 preview:

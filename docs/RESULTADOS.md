@@ -129,6 +129,7 @@ O preset do x264 passou de `slow` para `medium` na Etapa 13, o que reduz o tempo
 7. **Nova regra de callout**: termo isolado seguido de definição.
 8. **Glossário de correção do ASR** (`transcricao.correcoes`).
 9. **Revisão casada pelo tempo na fonte**, estável quando os cortes mudam.
+10. **Teto de bitrate por plataforma** (12 Mbps para Reels/TikTok/Shorts, 20 Mbps para YouTube): o grão temporal do `documentario` gerava 397 MB em 68 s; agora gera 99 MB (11,7 Mbps). O grão padrão do estilo também caiu de 12 para 7.
 
 ## O que ainda depende de você (limitações honestas)
 
