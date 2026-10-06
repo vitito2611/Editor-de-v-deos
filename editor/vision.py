@@ -81,7 +81,8 @@ def motion_score(fr: FrameReader, t0: float, t1: float) -> float:
     if len(frames) < 2:
         return 0.0
     g = frames.mean(axis=3)
-    return float(np.mean(np.abs(np.diff(g, axis=0))))
+    # mediana por par de frames: um único salto (corte na fonte) não conta como gesto
+    return float(np.median(np.mean(np.abs(np.diff(g, axis=0)), axis=(1, 2))))
 
 
 def composition_similarity(a: np.ndarray, b: np.ndarray) -> float:

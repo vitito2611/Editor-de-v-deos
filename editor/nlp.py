@@ -182,6 +182,14 @@ def annotate(words: list[dict], cfg: dict) -> dict:
             term = mm.group(1)
             if term.lower() not in ("isso", "esse", "essa", "ele", "ela", "você", "eu", "não", "tudo", "o", "a", "e"):
                 callouts.append({"termo": term, "s": s["s"], "sent": s["id"]})
+    # termo isolado seguido de definição: "Pronoia." + "... é o contrário de ..." (padrão do ref1)
+    for k, s in enumerate(sents[:-1]):
+        toks = s["texto"].strip(" .!?").split()
+        nxt = " ".join(sents[k + 1]["texto"].lower().split()[:6])
+        if 1 <= len(toks) <= 2 and len(toks[-1]) >= 4 and re.search(r"\b(é|significa|seria)\s+(o|a|quando|um|uma)\b", nxt) \
+                and not any(c["sent"] == k for c in callouts):
+            callouts.append({"termo": " ".join(toks), "s": s["s"], "sent": s["id"]})
+    callouts.sort(key=lambda c: c["s"])
     # ---- números para contador
     numeros = []
     for i, w in enumerate(words):

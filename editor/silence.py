@@ -15,6 +15,12 @@ from pathlib import Path
 
 import numpy as np
 import yaml
+
+
+def _plain(obj):
+    """Converte tipos numpy em tipos Python (para YAML)."""
+    import json
+    return json.loads(json.dumps(obj, default=float))
 from scipy import signal
 
 from .utils import ffmpeg, lin_to_db, log
@@ -125,7 +131,7 @@ def detect(audio16k: np.ndarray, words: list[dict], frases: list[dict], dur: flo
             # --- continuidade visual
             if ctx["continuidade_visual"]["ativo"] and frames is not None:
                 from .vision import motion_score
-                m = motion_score(frames, s, e)
+                m = motion_score(frames, s + 0.1, e - 0.1)
                 g["movimento"] = round(m, 2)
                 if m >= ctx["continuidade_visual"]["limiar_movimento"]:
                     g["motivos"].append(f"orador em movimento ({m:.1f})")
@@ -176,7 +182,7 @@ def write_review(res: dict, path: Path) -> None:
     head = ("# Revisão dos cortes de silêncio.\n# Edite 'acao' (cortar | encurtar | preservar) e rode novamente com"
             " --usar-revisao.\n")
     items = [{k: g[k] for k in ("id", "s", "e", "dur", "antes", "depois", "acao", "motivos")} for g in res["pausas"]]
-    path.write_text(head + yaml.safe_dump({"limiar_db": round(float(res["limiar_db"]), 2), "pausas": items},
+    path.write_text(head + yaml.safe_dump(_plain({"limiar_db": round(float(res["limiar_db"]), 2), "pausas": items}),
                                           allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 

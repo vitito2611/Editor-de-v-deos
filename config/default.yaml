@@ -12,6 +12,7 @@ geral:
   threads: 4                    # renders de segmentos em paralelo
   manter_intermediarios: true   # false = apaga work/<video>/segmentos após exportar
   fps_saida: null               # null = mantém o FPS da fonte
+  remover_tarjas: true          # detecta e remove tarjas pretas embutidas na fonte
 
 # -----------------------------------------------------------------------------
 # TRANSCRIÇÃO (Etapa 5 / base de todas as decisões de contexto)
@@ -51,7 +52,7 @@ silencio:
       aumento_energia_db: 5.0
     continuidade_visual:        # orador gesticulando durante o silêncio (diferença de frames)
       ativo: true
-      limiar_movimento: 7.0     # média de diferença absoluta entre frames (0-255)
+      limiar_movimento: 6.0     # mediana da diferença média entre frames (0-255) a 4 fps
     efeito_dramatico:           # pausa logo após conectivos de suspense
       ativo: true
       palavras: ["então", "mas", "e aí", "aí", "só que", "porém", "e", "e o", "sabe o que"]
@@ -84,8 +85,8 @@ cortes:
     permitir_mesmo_plano: false
   match_cut:
     ativo: true
-    similaridade_min: 0.80      # correlação de histograma HSV entre fim de A e início de B
-    distancia_rosto_max: 0.08   # distância normalizada entre posições do rosto
+    similaridade_min: 0.90      # correlação de histograma HSV entre fim de A e início de B
+    distancia_rosto_max: 0.10   # distância normalizada entre posições do rosto (exige rosto nos dois planos)
     alinhar_rosto: true         # reposiciona B para o rosto cair no mesmo ponto de A
   smash_cut:
     ativo: true
@@ -99,6 +100,7 @@ cortes:
     zoom_max: 1.15
     zoom_alternado: 1.14        # usado no modo alternado
     resetar_em_topico: true
+    dividir_clipes_longos_s: 6   # divide falas contínuas longas no início de frase (cria jump cuts); 0 = não
   beat_cut:
     ativo: true
     aplicar_em: impacto         # impacto | todos
@@ -158,7 +160,7 @@ legendas:
     caixa_inferior:             # Estilo 1
       fonte: Inter
       peso: Bold
-      tamanho: 64
+      tamanho: 78
       cor: "#FFFFFF"
       fundo: "#000000"
       fundo_alpha: 0.55
@@ -169,7 +171,7 @@ legendas:
     contorno_duplo:             # Estilo 2
       fonte: Inter
       peso: Black
-      tamanho: 70
+      tamanho: 84
       cor: "#FFFFFF"
       contorno: 5
       contorno_cor: "#000000"
@@ -180,7 +182,7 @@ legendas:
     karaoke:                    # Estilo 3 — palavra atual em outra cor
       fonte: Inter
       peso: ExtraBold
-      tamanho: 68
+      tamanho: 82
       cor: "#FFFFFF"
       cor_ativa: "#22E06B"
       contorno: 4
@@ -191,7 +193,7 @@ legendas:
     centro_impacto:             # Estilo 4 — momentos de impacto
       fonte: Inter
       peso: Black
-      tamanho: 110
+      tamanho: 120
       cor: "#FFFFFF"
       contorno: 6
       contorno_cor: "#000000"
@@ -202,7 +204,7 @@ legendas:
     topo:                       # Estilo 5 — variação de posição
       fonte: Inter
       peso: Bold
-      tamanho: 62
+      tamanho: 74
       cor: "#FFFFFF"
       contorno: 4
       contorno_cor: "#000000"
@@ -231,8 +233,8 @@ legendas:
     lateral_misto:              # ref2/ref3 — espaço negativo ao lado do rosto, regular/bold/itálico
       fonte: Inter
       peso: Medium
-      tamanho: 50
-      tamanho_destaque: 76
+      tamanho: 58
+      tamanho_destaque: 90
       cor: "#FFFFFF"
       cor_futura: "#9A9A9A"     # palavras ainda não ditas em cinza
       sombra: 2
@@ -340,7 +342,7 @@ sfx:
     categoria: transicao
   impacto:
     ativo: true
-    score_min: 0.85
+    score_min: 0.78
     categoria: impacto
   atencao:
     ativo: true
@@ -425,11 +427,11 @@ layout:
 # PLATAFORMAS / PERFIS DE EXPORTAÇÃO (Etapa 11)
 # -----------------------------------------------------------------------------
 plataformas:
-  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
-  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
-  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: slow, audio_kbps: 192}
-  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: slow, audio_kbps: 256}
-  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: slow, audio_kbps: 256}
+  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
+  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
+  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192}
+  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256}
+  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256}
   ao_exceder_duracao: avisar    # avisar | cortar (corta no fim de frase mais próximo)
 
 preview:

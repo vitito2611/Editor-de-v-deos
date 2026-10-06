@@ -1,0 +1,300 @@
+"""ETAPA 11 — Orquestração do pipeline completo.
+
+  entrada (cópia de trabalho; o original nunca é tocado)
+  → análise inicial → transcrição → NLP
+  → limpeza da voz (Etapa 7) → corte de silêncios (Etapa 3, revisão opcional)
+  → técnicas de corte (Etapa 4, modo automático ou sugestão)
+  → trilha: escolha + beats (Etapa 9) → beat cuts
+  → correção de cor (Etapa 6) → render dos segmentos e montagem
+  → legendas (Etapa 5) + motion graphics (Etapa 10)
+  → SFX (Etapa 8) → mix com ducking → master (-14 LUFS)
+  → composição final e exportação por plataforma → relatório
+
+A voz é limpa ANTES da detecção de silêncio porque a redução de ruído melhora o VAD;
+o resultado final é o mesmo da ordem descrita no briefing.
+"""
+from __future__ import annotations
+
+import hashlib
+import shutil
+from pathlib import Path
+
+import numpy as np
+
+from . import analysis, audio, cinematic, color, motion, music, nlp, render, sfx, silence, subtitles, transcribe
+from .config import load_config
+from .timeline import layout_times, map_words, snap_clips
+from .utils import ROOT, Timer, ffmpeg, load_audio, log, probe, read_json, setup_logging, write_json
+
+
+class Parada(Exception):
+    """Interrupção intencional (revisão manual / modo sugestão)."""
+
+
+def _remove_bars(src: Path, enabled: bool) -> Path:
+    """Detecta tarjas pretas embutidas (ex.: 16:9 dentro de 9:16) e gera uma cópia só com a
+    área ativa. Sem isso o reframe/zoom trataria as tarjas como imagem."""
+    if not enabled:
+        return src
+    import re as _re
+    from .utils import run as _run
+    m = probe(src)
+    p = _run(["ffmpeg", "-hide_banner", "-nostdin", "-i", str(src), "-an", "-vf",
+              "fps=2,cropdetect=limit=24:round=2:reset=0", "-f", "null", "-"])
+    found = _re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", p.stderr)
+    if not found:
+        return src
+    w, h, x, y = map(int, found[-1])
+    if w * h > 0.93 * m["largura"] * m["altura"] or w < 64 or h < 64:
+        return src
+    dst = src.with_name("fonte_ativa.mp4")
+    if not dst.exists():
+        log.info("  tarjas pretas detectadas → área ativa %dx%d+%d+%d", w, h, x, y)
+        ffmpeg("-i", str(src), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-crf", "12", "-preset", "fast",
+               "-c:a", "copy", str(dst))
+    return dst
+
+
+def _prepare_sources(inputs: list[Path], work: Path, remove_bars: bool = True) -> tuple[Path, list[float]]:
+    """Copia a(s) entrada(s) para a pasta de trabalho. Várias entradas são unidas em uma
+    fonte normalizada; as junções viram trocas de plano."""
+    if len(inputs) == 1:
+        dst = work / f"fonte{inputs[0].suffix.lower()}"
+        if not dst.exists() or dst.stat().st_size != inputs[0].stat().st_size:
+            shutil.copy2(inputs[0], dst)
+        return _remove_bars(dst, remove_bars), []
+    m0 = probe(inputs[0])
+    dst = work / "fonte.mp4"
+    args, fc, bounds, t = [], [], [], 0.0
+    for i, p in enumerate(inputs):
+        args += ["-i", str(p)]
+        fc.append(f"[{i}:v]scale={m0['largura']}:{m0['altura']}:force_original_aspect_ratio=decrease,"
+                  f"pad={m0['largura']}:{m0['altura']}:(ow-iw)/2:(oh-ih)/2,fps={m0['fps_float']},setsar=1[v{i}];"
+                  f"[{i}:a]aresample=48000,aformat=channel_layouts=stereo[a{i}]")
+        t += probe(p)["duracao"]
+        bounds.append(t)
+    fc.append("".join(f"[v{i}][a{i}]" for i in range(len(inputs))) + f"concat=n={len(inputs)}:v=1:a=1[v][a]")
+    if not dst.exists():
+        ffmpeg(*args, "-filter_complex", ";".join(fc), "-map", "[v]", "-map", "[a]", "-c:v", "libx264",
+               "-crf", "14", "-preset", "fast", "-c:a", "pcm_s16le", str(dst.with_suffix(".mkv")))
+        dst.with_suffix(".mkv").rename(dst)
+    return _remove_bars(dst, remove_bars), bounds[:-1]
+
+
+def _cache_key(p: Path, extra: str) -> str:
+    st = p.stat()
+    return hashlib.md5(f"{st.st_size}-{st.st_mtime_ns}-{extra}".encode()).hexdigest()[:10]
+
+
+def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | None = None,
+        overrides: list[str] | None = None, preview: bool = False, usar_revisao: bool = False,
+        revisar: bool = False, modo: str | None = None, saida: Path | None = None) -> dict:
+    cfg = load_config(estilo, config, overrides)
+    if modo:
+        cfg["cortes"]["modo"] = modo
+    if revisar:
+        cfg["silencio"]["revisao_manual"] = True
+    if plataforma not in cfg["plataformas"]:
+        raise ValueError(f"Plataforma '{plataforma}' inválida. Opções: {list(k for k in cfg['plataformas'] if isinstance(cfg['plataformas'][k], dict))}")
+    plat = cfg["plataformas"][plataforma]
+    nome = inputs[0].stem
+    tag = f"{nome}_{cfg.get('_estilo', 'padrao')}_{plataforma}"
+    work = ROOT / cfg["geral"]["pasta_trabalho"] / tag
+    outdir = ROOT / cfg["geral"]["pasta_saida"]
+    for d in (work, work / "segmentos", work / "revisao", outdir):
+        d.mkdir(parents=True, exist_ok=True)
+    setup_logging("INFO", work / "pipeline.log")
+    timer = Timer()
+    rep: dict = {"entrada": [str(p) for p in inputs], "estilo": cfg.get("_estilo"), "plataforma": plataforma,
+                 "preview": preview}
+    threads = cfg["geral"]["threads"]
+
+    # ------------------------------------------------------------------ análise
+    with timer.etapa("Análise inicial"):
+        src, joins = _prepare_sources(inputs, work, cfg["geral"].get("remover_tarjas", True))
+        an = analysis.analyze(src)
+        an["planos"] = sorted(set(an["planos"] + joins))
+        meta = an["meta"]
+        dur = meta["duracao"]
+        fps = meta["fps"]
+        rep["analise"] = an
+    # ------------------------------------------------------------------ transcrição
+    with timer.etapa("Transcrição"):
+        key = _cache_key(src, cfg["transcricao"]["motor"])
+        tfile = work / "transcricao.json"
+        if tfile.exists() and read_json(tfile).get("chave") == key:
+            words = read_json(tfile)["palavras"]
+            log.info("  (cache) %d palavras", len(words))
+        else:
+            words = transcribe.transcribe(load_audio(src, 16000), cfg["transcricao"], threads)
+            write_json(tfile, {"chave": key, "palavras": words})
+        transcribe.to_srt(words, work / "transcricao.srt")
+    with timer.etapa("Análise de linguagem (NLP)"):
+        nres = nlp.annotate(words, cfg)
+        frases = nres["frases"]
+        write_json(work / "nlp.json", {k: v for k, v in nres.items() if k != "palavras"})
+    # ------------------------------------------------------------------ áudio: limpeza
+    with timer.etapa("Correção de áudio (limpeza da voz)"):
+        sr = cfg["audio"]["taxa_amostragem"]
+        vwav = work / "voz_limpa.wav"
+        rep["audio_limpeza"] = audio.clean_voice(src, an, cfg, vwav)
+        voice = load_audio(vwav, sr)
+    # ------------------------------------------------------------------ silêncios
+    from .vision import FrameReader
+    frames = FrameReader(src)
+    with timer.etapa("Corte inteligente de silêncios"):
+        from scipy.signal import resample_poly
+        v16 = resample_poly(voice, 160, sr // 100).astype(np.float32)
+        if cfg["silencio"]["ativo"]:
+            sres = silence.detect(v16, words, frases, dur, cfg, frames)
+        else:
+            sres = {"pausas": [], "manter": [[0.0, dur]], "limiar_db": 0, "rms_db": [], "hop": 0.02}
+        rev = work / "revisao" / "cortes_silencio.yaml"
+        if usar_revisao and rev.exists():
+            sres = silence.load_review(rev, sres, dur, cfg["silencio"])
+        else:
+            silence.write_review(sres, rev)
+        if sres["rms_db"]:
+            silence.plot(sres, words, work / "silencio.png", dur)
+        rep["silencio"] = {k: v for k, v in sres.items() if k not in ("rms_db",)}
+        if cfg["silencio"]["revisao_manual"] and not usar_revisao:
+            silence.preview(src, sres["manter"], work / "revisao" / "preview_cortes.mp4")
+            raise Parada(f"Revisão manual: edite {rev} (preview em revisao/preview_cortes.mp4) e rode com --usar-revisao")
+    # ------------------------------------------------------------------ técnicas de corte
+    with timer.etapa("Técnicas de corte cinematográfico"):
+        clips = cinematic.build_clips(sres["manter"], words, frases, an["planos"], dur, cfg)
+        snap_clips(clips, fps)
+        clips = [c for c in clips if c.dur > 1.5 / float(fps)]
+        cinematic.attach_faces(clips, frames)
+        brolls = motion.find_broll(words, cfg)
+        decisions = cinematic.decide(clips, words, frases, cfg, frames,
+                                     broll_spans=[(b["s_src"], b["e_src"]) for b in brolls])
+        trev = work / "revisao" / "tecnicas.yaml"
+        if usar_revisao and trev.exists():
+            decisions = cinematic.load_review(trev, decisions)
+        else:
+            cinematic.write_review(decisions, trev)
+            if cfg["cortes"]["modo"] == "sugestao":
+                raise Parada(f"Modo sugestão: revise {trev} e rode com --usar-revisao")
+        cinematic.apply(clips, decisions, fps)
+        total = layout_times(clips, fps)
+    # ------------------------------------------------------------------ trilha + beat cut
+    with timer.etapa("Trilha sonora (escolha e beats)"):
+        words_out = map_words(clips, words)
+        frases_out = _map_frases(frases, words_out)
+        mplan = None
+        if cfg["musica"]["ativo"]:
+            mplan = music.plan(total, nres["tom"], [f for f in frases_out if f["s"] is not None], cfg, sr)
+            bdec = cinematic.decide_beats(clips, mplan["beats"], cfg, decisions)
+            cinematic.apply_beats(clips, bdec, fps)
+            decisions += bdec
+            total = layout_times(clips, fps)
+            words_out = map_words(clips, words)
+            frases_out = _map_frases(frases, words_out)
+        # limite de duração da plataforma
+        lim = plat.get("duracao_max_s")
+        if lim and total > lim:
+            if cfg["plataformas"]["ao_exceder_duracao"] == "cortar":
+                ends = [f["e"] for f in frases_out if f["e"] and f["e"] <= lim]
+                cut = max(ends) + 0.3 if ends else lim
+                clips = [c for c in clips if c.out_start < cut]
+                clips[-1].a_out = clips[-1].a_in + (cut - clips[-1].out_start)
+                clips[-1].v_out = clips[-1].v_in + clips[-1].dur
+                snap_clips(clips, fps)
+                total = layout_times(clips, fps)
+                words_out = [w for w in words_out if w["s"] < total]
+                log.warning("  duração cortada para %.1fs (limite %ss)", total, lim)
+            else:
+                log.warning("  ⚠ duração %.1fs excede o limite de %ss da plataforma %s", total, lim, plataforma)
+        rep["tecnicas"] = {"decisoes": decisions, "resumo": cinematic.summarize(decisions)}
+        write_json(work / "decisoes_tecnicas.json", decisions)
+        log.info("  técnicas: %s", rep["tecnicas"]["resumo"])
+        log.info("  duração: %.1fs → %.1fs", dur, total)
+    # ------------------------------------------------------------------ cor + render
+    scale = (cfg["preview"]["altura"] / max(plat["largura"], plat["altura"])) if preview else 1.0
+    g = render.compute_geometry(meta, plat, cfg, scale)
+    with timer.etapa("Correção de cor"):
+        shot_stats = color.analyze_shots(clips, frames, cfg)
+        primary = color.primary_filters(shot_stats, cfg)
+        lut = color.lut_filter(cfg)
+        rep["cor"] = {"layout": g.mode, "conteudo": [g.content_x, g.content_y, g.content_w, g.content_h, g.canvas_w, g.canvas_h], "look": cfg["cor"]["look"], "primaria": {str(k): v for k, v in primary.items()}}
+    with timer.etapa("Render dos segmentos e montagem"):
+        segdir = work / "segmentos"
+        for f in segdir.glob("*"):
+            f.unlink()
+        jobs = render.build_jobs(clips, [src], g, primary, segdir)
+        render.render_segments(jobs, g.fps, threads, preview)
+        montado = render.assemble(jobs, g.fps, segdir / "montado.mp4", preview)
+        vdur = probe(montado)["duracao"]
+        log.info("  %d segmentos, vídeo montado %.2fs (timeline %.2fs)", len(jobs), vdur, total)
+    faces = [(c.out_start, c.out_start + c.dur, render.face_in_canvas(c, c._win, g)) for c in clips]
+    faces = [f for f in faces if f[2]]
+    # ------------------------------------------------------------------ áudio: mix
+    with timer.etapa("Efeitos sonoros, trilha (ducking) e masterização"):
+        vtrack = audio.assemble(clips, voice, sr, fps, cfg["audio"]["crossfade_corte_ms"])
+        n = int(round(total * sr))
+        vtrack = np.pad(vtrack, (0, max(0, n - len(vtrack))))[:n]
+        vdb, vact = audio.voice_envelope(vtrack, sr)
+        mtrack = None
+        if mplan:
+            smash_t = [c.out_start for c in clips if "smash_cut" in c.tags and cfg["cortes"]["smash_cut"]["corte_musica_s"] > 0]
+            mtrack = music.render(mplan, total, vdb, vact, 0.02, smash_t, cfg, sr)
+            rep["musica"] = {"humor": mplan["humor"], "trechos": [{k: v for k, v in s.items() if k != "entry"} for s in mplan["trechos"]],
+                             "beats": len(mplan["beats"])}
+        events = sfx.plan(clips, decisions, words_out, frases_out, total, cfg, sr)
+        rep["sfx"] = [{k: v for k, v in e.items() if k != "audio"} for e in events]
+        amaster, minfo = audio.mix_and_master(vtrack, mtrack, events, sr, cfg, plat, work)
+        rep["audio_master"] = minfo
+    # ------------------------------------------------------------------ legendas + motion
+    with timer.etapa("Legendas dinâmicas e motion graphics"):
+        doc = subtitles.AssDoc(g.canvas_w, g.canvas_h)
+        for c in nres["callouts"]:
+            c["t_out"] = next((w["s"] for w in words_out if w["i"] >= frases[c["sent"]]["w0"]), None)
+        for nn in nres["numeros"]:
+            nn["t_out"] = next((w["s"] for w in words_out if w["i"] == nn["i"]), None)
+        rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc)
+        rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total)
+        ass = work / "legendas.ass"
+        doc.write(ass)
+        overlays = []
+        if cfg["motion"]["borda_filme"]:
+            overlays.append({"arquivo": motion.film_border(g, work / "moldura.png")})
+        broll_out = []
+        for b in brolls:
+            from .timeline import src_to_out
+            t = src_to_out(clips, 0, b["s_src"])
+            if t is not None:
+                broll_out.append({"t": t, "dur": min(cfg["motion"]["broll"]["duracao_s"], total - t), "arquivo": b["arquivo"]})
+        rep["broll"] = [{"t": round(b["t"], 2), "arquivo": str(b["arquivo"])} for b in broll_out]
+    # ------------------------------------------------------------------ composição final
+    with timer.etapa("Composição final e exportação"):
+        suffix = "_preview" if preview else ""
+        out = Path(saida) if saida else outdir / f"{tag}{suffix}.mp4"
+        render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg, plat,
+                       out, lut, broll_out, overlays, preview, total)
+        fin = probe(out)
+        loud = analysis.loudness_stats(out)
+        rep["saida"] = {"arquivo": str(out), "duracao": fin["duracao"], "resolucao": f"{fin['largura']}x{fin['altura']}",
+                        "lufs": loud["lufs"], "true_peak": loud["true_peak"], "lra": loud["lra"]}
+        log.info("  ✅ %s  (%.1fs, %s, %.1f LUFS, TP %.1f)", out, fin["duracao"], rep["saida"]["resolucao"],
+                 loud["lufs"] or 0, loud["true_peak"] or 0)
+    # ------------------------------------------------------------------ relatório
+    rep["tempos"] = timer.etapas
+    from .report import write_report
+    write_report(rep, src, clips, out, work, cfg, frames)
+    if not cfg["geral"]["manter_intermediarios"]:
+        shutil.rmtree(work / "segmentos", ignore_errors=True)
+    return rep
+
+
+def _map_frases(frases: list[dict], words_out: list[dict]) -> list[dict]:
+    by_sent: dict[int, list[dict]] = {}
+    for w in words_out:
+        by_sent.setdefault(w["sent"], []).append(w)
+    out = []
+    for f in frases:
+        ws = by_sent.get(f["id"])
+        nf = dict(f)
+        nf["s"], nf["e"] = (ws[0]["s"], ws[-1]["e"]) if ws else (None, None)
+        out.append(nf)
+    return out
