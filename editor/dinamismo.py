@@ -240,7 +240,8 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
             ffmpeg("-ss", f"{ev['t']:.3f}", "-i", str(montado), "-t", f"{ev['dur']:.3f}", "-an", "-vf",
                    f"gblur=sigma=28,eq=brightness=-0.22:saturation=0.85,scale={W}:{H},setsar=1",
                    "-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p", str(dst))
-        final.append(dict(ev, arquivo=dst))
+        # motion entra em corte seco: a animação de entrada/saída já está no próprio motion
+        final.append(dict(ev, arquivo=dst, corte_seco=True) if ev["tipo"] == "motion" else dict(ev, arquivo=dst))
     log.info("  dinamismo: %d sobreposições renderizadas (%s)", len(final),
              {k: sum(e["tipo"] == k for e in final) for k in ("video", "foto", "card", "motion")})
     return final, creditos

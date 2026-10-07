@@ -82,7 +82,8 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         dst = d / "midia" / f"{k:02d}_{e['tipo']}.mp4"
         # B-roll/fotos/fundos de card recebem a mesma cor (LUT) que o vídeo base
         # o fundo do card vem do próprio vídeo: se a cor já foi aplicada nos segmentos, não aplica de novo
-        filtro = lut if (lut and (e["tipo"] != "card" or lut_fundo_card)) else "null"
+        # motion (HyperFrames) tem a paleta própria do exemplo: não recebe o look da filmagem
+        filtro = lut if (lut and e["tipo"] != "motion" and (e["tipo"] != "card" or lut_fundo_card)) else "null"
         ffmpeg("-i", str(arq), "-an", "-vf", filtro, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
                "-pix_fmt", "yuv420p", str(dst))
         c = {"id": f"C{k:02d}", "tipo": "broll" if e["tipo"] in ("video", "angulo_ia", "motion") else e["tipo"],
