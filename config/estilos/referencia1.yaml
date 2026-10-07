@@ -15,3 +15,5 @@ motion:
   callout: {ativo: true, fonte: Permanent Marker, cor: "#FFFFFF"}
 musica: {humor: emocional}
 layout: {modo: auto}
+remotion:
+  tema: {fonte: Inter, fonte_titulo: Permanent Marker, animacao: suave, caixa_alta_destaque: false}

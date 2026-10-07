@@ -211,8 +211,9 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
     return final, creditos
 
 
-def ass_cards(doc: AssDoc, events, words_out, g, cfg):
-    """Texto dos cards: tipografia grande, branca, pesos/tamanhos misturados, revelação por palavra."""
+def ass_cards(doc: AssDoc, events, words_out, g, cfg, jobs: list | None = None):
+    """Texto dos cards: tipografia grande, branca, pesos/tamanhos misturados, revelação por palavra.
+    Com `jobs` (Remotion), o texto vira um job de render em vez de ASS; devolve os intervalos."""
     W, H = g.canvas_w, g.canvas_h
     k = (W / 1080) if H > W else (H / 1080)
     base = 66 * k
@@ -225,6 +226,11 @@ def ass_cards(doc: AssDoc, events, words_out, g, cfg):
         if not ws:
             continue
         spans.append((a, b))
+        if jobs is not None:
+            jobs.append({"tipo": "card", "t": round(a, 3), "dur": round(b - a, 3),
+                         "palavras": [{"w": w["w"], "s": round(max(0.0, w["s"] - a), 3), "kw": round(w.get("kw", 0), 3)} for w in ws],
+                         "y": round((g.content_y + g.content_h * 0.47) / H, 4)})
+            continue
         kw_i = max(range(len(ws)), key=lambda i: ws[i].get("kw", 0))
         # linhas: até 3 palavras por linha; a linha da palavra-chave fica gigante
         lines, cur = [], []

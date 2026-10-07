@@ -17,3 +17,5 @@ motion:
   vinheta: true
   callout: {ativo: false}
 musica: {humor: sombrio}
+remotion:
+  tema: {fonte: JetBrains Mono, fonte_titulo: JetBrains Mono, animacao: digitacao, caixa_alta_destaque: false}

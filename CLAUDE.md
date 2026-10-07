@@ -8,8 +8,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 - Vídeos brutos chegam na pasta do Google Drive "Edição de vídeo - Claude/Vídeos não editados"
   (pasta pai: https://drive.google.com/drive/folders/1IqX-X-ubjMnxhYctEF2tCocOgdyurgsv). Baixar com
-  `.venv/bin/gdown --folder <link>` para `entrada/`. Upload de volta ao Drive não é possível daqui:
-  entregar pelo chat (SendUserFile, limite 30 MB → cópia 2-pass ~2,95 Mbps) e avisar.
+  `.venv/bin/gdown --folder <link>` para `entrada/`. **Entrega: o cliente quer o vídeo na pasta
+  "Vídeos editados"** (id `1Ye5BDFvAa2lNBIqbCj6BBe5AmyKi1JxP`), não no chat. O conector Google Drive
+  (`create_file`) só aceita conteúdo base64 dentro da chamada — inviável para vídeo; até haver outra
+  via, entregar por link (Artifact) ou chat (SendUserFile ≤ 30 MB) e avisar o cliente.
 - Vídeos de iPhone vêm em HDR (HLG/Dolby Vision) 4K60: o pipeline já converte para SDR e 1440p30.
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Fazer preview, conferir frames (contact sheet) antes do render final.
@@ -31,7 +33,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - **Ângulos de câmera por IA** (Seedance 2.0 via MCP Higgsfield): ver `.claude/skills/angulos-ia/SKILL.md`
   e `editor/angulos.py`. Requer créditos Higgsfield e rede liberada para `upload.higgsfield.ai`.
 
-- **Remotion** (vídeo com React, `remotion/`, instalado com `npx create-video@latest --yes --blank remotion`):
+- **Remotion — ligado em TODOS os modelos** (`remotion:` no default.yaml; tema por preset): cards,
+  contador, callout e gancho renderizados por `editor/remotion_fx.py` → `remotion/render-lote.mjs`
+  (composição `Elemento`, ProRes 4444 com alfa) e sobrepostos pelo FFmpeg. Sem Node → ASS.
+- Remotion (vídeo com React, `remotion/`, instalado com `npx create-video@latest --yes --blank remotion`):
   motion graphics e animações em código. Render: `cd remotion && npx remotion render src/index.ts <Composição> out/x.mp4`
   (o `remotion.config.ts` já aponta para o Chromium headless do ambiente). Licença: grátis para até 3 pessoas.
 

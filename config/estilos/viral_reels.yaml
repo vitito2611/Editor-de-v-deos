@@ -34,3 +34,5 @@ musica:
   ducking_db: -11
   trocar_a_cada_s: [26, 36]     # muda de faixa no meio do vídeo (sensação de "virada")
   crossfade_s: 1.2
+remotion:
+  tema: {fonte: Inter, animacao: pop, caixa_alta_destaque: true}   # pop elástico, palavra-chave gigante

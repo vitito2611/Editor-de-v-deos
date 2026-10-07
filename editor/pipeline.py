@@ -325,17 +325,32 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         rep["audio_master"] = minfo
     # ------------------------------------------------------------------ legendas + motion
     with timer.etapa("Legendas dinâmicas e motion graphics"):
-        doc = subtitles.AssDoc(g.canvas_w, g.canvas_h)
         for c in nres["callouts"]:
             c["t_out"] = next((w["s"] for w in words_out if w["i"] >= frases[c["sent"]]["w0"]), None)
         for nn in nres["numeros"]:
             nn["t_out"] = next((w["s"] for w in words_out if w["i"] == nn["i"]), None)
-        card_spans = []
-        if dyn_events:
-            from . import dinamismo
-            card_spans = dinamismo.ass_cards(doc, dyn_events, words_out, g, cfg)
-        rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc, pular=card_spans)
-        rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total)
+        from . import remotion_fx
+        externos = remotion_fx.elementos(cfg)   # elementos desenhados pelo Remotion (React)
+
+        def montar_ass(externos):
+            doc = subtitles.AssDoc(g.canvas_w, g.canvas_h)
+            jobs, card_spans = [], []
+            if dyn_events:
+                from . import dinamismo
+                card_spans = dinamismo.ass_cards(doc, dyn_events, words_out, g, cfg,
+                                                 jobs=jobs if "card" in externos else None)
+            rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc, pular=card_spans)
+            rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total, externos, jobs)
+            return doc, jobs
+
+        doc, rjobs = montar_ass(externos)
+        motion_clips = []
+        if externos:
+            motion_clips = remotion_fx.render(rjobs, g, cfg, work)
+            if motion_clips is None:   # falhou → mesmos elementos em ASS
+                doc, rjobs = montar_ass(set())
+                motion_clips = []
+            rep["remotion"] = [{"tipo": c["tipo"], "t": c["t"], "dur": c["dur"]} for c in motion_clips]
         ass = work / "legendas.ass"
         doc.write(ass)
         overlays = []
@@ -355,7 +370,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         suffix = "_preview" if preview else ""
         out = Path(saida) if saida else outdir / f"{tag}{suffix}.mp4"
         render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg, plat,
-                       out, lut, broll_out, overlays, preview, total)
+                       out, lut, broll_out, overlays, preview, total, motion_clips)
         fin = probe(out)
         loud = analysis.loudness_stats(out)
         rep["saida"] = {"arquivo": str(out), "duracao": fin["duracao"], "resolucao": f"{fin['largura']}x{fin['altura']}",

@@ -66,8 +66,11 @@ def find_broll(words: list[dict], cfg: dict) -> list[dict]:
 
 # ----------------------------------------------------------------------------- ASS motion
 def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list[dict], faces, cfg: dict,
-          duration: float) -> list[dict]:
+          duration: float, externos: set | None = None, jobs: list | None = None) -> list[dict]:
+    """externos = elementos desenhados pelo Remotion: em vez do ASS, viram jobs em `jobs`."""
     mc = cfg["motion"]
+    externos = externos or set()
+    jobs = jobs if jobs is not None else []
     if not mc["ativo"]:
         return []
     W, H = g.canvas_w, g.canvas_h
@@ -93,6 +96,14 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
                     cur = ""
                 cur += wd + " "
             lines.append(cur.strip())
+            if "gancho" in externos:
+                ws_g = [w for w in words_out if w["s"] < gc["duracao_s"]][: len(txt.split())] if not gc["texto"] else []
+                pal = ([{"w": w["w"], "s": round(max(0.0, w["s"]), 3), "kw": w.get("kw", 0)} for w in ws_g]
+                       or [{"w": t, "s": round(0.12 * i, 3)} for i, t in enumerate(txt.split())])
+                jobs.append({"tipo": "gancho", "t": 0.0, "dur": gc["duracao_s"], "palavras": pal, "y": 0.3})
+                added.append({"tipo": "gancho", "t": 0.0, "texto": txt, "remotion": True})
+                lines = []
+        if txt and lines:
             st = {"fonte": "Inter", "peso": "Bold", "tamanho": 58 * k, "cor": "#FFFFFF", "sombra": 3, "sombra_alpha": 0.6}
             doc.add(0.0, gc["duracao_s"], "{\\an5\\pos(%d,%d)\\fad(150,200)%s}" % (W / 2, H * 0.3, font_tags(st))
                     + "\\N".join(esc(x) for x in lines), layer=5)
@@ -125,6 +136,10 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
             f = face_at(t)
             y = (f[1] + f[3] * 0.85) * H if f else cy0 + ch * 0.45
             y = min(y, cy0 + ch * 0.8)
+            if "callout" in externos:
+                jobs.append({"tipo": "callout", "t": round(t, 3), "dur": co["duracao_s"], "texto": c["termo"], "y": round(y / H, 4)})
+                added.append({"tipo": "callout", "t": round(t, 2), "texto": c["termo"], "remotion": True})
+                continue
             st = {"fonte": co["fonte"], "peso": "Regular", "tamanho": co["tamanho"] * k, "cor": co["cor"],
                   "contorno": 0, "sombra": 3, "sombra_alpha": 0.5}
             doc.add(t, t + co["duracao_s"], "{\\an5\\pos(%d,%d)\\frz-3\\fad(60,200)\\fscx30\\fscy30"
@@ -142,6 +157,11 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
             stu = dict(st, peso="Bold", tamanho=48 * k)
             # abaixo da faixa de legenda do topo (0.18H) e acima do rosto
             y = cy0 + ch * 0.30 if not (g.mode == "letterbox" and H > W) else cy0 - 150 * k
+            if "contador" in externos:
+                jobs.append({"tipo": "contador", "t": round(t0, 3), "dur": round(d + 1.2, 3), "valor": n["valor"],
+                             "unidade": n["unidade"] or "", "dur_conta": d, "y": round(y / H, 4)})
+                added.append({"tipo": "contador", "t": round(t0, 2), "texto": f"{n['valor']:g} {n['unidade']}", "remotion": True})
+                continue
             for i in range(steps):
                 a = t0 + d * i / steps
                 b = t0 + d * (i + 1) / steps if i < steps - 1 else t0 + d + 1.2

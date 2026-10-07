@@ -196,7 +196,8 @@ def _esc(p) -> str:
 
 
 def compose(video: Path, audio: Path, ass: Path | None, g: Geometry, cfg: dict, plat: dict, out: Path,
-            lut: str, broll: list[dict], overlays: list[dict], preview: bool, duration: float) -> Path:
+            lut: str, broll: list[dict], overlays: list[dict], preview: bool, duration: float,
+            motion_clips: list[dict] | None = None) -> Path:
     inputs = ["-i", str(video), "-i", str(audio)]
     fc = []
     cur = "[0:v]"
@@ -238,6 +239,12 @@ def compose(video: Path, audio: Path, ass: Path | None, g: Geometry, cfg: dict, 
         inputs += ["-loop", "1", "-t", f"{duration:.3f}", "-i", str(o["arquivo"])]
         fc.append(f"[{idx}:v]scale={W}:{H},format=rgba[ov{idx}];{cur}[ov{idx}]overlay=0:0:shortest=1[o{idx}]")
         cur = f"[o{idx}]"
+        idx += 1
+    for m in motion_clips or []:  # elementos do Remotion (ProRes 4444 com alfa, já no tamanho do canvas)
+        inputs += ["-i", str(m["arquivo"])]
+        fc.append(f"[{idx}:v]fps={float(g.fps):.6f},scale={W}:{H},format=yuva444p,setpts=PTS-STARTPTS+{m['t']:.3f}/TB[mg{idx}];"
+                  f"{cur}[mg{idx}]overlay=0:0:eof_action=pass:enable='between(t,{m['t']:.3f},{m['t'] + m['dur']:.3f})'[m{idx}]")
+        cur = f"[m{idx}]"
         idx += 1
     if ass:
         fc.append(f"{cur}ass=filename='{_esc(ass)}':fontsdir='{_esc(ROOT / 'assets' / 'fonts')}'[sub]")

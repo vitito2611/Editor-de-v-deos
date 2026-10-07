@@ -21,3 +21,5 @@ motion:
 sfx: {transicao: {ativo: false}, impacto: {ativo: false}, atencao: {ativo: false}}
 musica: {humor: emocional}
 layout: {modo: letterbox}
+remotion:
+  tema: {fonte: Inter, animacao: suave, espacamento: 0.04, caixa_alta_destaque: false}
