@@ -28,7 +28,8 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   `python -m editor.projeto aplicar <projeto.json> <alteracoes.json>` e
   `python -m editor.projeto renderizar <projeto.json> <saida_com_trilha.mp4> --audio-sem-trilha work/<job>/audio_master_sem_trilha.wav`
   (só re-renderiza camadas, ~3 min). O campo `pedido` traz pedidos livres (trocar foto/B-roll).
-  Estúdio do vídeo 2 (Santa Cruz): https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p
+  Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p ·
+  vídeo 3 (IA e emprego) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
   em localhost:3000 com cada vídeo como composição `Edicao-<nome>`.
 

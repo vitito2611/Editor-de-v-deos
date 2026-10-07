@@ -49,6 +49,8 @@ def _legendas(words_out, g, faces, cfg, pular, estilos_log=None) -> list[dict]:
         t0 = grp[0]["s"]
         nxt = grupos[k + 1][0]["s"] if k + 1 < len(grupos) else grp[-1]["e"] + 0.4
         t1 = min(nxt, grp[-1]["e"] + 0.6)
+        # a legenda termina onde começa um motion/card (não invade o texto da inserção)
+        t1 = min([t1] + [a for a, _ in pular if a > t0 + 0.05])
         nchars = sum(len(w["w"]) + 1 for w in grp)
         nome = por_t.get(round(t0, 2), lc["estilo_base"])
         sb = estilos.get(nome, st)
@@ -138,7 +140,7 @@ def gerar_lista() -> None:
 
 def renderizar(pj: Path, saida: Path, crf: int = 18) -> bool:
     log.info("  render final pelo Remotion (o mesmo do Studio)…")
-    r = subprocess.run(["node", str(DIR / "render-edicao.mjs"), str(pj), str(saida.resolve()), str(crf)],
+    r = subprocess.run(["node", str(DIR / "render-edicao.mjs"), str(Path(pj).resolve()), str(saida.resolve()), str(crf)],
                        cwd=DIR, capture_output=True, text=True)
     if r.returncode != 0 or not saida.exists():
         log.warning("  render Remotion falhou → composição FFmpeg. %s", (r.stderr or r.stdout)[-800:])
