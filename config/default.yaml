@@ -322,6 +322,7 @@ cor:
     doc_ref4:   {contraste: 0.12, saturacao: 0.92, temperatura: 0.03, tint: 0.0, sombras: [-0.02, 0.01, 0.03], luzes: [0.04, 0.015, -0.03], pretos: 0.03, vibrance: 0.08}
     dark_ref5:  {contraste: 0.22, saturacao: 1.10, temperatura: 0.0, tint: 0.0, sombras: [-0.04, 0.01, 0.05], luzes: [0.06, 0.02, -0.05], pretos: -0.03, vibrance: 0.15}
     vibrante:   {contraste: 0.08, saturacao: 1.08, temperatura: 0.0, tint: 0.0, sombras: [0, 0, 0.01], luzes: [0, 0, 0], pretos: 0.0, vibrance: 0.15}
+    azul_cinema: {contraste: 0.16, saturacao: 0.90, temperatura: -0.06, tint: 0.035, sombras: [-0.05, 0.02, 0.05], luzes: [0.015, 0.005, -0.01], pretos: -0.01, vibrance: 0.05}   # cliente: azul cinematográfico (vídeo 3)
   relatorio_histograma: true
 
 # -----------------------------------------------------------------------------
@@ -366,6 +367,7 @@ sfx:
   ativo: true
   pasta: assets/sfx
   volume_rel_voz_db: -14        # SFX ficam este tanto abaixo da voz
+  ajuste_categoria_db: {impacto: -4}   # cliente: o impacto do smash cut estava alto demais (vídeo 3)
   variacao_volume_db: 2.0
   intervalo_min_s: 2.5
   max_por_minuto: 10

@@ -131,6 +131,7 @@ def plan(clips, decisions: list[dict], words_out: list[dict], frases_out: list[d
         gain = sc["volume_rel_voz_db"] + rnd.uniform(-sc["variacao_volume_db"], sc["variacao_volume_db"])
         if cat == "impacto" and "palavra" in why:
             gain -= 4   # impactos em palavras são mais discretos que no smash cut
+        gain += (sc.get("ajuste_categoria_db") or {}).get(cat, 0.0)   # afinação por tipo (pedido do cliente)
         events.append({"t": round(start, 3), "categoria": cat, "arquivo": name, "motivo": why,
                        "ganho_db": round(gain, 1), "audio": audio})
     if sc["ambiente"]["ativo"] and bank.get(sc["ambiente"]["categoria"]):

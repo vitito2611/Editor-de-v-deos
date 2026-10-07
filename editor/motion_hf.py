@@ -186,12 +186,15 @@ def renderizar(roteiro: dict | Path, saida: Path, W: int = 1080, H: int = 1920, 
     if isinstance(roteiro, (str, Path)):
         roteiro = yaml.safe_load(Path(roteiro).read_text(encoding="utf-8"))
     from .utils import arquivo_black_jack
-    chave = hashlib.sha1(json.dumps([roteiro, W, H, rapido, MODELO.stat().st_mtime, str(arquivo_black_jack())],
+    cinema = roteiro.get("modelo", "cinema") == "cinema"   # padrão desde o vídeo 3 (escuro, fluido, ilustrado)
+    modelo = MODELO_CINEMA if cinema else MODELO
+    chave = hashlib.sha1(json.dumps([roteiro, W, H, rapido, modelo.stat().st_mtime, str(arquivo_black_jack()),
+                                     Path(__file__).stat().st_mtime],
                                     sort_keys=True, default=str).encode()).hexdigest()[:12]
     pasta = HF / "projetos" / f"motion_{chave}"
     cache = pasta / "renders" / "video.mp4"
     if not cache.exists():
-        montar(roteiro, pasta, W, H)
+        (montar_cinema if cinema else montar)(roteiro, pasta, W, H)
         r = subprocess.run(["npx", "hyperframes", "lint", str(pasta)], cwd=HF, capture_output=True, text=True)
         if "error" in (r.stdout + r.stderr).lower() and r.returncode != 0:
             log.warning("  HyperFrames lint: %s", (r.stdout + r.stderr)[-1200:])
@@ -226,3 +229,169 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ============================================================================= modelo "cinema"
+# Pedido do cliente (vídeo 3): paleta escura, movimento fluido e ILUSTRAÇÕES por cena (não só texto).
+MODELO_CINEMA = HF / "modelos" / "motion_cinema.html"
+PALETA_CINEMA = {"fundo": "#060913", "texto": "#eef3ff", "acento": "#5ec8ff",
+                 "g1": "#1e3a8a", "g2": "#0e7490", "g3": "#312e81"}
+
+
+def _titulo(txt: str, tam: int = 92, top: float = 16) -> str:
+    """Título com máscara por palavra (entra de baixo para cima); *trecho* = destaque."""
+    if not txt:
+        return ""
+    spans = []
+    for sp in _frase(txt).split("</span>"):
+        if sp.strip():
+            spans.append(f'<span class="m">{sp.strip()}</span></span>')
+    return f'<div class="titulo" style="--tam:{tam};--ty:{top}%">{"".join(spans)}</div>'
+
+
+def _gear(cx: float, cy: float, r: float, dentes: int, cls: str, cor: str) -> str:
+    pts = []
+    for i in range(dentes * 4):
+        a = 2 * math.pi * i / (dentes * 4)
+        rr = r * (1.0 if (i % 4) in (1, 2) else 0.82)
+        pts.append(f"{cx + rr * math.cos(a):.1f},{cy + rr * math.sin(a):.1f}")
+    return (f'<g class="gear {cls}"><polygon points="{" ".join(pts)}" fill="{cor}" opacity="0.92"/>'
+            f'<circle cx="{cx}" cy="{cy}" r="{r * 0.34:.1f}" fill="#060913"/></g>')
+
+
+def _cena_cinema(c: dict, k: int, pasta: Path, W: int, H: int, pal: dict, rng: random.Random) -> str:
+    tipo = c["tipo"]
+    tit = _titulo(c.get("titulo", c.get("frase", "")), int(c.get("tamanho", 88)), float(c.get("titulo_top", 14)))
+    sub = f'<div class="sub" style="top:{c.get("sub_top", 86)}%">{html.escape(c["sub"])}</div>' if c.get("sub") else ""
+    iy = c.get("ilu_y", 56)
+    if tipo == "texto":
+        corpo = _titulo(c.get("frase", c.get("titulo", "")), int(c.get("tamanho", 110)), float(c.get("titulo_top", 40)))
+        return corpo + sub
+    if tipo == "cards_somem":
+        fica = set(c.get("ficam", [4]))
+        cards = []
+        for i in range(9):
+            col, lin = i % 3, i // 3
+            x, y = 45 + col * 290, 50 + lin * 210
+            cards.append(f'<div class="card{" fica" if i in fica else ""}" style="left:calc({x} * var(--u));'
+                         f'top:calc({y} * var(--u))"><div class="ic"></div>'
+                         f'<div class="ln"></div><div class="ln c"></div></div>')
+        return tit + f'<div class="ilu" style="--iy:{iy}%;--iw:920;--ih:700">{"".join(cards)}</div>' + sub
+    if tipo == "engrenagens":
+        g = (_gear(300, 330, 190, 12, "g1", pal["acento"]) + _gear(560, 520, 130, 9, "g2", pal["g2"]) +
+             _gear(620, 230, 90, 7, "g3", "#7b8cff"))
+        tarefas = "".join(f'<div class="tarefa" style="top:{78 + 0 * i}%;font-weight:700">↻ {html.escape(t)}</div>'
+                          for i, t in enumerate(c.get("tarefas", ["Copiar", "Colar", "Repetir"])))
+        return tit + f'<div class="ilu" style="--iy:{iy}%;--iw:860;--ih:760"><svg viewBox="0 0 860 760">{g}</svg></div>' + tarefas
+    if tipo == "multiplica":
+        cx = cy = 430
+        lig, nos = [], []
+        nos.append(f'<circle class="no no0" cx="{cx}" cy="{cy}" r="58" fill="{pal["acento"]}"/>'
+                   f'<circle class="no no0" cx="{cx}" cy="{cy - 14}" r="18" fill="#060913"/>'
+                   f'<path class="no no0" d="M{cx - 30} {cy + 34} q30 -40 60 0" stroke="#060913" stroke-width="12" fill="none"/>')
+        n1 = 6
+        for i in range(n1):
+            a = 2 * math.pi * i / n1 - math.pi / 2
+            x1, y1 = cx + 200 * math.cos(a), cy + 200 * math.sin(a)
+            lig.append(f'<line class="lig" data-n="0" x1="{cx}" y1="{cy}" x2="{x1:.0f}" y2="{y1:.0f}" stroke="{pal["acento"]}" stroke-width="5" opacity="0.7"/>')
+            nos.append(f'<circle class="no" data-n="0" cx="{x1:.0f}" cy="{y1:.0f}" r="30" fill="{pal["acento"]}"/>')
+            for j in (-1, 1):
+                b = a + j * 0.32
+                x2, y2 = cx + 370 * math.cos(b), cy + 370 * math.sin(b)
+                lig.append(f'<line class="lig" data-n="1" x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" stroke="#7b8cff" stroke-width="4" opacity="0.6"/>')
+                nos.append(f'<circle class="no" data-n="1" cx="{x2:.0f}" cy="{y2:.0f}" r="20" fill="#9fb4ff"/>')
+        cont = f'<div class="sub contador" style="top:{c.get("contador_top", 84)}%;font-weight:900;font-size:calc(120 * var(--u));color:var(--acento)">×1</div>'
+        return tit + (f'<div class="ilu" style="--iy:{iy}%;--iw:860;--ih:860"><svg viewBox="0 0 860 860">{"".join(lig)}{"".join(nos)}</svg></div>'
+                      + cont)
+    if tipo == "relogio":
+        rel = (f'<svg viewBox="0 0 400 400"><circle cx="200" cy="200" r="180" fill="none" stroke="rgba(160,200,255,0.18)" stroke-width="22"/>'
+               f'<circle class="arco" cx="200" cy="200" r="180" fill="none" stroke="{pal["acento"]}" stroke-width="22" stroke-linecap="round" '
+               f'stroke-dasharray="1131" stroke-dashoffset="1131" transform="rotate(-90 200 200)"/>'
+               f'<line class="ponteiro" x1="200" y1="200" x2="200" y2="70" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>'
+               f'<circle cx="200" cy="200" r="16" fill="#ffffff"/></svg>')
+        a1, v1, a2, v2 = c.get("antes", "Antes"), c.get("antes_valor", "8 h"), c.get("depois", "Com IA"), c.get("depois_valor", "1 h")
+        barras = (f'<div style="position:absolute;left:10%;right:10%;top:{c.get("barras_top", 70)}%;height:calc(380 * var(--u))">'
+                  f'<div class="rot" style="top:0">{html.escape(a1)}</div>'
+                  f'<div class="barra" style="top:calc(56 * var(--u));background:rgba(160,200,255,0.25)"></div>'
+                  f'<div class="val" style="top:calc(68 * var(--u));right:0">{html.escape(v1)}</div>'
+                  f'<div class="rot" style="top:calc(190 * var(--u))">{html.escape(a2)}</div>'
+                  f'<div class="barra" style="top:calc(246 * var(--u));background:var(--acento)"></div>'
+                  f'<div class="val" style="top:calc(258 * var(--u));left:calc(140 * var(--u))">{html.escape(v2)}</div></div>')
+        return tit + f'<div class="ilu" style="--iy:{c.get("ilu_y", 44)}%;--iw:520;--ih:520">{rel}</div>' + barras
+    if tipo == "soma":
+        a, b, r = c.get("a", "Você"), c.get("b", "IA"), c.get("resultado", "Mais resultado")
+        svg = (f'<svg viewBox="-430 -300 860 600">'
+               f'<g class="bola"><circle r="150" fill="rgba(160,200,255,0.12)" stroke="#9fb4ff" stroke-width="5"/>'
+               f'<text y="18" text-anchor="middle" font-family="Rubik" font-weight="700" font-size="56" fill="#eef3ff">{html.escape(a)}</text></g>'
+               f'<g class="bola"><circle r="150" fill="rgba(94,200,255,0.18)" stroke="{pal["acento"]}" stroke-width="5"/>'
+               f'<text y="18" text-anchor="middle" font-family="Rubik" font-weight="900" font-size="64" fill="{pal["acento"]}">{html.escape(b)}</text></g>'
+               f'<g class="mais"><rect x="-14" y="-60" width="28" height="120" rx="14" fill="#ffffff"/><rect x="-60" y="-14" width="120" height="28" rx="14" fill="#ffffff"/></g>'
+               f'<g class="fusao"><circle r="210" fill="url(#gf{k})"/><text y="20" text-anchor="middle" font-family="Rubik" font-weight="900" font-size="58" fill="#04101f">{html.escape(r)}</text></g>'
+               f'<defs><radialGradient id="gf{k}"><stop offset="0" stop-color="#bfe9ff"/><stop offset="0.6" stop-color="{pal["acento"]}"/>'
+               f'<stop offset="1" stop-color="#1b3f9e"/></radialGradient></defs></svg>')
+        return tit + f'<div class="ilu" style="--iy:{iy}%;--iw:860;--ih:600">{svg}</div>' + sub
+    if tipo == "celular":
+        msgs = c.get("mensagens") or [["eu", "Como fecho mais tratamentos?"], ["ia", "Vamos montar o plano juntos:"]]
+        itens = c.get("plano") or ["Diagnóstico explicado", "Plano em etapas", "Proposta de pagamento"]
+        bolhas = "".join(f'<div class="bolha passo {html.escape(q)}">{html.escape(t)}</div>' for q, t in msgs)
+        plano = ('<div class="plano passo">' + "".join(f'<div class="item"><span class="ok"></span>{html.escape(t)}</div>' for t in itens) + "</div>")
+        app = (f'<div class="app"><div class="app-topo"><span class="orb"></span>{html.escape(c.get("app", "Assistente IA"))}</div>'
+               f'<div class="onda">{"<i></i>" * 14}</div>{bolhas}{plano}</div>')
+        rot = _titulo(c.get("rotulo", ""), int(c.get("tamanho", 72)), 5) if c.get("rotulo") else ""
+        return rot + (f'<div class="ilu" style="--iy:{c.get("ilu_y", 57)}%;--iw:600;--ih:1180"><div class="celular"><div class="tela">{app}'
+                      f'<div class="ilha"></div></div></div></div>')
+    if tipo == "timeline":
+        cores = [pal["acento"], "#7b8cff", "#2dd4bf"]
+        trilhas = []
+        for i in range(3):
+            clipes, x = [], 0
+            while x < 820:
+                w = rng.randint(110, 230)
+                clipes.append(f'<div class="clipe" style="left:calc({x} * var(--u));width:calc({min(w, 860 - x) - 10} * var(--u));'
+                              f'background:{cores[(i + len(clipes)) % 3]};opacity:{0.55 + 0.15 * (i % 2)}"></div>')
+                x += w
+            trilhas.append(f'<div class="trilha" style="top:calc({i * 92} * var(--u))">{"".join(clipes)}</div>')
+        chip = f'<div class="chip" style="right:0;top:calc(-120 * var(--u))">{html.escape(c.get("chip", "IA"))}</div>'
+        return tit + (f'<div class="ilu" style="--iy:{iy}%;--iw:860;--ih:300">{"".join(trilhas)}'
+                      f'<div class="agulha" style="height:calc(320 * var(--u))"></div>{chip}</div>') + sub
+    raise ValueError(f"tipo de cena desconhecido no modelo cinema: {tipo}")
+
+
+def montar_cinema(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
+    pasta.mkdir(parents=True, exist_ok=True)
+    (pasta / "fonts").mkdir(exist_ok=True)
+    (pasta / "assets").mkdir(exist_ok=True)
+    for f in FONTES:
+        shutil.copy2(ROOT / "assets" / "fonts" / f, pasta / "fonts" / f)
+    shutil.copy2(HF / "node_modules" / "gsap" / "dist" / "gsap.min.js", pasta / "gsap.min.js")
+    from .utils import arquivo_black_jack
+    bj = arquivo_black_jack()
+    if bj:
+        shutil.copy2(bj, pasta / "fonts" / f"BlackJack{bj.suffix.lower()}")
+        dest_face = f'@font-face {{ font-family: "Black Jack"; src: url("fonts/BlackJack{bj.suffix.lower()}"); }}'
+        dest_css = '"Black Jack", cursive; font-weight: 400; font-size: 1.3em; line-height: 0.9'
+    else:
+        dest_face, dest_css = "", '"Noto Serif", serif; font-style: italic; font-weight: 700'
+    pal = dict(PALETA_CINEMA, **(roteiro.get("paleta") or {}))
+    rng = random.Random(7)
+    t, cenas, blocos = 0.0, [], []
+    for k, c in enumerate(roteiro["cenas"]):
+        c = dict(c)
+        d = float(c.get("dur", 3.0))
+        c["t"], c["dur"] = round(t, 3), d
+        corpo = _cena_cinema(c, k, pasta, W, H, pal, rng)
+        blocos.append(f'<section id="c{k}" class="clip" data-start="{c["t"]}" data-duration="{d}" data-track-index="1">'
+                      f'<div class="palco">{corpo}</div></section>')
+        cenas.append({kk: c[kk] for kk in ("tipo", "t", "dur", "fator") if kk in c})
+        t += d
+    doc = MODELO_CINEMA.read_text(encoding="utf-8")
+    for kk, v in {"__FONTE_DEST_FACE__": dest_face, "__FONTE_DEST_CSS__": dest_css, "__W__": str(W), "__H__": str(H),
+                  "__DUR__": f"{t:.3f}", "__TITULO__": html.escape(roteiro.get("titulo", "motion")),
+                  "__FUNDO__": pal["fundo"], "__TEXTO__": pal["texto"], "__ACENTO__": pal["acento"],
+                  "__G1__": pal["g1"], "__G2__": pal["g2"], "__G3__": pal["g3"],
+                  "__CENAS_HTML__": "\n      ".join(blocos),
+                  "__DADOS__": json.dumps({"dur": round(t, 3), "cenas": cenas}, ensure_ascii=False)}.items():
+        doc = doc.replace(kk, v)
+    (pasta / "index.html").write_text(doc, encoding="utf-8")
+    (pasta / "hyperframes.json").write_text(json.dumps({"name": pasta.name}), encoding="utf-8")
+    return pasta

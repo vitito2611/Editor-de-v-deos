@@ -45,15 +45,23 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - Edição dinâmica: troca de plano a cada ≤ 2,6 s, B-roll/fotos/cards nos momentos-chave, fotos das
   pessoas/marcas citadas (ex.: Zuckerberg, Steve Jobs) — só fontes com licença (Openverse/Wikimedia,
   Mixkit). Não usar fotos do Google (direitos autorais).
-- SFX: o nível da v2 foi aprovado. **Vetado para sempre:** o "plin"/brilho (Magic sparkle whoosh,
+- SFX: o nível da v2 foi aprovado; impacto do smash cut −4 dB (`sfx.ajuste_categoria_db`, cliente achou alto). **Vetado para sempre:** o "plin"/brilho (Magic sparkle whoosh,
   `sfx.proibidos`). Cliente não gostou de cenas genéricas sem relação (pizza, carteira).
 - Trilhas: Mixkit (royalty-free); músicas em alta são adicionadas pelo cliente no app.
 - Glossário do ASR por vídeo em `transcricao.correcoes` (ex.: Zuckenberg → Zuckerberg).
+- Cor: cliente prefere **azul cinematográfico** (`cor.look: azul_cinema`) ao tom quente; empresa dele: **Zeal**
+  (assistente de IA por voz para odontologia).
 - **Pausas e erros de gravação têm que sair**: pausas ≥ 0,22 s cortadas (`silencio`), recomeços/gaguejadas/
   muletas/frase abandonada cortados por `editor/erros.py` (revisão em `revisao/erros_gravacao.yaml`).
 
 ## Habilidades extras
 
+- **Motion padrão = modelo "cinema"** (`hyperframes/modelos/motion_cinema.html`, `modelo: cinema` no roteiro): paleta
+  ESCURA azul/ciano, movimento fluido (easings longos, sobreposição, câmera sempre em leve movimento) e
+  **ilustrações animadas por cena, não só texto** — tipos `cards_somem`, `engrenagens`, `multiplica`, `relogio`,
+  `soma`, `celular` (assistente de voz montando um plano), `timeline`, `texto`. Feedback do cliente (vídeo 3): o
+  exemplo é referência de MOVIMENTO, não de paleta (nada de rosa/lilás claro); motions "robotizados" e só com
+  letras foram reprovados. O modelo claro antigo continua como `modelo: claro`.
 - **Vídeo em motion (HyperFrames, HTML+GSAP → MP4)** no estilo do exemplo do cliente
   (`referencias/motion_exemplo.mp4`: fundo branco com brilho lilás/rosa embaixo, texto cinético com desfoque,
   ícones flutuando, palavra soletrada, colagem em anel, celular, logo, abas de capítulo). Roteiro YAML →
