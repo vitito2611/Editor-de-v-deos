@@ -31,6 +31,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - **Ângulos de câmera por IA** (Seedance 2.0 via MCP Higgsfield): ver `.claude/skills/angulos-ia/SKILL.md`
   e `editor/angulos.py`. Requer créditos Higgsfield e rede liberada para `upload.higgsfield.ai`.
 
+- **Remotion** (vídeo com React, `remotion/`, instalado com `npx create-video@latest --yes --blank remotion`):
+  motion graphics e animações em código. Render: `cd remotion && npx remotion render src/index.ts <Composição> out/x.mp4`
+  (o `remotion.config.ts` já aponta para o Chromium headless do ambiente). Licença: grátis para até 3 pessoas.
+
 ## Ambiente
 
 - `./setup.sh` reinstala tudo; o modelo de transcrição (Parakeet) baixa do GitHub; HuggingFace é bloqueado.
