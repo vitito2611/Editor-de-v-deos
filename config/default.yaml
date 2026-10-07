@@ -460,6 +460,25 @@ dinamismo:
   plano: []                     # ex.: [{contem: "Steve Jobs", tipo: foto, busca: "Steve Jobs"}]
 
 # -----------------------------------------------------------------------------
+# ÂNGULOS DE CÂMERA POR IA (editor/angulos.py + .claude/skills/angulos-ia)
+# Gera, a partir de um vídeo de câmera única, planos que nunca foram filmados (por cima do
+# ombro, plongée, macro das mãos, perfil, contra-plongée...) com Seedance 2.0 (Higgsfield MCP).
+# Custo aprox. por ângulo (janela de 5 s): 720p fast 12,5 · 720p std 22,5 · 1080p 45 créditos.
+# -----------------------------------------------------------------------------
+angulos:
+  ativo: false
+  quantidade: 8                 # ângulos por vídeo
+  dur_min_s: 1.0
+  dur_max_s: 2.6
+  inicio_livre_s: 2.0           # o gancho fica no plano original
+  janela_s: 5                   # trecho enviado como referência (Seedance: 4–15 s)
+  modelo: seedance_2_0
+  resolucao: 720p
+  modo: std                     # std | fast
+  max_boca: 2                   # 0 = só ângulos sem boca visível (sincronia labial mais segura)
+  angulos: [ombro, plongee, maos, perfil, geral_tras, contra, tres_quartos, primeiro_plano]
+
+# -----------------------------------------------------------------------------
 # ENQUADRAMENTO / LAYOUT DE SAÍDA
 # -----------------------------------------------------------------------------
 layout:

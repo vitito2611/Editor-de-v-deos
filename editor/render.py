@@ -207,7 +207,8 @@ def compose(video: Path, audio: Path, ass: Path | None, g: Geometry, cfg: dict, 
         d = b["dur"]
         fc.append(f"[{idx}:v]fps={float(g.fps):.6f},scale={g.content_w}:{g.content_h}:force_original_aspect_ratio=increase,"
                   f"crop={g.content_w}:{g.content_h},setsar=1,format=yuva420p,"
-                  f"fade=t=in:st=0:d=0.12:alpha=1,fade=t=out:st={max(0, d - 0.12):.3f}:d=0.12:alpha=1,"
+                  + ("" if b.get("corte_seco") else
+                     f"fade=t=in:st=0:d=0.12:alpha=1,fade=t=out:st={max(0, d - 0.12):.3f}:d=0.12:alpha=1,") +
                   f"setpts=PTS-STARTPTS+{b['t']:.3f}/TB[br{idx}]")
         fc.append(f"{cur}[br{idx}]overlay=eof_action=pass:enable='between(t,{b['t']:.3f},{b['t'] + d:.3f})'[c{idx}]")
         cur = f"[c{idx}]"

@@ -285,6 +285,16 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             dyn_events, creditos = dinamismo.fetch_and_render(plano, cfg, g, montado, work)
             rep["dinamismo"] = [{k: (str(v) if isinstance(v, Path) else v) for k, v in e.items()} for e in dyn_events]
             rep["creditos"] = creditos
+    # ------------------------------------------------------------------ ângulos de câmera por IA (Seedance)
+    if (cfg.get("angulos") or {}).get("ativo"):
+        with timer.etapa("Ângulos de IA (plano / inserção)"):
+            from . import angulos
+            pp = angulos.preparar(clips, src, work, cfg)
+            ang = angulos.eventos(clips, work, cfg, g)
+            # não sobrepõe B-roll/fotos/cards já planejados
+            ang = [e for e in ang if not any(e["t"] < o["t"] + o["dur"] and o["t"] < e["t"] + e["dur"] for o in dyn_events)]
+            dyn_events = dyn_events + ang
+            rep["angulos"] = {"plano": str(pp) if pp else None, "inseridos": [{k: (str(v) if isinstance(v, Path) else v) for k, v in e.items()} for e in ang]}
     faces = [(c.out_start, c.out_start + c.dur, render.face_in_canvas(c, c._win, g)) for c in clips]
     faces = [f for f in faces if f[2]]
     # ------------------------------------------------------------------ áudio: mix
@@ -301,6 +311,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
                              "beats": len(mplan["beats"])}
         extras = []
         for e in dyn_events:   # whoosh na entrada de cada sobreposição; impacto nos cards
+            if e.get("tipo") == "angulo_ia":
+                continue           # troca de ângulo é corte seco, como numa multicâmera real
             extras.append((e["t"], "transicao", f"entrada {e['tipo']}", 2.5))
             if e["tipo"] == "card":
                 extras.append((e["t"] + 0.12, "impacto", "card de impacto", 2.2))
@@ -335,7 +347,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             t = src_to_out(clips, 0, b["s_src"])
             if t is not None:
                 broll_out.append({"t": t, "dur": min(cfg["motion"]["broll"]["duracao_s"], total - t), "arquivo": b["arquivo"]})
-        broll_out += [{"t": e["t"], "dur": e["dur"], "arquivo": e["arquivo"]} for e in dyn_events]
+        broll_out += [{"t": e["t"], "dur": e["dur"], "arquivo": e["arquivo"], "corte_seco": e.get("corte_seco", False)}
+                      for e in dyn_events]
         rep["broll"] = [{"t": round(b["t"], 2), "arquivo": str(b["arquivo"])} for b in broll_out]
     # ------------------------------------------------------------------ composição final
     with timer.etapa("Composição final e exportação"):
