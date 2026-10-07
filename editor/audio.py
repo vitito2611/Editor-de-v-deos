@@ -116,7 +116,7 @@ def voice_envelope(voice: np.ndarray, sr: int, hop_s: float = 0.02, thr_db: floa
 
 
 def mix_and_master(voice: np.ndarray, music: np.ndarray | None, sfx_events: list[dict], sr: int,
-                   cfg: dict, plat: dict, work: Path) -> tuple[Path, dict]:
+                   cfg: dict, plat: dict, work: Path, nome: str = "audio_master") -> tuple[Path, dict]:
     n = len(voice)
     mix = np.stack([voice, voice], 1).astype(np.float32)
     if music is not None:
@@ -133,7 +133,7 @@ def mix_and_master(voice: np.ndarray, music: np.ndarray | None, sfx_events: list
             clip, s = clip[-s:], 0
         e = min(n, s + len(clip))
         mix[s:e] += clip[: e - s]
-    pre = work / "mix_pre_master.wav"
+    pre = work / f"{nome}_pre.wav"
     save_wav(pre, mix, sr)
     mc = cfg["audio"]["master"]
     target = plat.get("lufs", mc["lufs"])
@@ -141,7 +141,7 @@ def mix_and_master(voice: np.ndarray, music: np.ndarray | None, sfx_events: list
     p = run(["ffmpeg", "-hide_banner", "-nostdin", "-i", str(pre), "-af",
              f"loudnorm=I={target}:TP={mc['true_peak_db']}:LRA={mc['lra']}:print_format=json", "-f", "null", "-"])
     meas = json.loads(re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", p.stderr, re.S).group(0))
-    out = work / "audio_master.wav"
+    out = work / f"{nome}.wav"
     ffmpeg("-i", str(pre), "-af",
            f"loudnorm=I={target}:TP={mc['true_peak_db']}:LRA={mc['lra']}:measured_I={meas['input_i']}:"
            f"measured_TP={meas['input_tp']}:measured_LRA={meas['input_lra']}:measured_thresh={meas['input_thresh']}:"

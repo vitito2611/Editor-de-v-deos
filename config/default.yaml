@@ -16,6 +16,7 @@ geral:
   hdr_para_sdr: true            # converte HDR (HLG/PQ, ex.: iPhone) para SDR Rec.709 com tone mapping
   fonte_max_lado: 2560          # fontes maiores (ex.: 4K) viram mezanino 1440p — mantém margem p/ zoom
   fps_max: 30                   # fontes 60 fps são renderizadas em 30 fps (Reels/TikTok)
+  versao_sem_trilha: true       # gera também <saida>_sem_trilha.mp4 no mesmo render (só troca o áudio)
 
 # -----------------------------------------------------------------------------
 # TRANSCRIÇÃO (Etapa 5 / base de todas as decisões de contexto)
@@ -47,16 +48,16 @@ silencio:
   margem_sobre_ruido_db: 9
   janela_ms: 20                 # janela da análise RMS
   banda_voz_hz: [120, 4000]     # filtra a análise de energia para a faixa da voz
-  duracao_minima_s: 0.4         # silêncios menores que isso nunca são cortados
-  folga_antes_s: 0.06           # quanto de "ar" manter antes da fala retomar
-  folga_depois_s: 0.10          # quanto manter depois que a fala termina
-  pausa_preservada_s: 0.45      # duração mantida quando uma regra de contexto preserva a pausa
+  duracao_minima_s: 0.22        # silêncios menores que isso nunca são cortados (cliente: tirar as pausas)
+  folga_antes_s: 0.04           # quanto de "ar" manter antes da fala retomar
+  folga_depois_s: 0.07          # quanto manter depois que a fala termina
+  pausa_preservada_s: 0.30      # duração mantida quando uma regra de contexto preserva a pausa
   contexto:
     pausa_antes_importante:     # energia sobe depois da pausa / próxima palavra é número ou revelação
       ativo: true
       aumento_energia_db: 5.0
     continuidade_visual:        # orador gesticulando durante o silêncio (diferença de frames)
-      ativo: true
+      ativo: false              # cliente: gesticular não justifica manter pausa
       limiar_movimento: 6.0     # mediana da diferença média entre frames (0-255) a 4 fps
     efeito_dramatico:           # pausa logo após conectivos de suspense
       ativo: true
@@ -65,6 +66,15 @@ silencio:
       ativo: true
       similaridade_max: 0.12
   revisao_manual: false         # true = para após gerar revisao/cortes_silencio.yaml
+
+erros:                          # erros de gravação (editor/erros.py) — revisão em revisao/erros_gravacao.yaml
+  ativo: true
+  recomeco: true                # "o time, o time do povo" → corta a 1ª tentativa
+  frase_abandonada: true        # começo de frase recomeçado igual depois de pausa
+  gaguejada: true               # "que que", "o o" (ênfase como "muito, muito" fica)
+  muletas: true                 # "é…", "hã", "hum", "tipo assim" isolados
+  janela_palavras: 10
+  pausa_recomeco_s: 0.2
 
 # -----------------------------------------------------------------------------
 # TÉCNICAS DE CORTE CINEMATOGRÁFICO E VIRAL (Etapa 4)
@@ -500,13 +510,14 @@ remotion:                       # motion graphics em React (remotion/src/Element
     espacamento: 0              # letter-spacing (em)
     caixa_alta_destaque: true   # palavra-chave do card em CAIXA ALTA
   concorrencia: null            # null = automático
+  edicao: true                  # a edição inteira vira projeto Remotion (Studio/Player) e o final sai dele
 
 plataformas:
-  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
-  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
-  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: medium, audio_kbps: 192, maxrate_kbps: 12000}
-  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256, maxrate_kbps: 20000}
-  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: medium, audio_kbps: 256, maxrate_kbps: 16000}
+  reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}
+  tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}
+  shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}
+  youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: fast, audio_kbps: 256, maxrate_kbps: 20000}
+  youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: fast, audio_kbps: 256, maxrate_kbps: 16000}
   ao_exceder_duracao: avisar    # avisar | cortar (corta no fim de frase mais próximo)
 
 preview:

@@ -11,6 +11,10 @@ para não cobrir o rosto.
 """
 from __future__ import annotations
 
+import json
+
+import hashlib
+
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from fractions import Fraction
@@ -148,9 +152,24 @@ def _render_job(j: dict, fps: Fraction, q: dict):
 
 
 def render_segments(jobs: list[dict], fps: Fraction, threads: int, preview: bool) -> None:
-    q = {"preset": "ultrafast", "crf": 26} if preview else {"preset": "fast", "crf": 13}
+    # intermediários: veryfast + CRF 12 (visualmente idêntico ao final; o encode final é que define a qualidade)
+    q = {"preset": "ultrafast", "crf": 26} if preview else {"preset": "veryfast", "crf": 12}
+
+    def one(j):
+        # reaproveita o segmento se nada mudou (rodadas de ajuste só re-renderizam o que mudou)
+        sig = hashlib.md5(json.dumps([str(j.get("src")), j.get("t"), j.get("frames"), j.get("filtro"), j.get("tipo"),
+                                      q, str(fps)], default=str).encode()).hexdigest()
+        sf = Path(j["out"]).with_suffix(".sig")
+        if Path(j["out"]).exists() and sf.exists() and sf.read_text() == sig:
+            return False
+        _render_job(j, fps, q)
+        sf.write_text(sig)
+        return True
+
     with ThreadPoolExecutor(max_workers=threads) as ex:
-        list(ex.map(lambda j: _render_job(j, fps, q), jobs))
+        feitos = list(ex.map(one, jobs))
+    if not all(feitos):
+        log.info("  %d de %d segmentos reaproveitados (sem mudança)", feitos.count(False), len(jobs))
 
 
 def assemble(jobs: list[dict], fps: Fraction, out: Path, preview: bool) -> Path:

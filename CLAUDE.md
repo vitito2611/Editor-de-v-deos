@@ -14,7 +14,23 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   via, entregar por link (Artifact) ou chat (SendUserFile ≤ 30 MB) e avisar o cliente.
 - Vídeos de iPhone vêm em HDR (HLG/Dolby Vision) 4K60: o pipeline já converte para SDR e 1440p30.
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
-- Fazer preview, conferir frames (contact sheet) antes do render final.
+- Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
+  a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
+
+## Edição em conjunto (pedido do cliente: ver e editar junto, como no Remotion Studio)
+
+- Com Node/Remotion, a edição vira um projeto Remotion (`editor/projeto.py` → `remotion/public/projetos/<slug>/`,
+  composição `Edicao` em `remotion/src/Edicao.tsx`): base (cortes/zoom/cor/áudio, FFmpeg) + camadas React
+  (legendas, cards, contadores, B-roll, fotos). O render final sai do Remotion (`render-edicao.mjs`) = WYSIWYG.
+- Na nuvem: publicar o **estúdio** (`editor.pagina.estudio(projeto.json, pasta, titulo, sub)` → Artifact com
+  `capabilities: {db: {}}` + mídia 720p em `files`). O cliente edita texto/tempo/ocultar na timeline e salva no
+  doc `edicao/atual`; ler com ArtifactData (`get edicao/atual`), salvar em JSON e rodar
+  `python -m editor.projeto aplicar <projeto.json> <alteracoes.json>` e
+  `python -m editor.projeto renderizar <projeto.json> <saida_com_trilha.mp4> --audio-sem-trilha work/<job>/audio_master_sem_trilha.wav`
+  (só re-renderiza camadas, ~3 min). O campo `pedido` traz pedidos livres (trocar foto/B-roll).
+  Estúdio do vídeo 2 (Santa Cruz): https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p
+- No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
+  em localhost:3000 com cada vídeo como composição `Edicao-<nome>`.
 
 ## Preferências aprovadas (estilo `viral_reels` = v2 aprovada do vídeo 1)
 
@@ -27,6 +43,8 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   `sfx.proibidos`). Cliente não gostou de cenas genéricas sem relação (pizza, carteira).
 - Trilhas: Mixkit (royalty-free); músicas em alta são adicionadas pelo cliente no app.
 - Glossário do ASR por vídeo em `transcricao.correcoes` (ex.: Zuckenberg → Zuckerberg).
+- **Pausas e erros de gravação têm que sair**: pausas ≥ 0,22 s cortadas (`silencio`), recomeços/gaguejadas/
+  muletas/frase abandonada cortados por `editor/erros.py` (revisão em `revisao/erros_gravacao.yaml`).
 
 ## Habilidades extras
 
@@ -39,6 +57,12 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - Remotion (vídeo com React, `remotion/`, instalado com `npx create-video@latest --yes --blank remotion`):
   motion graphics e animações em código. Render: `cd remotion && npx remotion render src/index.ts <Composição> out/x.mp4`
   (o `remotion.config.ts` já aponta para o Chromium headless do ambiente). Licença: grátis para até 3 pessoas.
+
+## Velocidade
+
+- Mezanino HDR→SDR em cache compartilhado (`work/_fontes/`, superfast CRF 12, GOP 15); análise em cache;
+  segmentos veryfast CRF 12 e reaproveitados se nada mudou; final preset fast. Vídeo 2 (51 s, 4K60 HDR):
+  ~37 min → ~17 min na 1ª vez; ajustes de camadas ~3 min. Num Mac (Apple Silicon) é bem mais rápido.
 
 ## Ambiente
 

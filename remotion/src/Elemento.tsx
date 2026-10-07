@@ -45,9 +45,13 @@ const FONTES: [string, string, string, string][] = [
   ["JetBrains Mono", "JetBrainsMono-Bold.ttf", "700", "normal"],
 ];
 
-const useFontes = () => {
-  const [h] = useState(() => delayRender("fontes"));
+// No Studio/render as fontes vêm de public/fonts; na página de revisão (Player) vêm do Google Fonts
+// (window.__FONTES_EXTERNAS) — mesmas famílias.
+const externas = () => typeof window !== "undefined" && (window as unknown as { __FONTES_EXTERNAS?: boolean }).__FONTES_EXTERNAS;
+export const useFontes = () => {
+  const [h] = useState(() => (externas() ? null : delayRender("fontes")));
   useEffect(() => {
+    if (h === null) return;
     Promise.all(FONTES.map(([fam, arq, weight, style]) => {
       const f = new FontFace(fam, `url(${staticFile("fonts/" + arq)})`, { weight, style });
       return f.load().then((ok) => document.fonts.add(ok));

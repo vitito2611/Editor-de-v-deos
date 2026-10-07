@@ -23,3 +23,9 @@ musica: {humor: emocional}
 layout: {modo: letterbox}
 remotion:
   tema: {fonte: Inter, animacao: suave, espacamento: 0.04, caixa_alta_destaque: false}
+silencio:                       # documentário respira: pausas mais longas que nos modelos virais
+  duracao_minima_s: 0.4
+  folga_antes_s: 0.06
+  folga_depois_s: 0.10
+  pausa_preservada_s: 0.45
+  contexto: {continuidade_visual: {ativo: true}}

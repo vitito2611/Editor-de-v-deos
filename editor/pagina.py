@@ -164,3 +164,98 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ----------------------------------------------------------------------------- estúdio (edição em conjunto)
+ESTUDIO_CSS = """
+/* Layout: mesa de edição — monitor 9:16 + inspetor no topo, timeline de trilhas embaixo (como o Remotion Studio) */
+:root {
+  --bg: #121416; --painel: #1a1d20; --linha: #2b3035; --fg: #eceeee; --suave: #9aa3a8; --acento: #e8e2d6;
+  --broll: #3a4a5c; --motion: #5c4a3a; --legenda: #3d4a3f; --sel: #e8e2d6;
+  --f-titulo: "Archivo", "Helvetica Neue", Arial, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --nome-w: 120px; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--f-titulo); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 18px; }
+header h1 { margin: 0; font-weight: 800; font-size: clamp(1.4rem, 3.5vw, 2.1rem); text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--suave); max-width: 70ch; line-height: 1.5; }
+.estudio { display: grid; gap: 16px; }
+.topo { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.monitor { background: #000; border: 1px solid var(--linha); border-radius: 6px; overflow: hidden; max-width: 100%; }
+.inspetor { display: grid; gap: 14px; background: var(--painel); border: 1px solid var(--linha); border-radius: 6px; padding: 16px; min-width: 0; }
+.vazio h2 { margin: 0 0 6px; font-size: 1rem; }
+.vazio p, .motivo { color: var(--suave); margin: 0 0 6px; line-height: 1.5; font-size: 0.9rem; }
+.ficha { display: grid; gap: 12px; }
+.ficha-topo { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.tag { font-family: var(--f-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--linha); border-radius: 3px; }
+.link { all: unset; cursor: pointer; font-family: var(--f-mono); font-size: 0.82rem; color: var(--acento); text-decoration: underline; }
+.campo { display: grid; gap: 5px; font-size: 0.82rem; color: var(--suave); min-width: 0; }
+.campo em { font-style: normal; opacity: 0.8; }
+.campo input, .campo textarea { font: 0.95rem var(--f-titulo); color: var(--fg); background: var(--bg); border: 1px solid var(--linha); border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; resize: vertical; }
+.campo input:focus, .campo textarea:focus, .bloco:focus-visible, button:focus-visible { outline: 2px solid var(--acento); outline-offset: 1px; }
+.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; }
+.acoes { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.primario { font: 700 0.9rem var(--f-titulo); background: var(--acento); color: #121416; border: 0; border-radius: 4px; padding: 10px 16px; cursor: pointer; }
+.primario:disabled { opacity: 0.45; cursor: default; }
+.estado { color: var(--suave); font-size: 0.85rem; }
+.timeline { position: relative; background: var(--painel); border: 1px solid var(--linha); border-radius: 6px; padding: 10px 12px 12px; overflow-x: auto; }
+.regua { position: relative; height: 18px; margin-left: var(--nome-w); font-family: var(--f-mono); font-size: 0.7rem; color: var(--suave); min-width: 640px; }
+.regua span { position: absolute; transform: translateX(-2px); font-variant-numeric: tabular-nums; }
+.trilha { display: grid; grid-template-columns: var(--nome-w) minmax(640px, 1fr); align-items: center; min-height: 34px; border-top: 1px solid var(--linha); }
+.nome-trilha { font-family: var(--f-mono); font-size: 0.72rem; color: var(--suave); text-transform: uppercase; letter-spacing: 0.05em; padding-right: 8px; }
+.faixa { position: relative; height: 28px; }
+.bloco { position: absolute; top: 3px; height: 22px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; padding: 0 5px; overflow: hidden; color: var(--fg); font: 0.7rem var(--f-titulo); text-align: left; white-space: nowrap; box-sizing: border-box; }
+.bloco span { overflow: hidden; text-overflow: ellipsis; display: block; line-height: 20px; }
+.t-broll, .t-foto { background: var(--broll); }
+.t-card, .t-contador, .t-callout, .t-gancho { background: var(--motion); }
+.t-legenda { background: var(--legenda); }
+.bloco.sel { border-color: var(--sel); }
+.bloco.editado::after { content: ""; position: absolute; right: 3px; top: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--acento); }
+.bloco.oculto { opacity: 0.35; text-decoration: line-through; }
+.cabeca { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--acento); pointer-events: none; margin-left: 12px; }
+@media (max-width: 760px) { .topo { grid-template-columns: minmax(0, 1fr); } .monitor { max-width: 300px; margin: 0 auto; width: 100%; } :root { --nome-w: 84px; } }
+"""
+
+
+def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str) -> tuple[Path, dict]:
+    """Gera a página-estúdio: HTML com o app (Player + timeline) embutido e a mídia em 720p.
+    Devolve (html, mapa de arquivos para publicar)."""
+    import subprocess
+    from .utils import ffmpeg
+    rdir = Path(__file__).resolve().parent.parent / "remotion"
+    subprocess.run(["npx", "esbuild", "src/estudio/main.tsx", "--bundle", "--minify", "--format=iife",
+                    "--jsx=automatic", "--define:process.env.NODE_ENV=\"production\"", "--outfile=out/estudio/app.js"],
+                   cwd=rdir, check=True, capture_output=True)
+    app = (rdir / "out" / "estudio" / "app.js").read_text(encoding="utf-8")
+    proj = json.loads(pj.read_text(encoding="utf-8"))
+    saida_dir.mkdir(parents=True, exist_ok=True)
+    (saida_dir / "midia").mkdir(exist_ok=True)
+    arquivos = {}
+
+    def leve(src: Path, rel: str, audio: bool):
+        dst = saida_dir / rel
+        ffmpeg("-i", str(src), "-vf", "scale=720:-2", "-c:v", "libx264", "-crf", "25", "-preset", "veryfast",
+               "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "128k"] if audio else ["-an"]),
+               "-movflags", "+faststart", str(dst))
+        arquivos[rel] = str(dst)
+
+    leve(pj.parent / proj["base"], "base.mp4", True)
+    for c in proj["camadas"]:
+        if c.get("arquivo"):
+            leve(pj.parent / c["arquivo"], c["arquivo"], False)
+    proj["raiz"] = ""
+    dados = json.dumps(proj, ensure_ascii=False).replace("</", "<\\/")
+    html_txt = (f"<meta charset=\"utf-8\"><title>{html.escape(titulo)}</title>\n"
+                '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800'
+                '&family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,600;1,700'
+                '&family=JetBrains+Mono:wght@400;700&family=Permanent+Marker&display=swap">\n'
+                f"<style>{ESTUDIO_CSS}</style>\n"
+                f'<div class="wrap"><header><h1>{html.escape(titulo)}</h1><p>{html.escape(sub)}</p></header>'
+                '<div id="app"></div></div>\n'
+                f"<script>window.PROJETO = {dados};</script>\n"
+                f"<script>{app}</script>\n")
+    out = saida_dir / "estudio.html"
+    out.write_text(html_txt, encoding="utf-8")
+    return out, arquivos

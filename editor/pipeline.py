@@ -16,10 +16,12 @@ o resultado final é o mesmo da ordem descrita no briefing.
 from __future__ import annotations
 
 import hashlib
+from fractions import Fraction
 import shutil
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 from . import analysis, audio, cinematic, color, motion, music, nlp, render, sfx, silence, subtitles, transcribe
 from .config import load_config
@@ -66,8 +68,12 @@ def _normalize_source(src: Path, g: dict) -> Path:
     slow = fmax and fps > fmax + 0.5
     if not (hdr or scale or slow):
         return src
-    dst = src.with_name("fonte_mezanino.mp4")
+    # cache compartilhado entre estilos/plataformas (mesmo bruto = mesmo mezanino)
+    cache = ROOT / "work" / "_fontes"
+    cache.mkdir(parents=True, exist_ok=True)
+    dst = cache / f"{_cache_key(src, 'mez2')}_mezanino.mp4"
     if dst.exists():
+        log.info("  (cache) mezanino %s", dst.name)
         return dst
     vf = []
     if slow:
@@ -85,9 +91,13 @@ def _normalize_source(src: Path, g: dict) -> Path:
         vf.append(f"scale={sw}:{sh}:flags=lanczos,format=yuv420p")
     log.info("  fonte normalizada: %s%s%s → %dx%d", "HDR→SDR " if hdr else "", f"{w}x{h} " if scale else "",
              f"{fps:.0f}→{fmax} fps" if slow else "", sw, sh)
-    ffmpeg("-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "14", "-preset", "fast",
+    # intermediário: superfast + CRF 12 (≈ sem perda visível, 2x mais rápido que fast) e GOP curto
+    # (os segmentos fazem seek no mezanino — com GOP 250 cada seek decodificava até 8 s)
+    tmp = dst.with_suffix(".tmp.mp4")
+    ffmpeg("-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
            "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
-           "-c:a", "aac", "-b:a", "256k", "-map_metadata", "-1", str(dst))
+           "-c:a", "aac", "-b:a", "256k", "-map_metadata", "-1", str(tmp))
+    tmp.replace(dst)
     return dst
 
 
@@ -99,18 +109,23 @@ def _remove_bars(src: Path, enabled: bool) -> Path:
     import re as _re
     from .utils import run as _run
     m = probe(src)
-    p = _run(["ffmpeg", "-hide_banner", "-nostdin", "-i", str(src), "-an", "-vf",
-              "fps=2,cropdetect=limit=24:round=2:reset=0", "-f", "null", "-"])
-    found = _re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", p.stderr)
+    found = []
+    for k in range(1, 7):   # 6 amostras de 3 frames ao longo do vídeo (antes: decodificava tudo)
+        t = m["duracao"] * k / 7
+        p = _run(["ffmpeg", "-hide_banner", "-nostdin", "-ss", f"{t:.2f}", "-i", str(src), "-an", "-frames:v", "3",
+                  "-vf", "cropdetect=limit=24:round=2:reset=0", "-f", "null", "-"])
+        found += _re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", p.stderr)[-1:]
+    if found:   # a maior área ativa vista (uma cena escura não pode "inventar" tarja)
+        found = [max(found, key=lambda c: int(c[0]) * int(c[1]))]
     if not found:
         return src
     w, h, x, y = map(int, found[-1])
     if w * h > 0.93 * m["largura"] * m["altura"] or w < 64 or h < 64:
         return src
-    dst = src.with_name("fonte_ativa.mp4")
+    dst = src.with_name(src.stem + "_ativa.mp4")
     if not dst.exists():
         log.info("  tarjas pretas detectadas → área ativa %dx%d+%d+%d", w, h, x, y)
-        ffmpeg("-i", str(src), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-crf", "12", "-preset", "fast",
+        ffmpeg("-i", str(src), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
                "-c:a", "copy", str(dst))
     return dst
 
@@ -120,7 +135,11 @@ def _prepare_sources(inputs: list[Path], work: Path, remove_bars: bool = True) -
     fonte normalizada; as junções viram trocas de plano."""
     if len(inputs) == 1:
         dst = work / f"fonte{inputs[0].suffix.lower()}"
-        if not dst.exists() or dst.stat().st_size != inputs[0].stat().st_size:
+        if dst.is_symlink() or dst.exists():
+            dst.unlink()
+        try:
+            dst.symlink_to(inputs[0].resolve())
+        except OSError:
             shutil.copy2(inputs[0], dst)
         return _remove_bars(dst, remove_bars), []
     m0 = probe(inputs[0])
@@ -171,9 +190,17 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
 
     # ------------------------------------------------------------------ análise
     with timer.etapa("Análise inicial"):
-        src, joins = _prepare_sources(inputs, work, cfg["geral"].get("remover_tarjas", True))
-        src = _normalize_source(src, cfg["geral"])
-        an = analysis.analyze(src)
+        src, joins = _prepare_sources(inputs, work, False)
+        src = _remove_bars(_normalize_source(src, cfg["geral"]), cfg["geral"].get("remover_tarjas", True))
+        akey = _cache_key(src, "analise1")
+        afile = work / "analise.json"
+        if afile.exists() and read_json(afile).get("chave") == akey:
+            an = read_json(afile)["an"]
+            an["meta"]["fps"] = Fraction(an["meta"]["fps"])
+            log.info("  (cache) análise da fonte")
+        else:
+            an = analysis.analyze(src)
+            write_json(afile, {"chave": akey, "an": dict(an, meta=dict(an["meta"], fps=str(an["meta"]["fps"])))})
         an["planos"] = sorted(set(an["planos"] + joins))
         meta = an["meta"]
         dur = meta["duracao"]
@@ -216,6 +243,21 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             sres = silence.load_review(rev, sres, dur, cfg["silencio"])
         else:
             silence.write_review(sres, rev)
+        # erros de gravação (recomeços, gaguejadas, muletas) — revisão em revisao/erros_gravacao.yaml
+        from . import erros
+        erev = work / "revisao" / "erros_gravacao.yaml"
+        if usar_revisao and erev.exists():
+            ecortes = yaml.safe_load(erev.read_text(encoding="utf-8")).get("erros") or []
+        else:
+            ecortes = erros.detectar(words, cfg)
+            erev.write_text("# Erros de gravação detectados. 'aplicar: false' mantém o trecho; rode com --usar-revisao.\n"
+                            + yaml.safe_dump({"erros": ecortes}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        if ecortes:
+            db = np.array(sres["rms_db"]) if sres.get("rms_db") else None
+            antes = sum(b - a for a, b in sres["manter"])
+            sres["manter"] = erros.aplicar(sres["manter"], ecortes, db, sres.get("hop", 0.02))
+            log.info("  erros de gravação removidos: %.1fs", antes - sum(b - a for a, b in sres["manter"]))
+        sres["erros"] = ecortes
         if sres["rms_db"]:
             silence.plot(sres, words, work / "silencio.png", dur)
         rep["silencio"] = {k: v for k, v in sres.items() if k not in ("rms_db",)}
@@ -354,14 +396,16 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
                                                  jobs=jobs if "card" in externos else None)
             rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc, pular=card_spans)
             rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total, externos, jobs)
-            return doc, jobs
+            return doc, jobs, card_spans
 
-        doc, rjobs = montar_ass(externos)
+        doc, rjobs, card_spans = montar_ass(externos)
+        # modo projeto: a edição vira uma composição Remotion (Studio/Player) e o final sai dela
+        modo_projeto = bool(externos) and remotion_fx.cfg_of(cfg).get("edicao", True) and not preview
         motion_clips = []
-        if externos:
+        if externos and not modo_projeto:
             motion_clips = remotion_fx.render(rjobs, g, cfg, work)
             if motion_clips is None:   # falhou → mesmos elementos em ASS
-                doc, rjobs = montar_ass(set())
+                doc, rjobs, card_spans = montar_ass(set())
                 motion_clips = []
             rep["remotion"] = [{"tipo": c["tipo"], "t": c["t"], "dur": c["dur"]} for c in motion_clips]
         ass = work / "legendas.ass"
@@ -382,14 +426,36 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
     with timer.etapa("Composição final e exportação"):
         suffix = "_preview" if preview else ""
         out = Path(saida) if saida else outdir / f"{tag}{suffix}.mp4"
-        render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg, plat,
-                       out, lut, broll_out, overlays, preview, total, motion_clips)
+        feito = False
+        if modo_projeto:
+            from . import projeto
+            base = work / "base.mp4"   # cortes + zoom + cor + áudio, sem camadas (intermediário de alta qualidade)
+            render.compose(montado, amaster, None, g, cfg, dict(plat, crf=14, preset="veryfast"), base, lut, [],
+                           overlays, preview, total)
+            pj = projeto.exportar(Path(out).stem.replace("_com_trilha", ""), g, total, base, lut, cfg, words_out,
+                                  faces, dyn_events, rjobs, card_spans)
+            rep["projeto_remotion"] = str(pj)
+            feito = projeto.renderizar(pj, out, plat["crf"])
+            if not feito:   # sem Remotion funcional: mesmos elementos em ASS pelo FFmpeg
+                doc, rjobs, card_spans = montar_ass(set())
+                doc.write(ass)
+        if not feito:
+            render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg, plat,
+                           out, lut, broll_out, overlays, preview, total, motion_clips)
         fin = probe(out)
         loud = analysis.loudness_stats(out)
         rep["saida"] = {"arquivo": str(out), "duracao": fin["duracao"], "resolucao": f"{fin['largura']}x{fin['altura']}",
                         "lufs": loud["lufs"], "true_peak": loud["true_peak"], "lra": loud["lra"]}
         log.info("  ✅ %s  (%.1fs, %s, %.1f LUFS, TP %.1f)", out, fin["duracao"], rep["saida"]["resolucao"],
                  loud["lufs"] or 0, loud["true_peak"] or 0)
+        # versão sem trilha (cliente põe a música em alta no app): mesmo vídeo, só troca o áudio
+        if cfg["geral"].get("versao_sem_trilha", True) and mtrack is not None and not preview:
+            asem, _ = audio.mix_and_master(vtrack, None, events, sr, cfg, plat, work, nome="audio_master_sem_trilha")
+            out_sem = out.with_name(out.stem.replace("_com_trilha", "") + "_sem_trilha.mp4")
+            ffmpeg("-i", str(out), "-i", str(asem), "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac",
+                   "-b:a", f"{plat['audio_kbps']}k", "-ar", "48000", "-movflags", "+faststart", "-shortest", str(out_sem))
+            rep["saida"]["sem_trilha"] = str(out_sem)
+            log.info("  ✅ %s  (mesmo vídeo, sem música)", out_sem)
     # ------------------------------------------------------------------ relatório
     rep["tempos"] = timer.etapas
     from .report import write_report
