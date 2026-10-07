@@ -33,10 +33,15 @@ def eventos(rep: dict) -> list[dict]:
         if m.get("remotion"):
             for x in ev:
                 if x["tipo"] == m["tipo"] and abs(x["t"] - m["t"]) < 0.3:
-                    x["o_que"] = m.get("texto", "")
+                    txt = m.get("texto", "")
+                    num, _, resto = txt.partition(" ")
+                    if num.replace(".", "").isdigit():   # 45000 → 45.000
+                        txt = f"{float(num):,.0f}".replace(",", ".") + (" " + resto if resto else "")
+                    x["o_que"] = txt
     for d in (rep.get("tecnicas") or {}).get("decisoes", []):
         if d.get("aplicar") and d.get("t_saida") is not None and d["tecnica"] not in ("jump_zoom",):
-            ev.append({"t": d["t_saida"], "dur": 0.3, "tipo": "transicao", "o_que": d["tecnica"].replace("_", " "),
+            ev.append({"t": d["t_saida"], "dur": 0.3, "tipo": "transicao", "o_que": {"flash": "flash branco", "whip": "whip pan", "glitch": "glitch"}.get(
+                           (d.get("params") or {}).get("tipo"), d["tecnica"].replace("_", " ")),
                        "por": d.get("motivo", "")})
     return sorted(ev, key=lambda x: x["t"])
 
