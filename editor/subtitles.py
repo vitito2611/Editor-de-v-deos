@@ -289,9 +289,9 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
                 for i in idxs:
                     tag = "\\alpha&HFF&" if i > wi else "\\alpha&H00&"
                     if _is_kw(grp[i], lc):
-                        tag += f"\\1c{ass_color(cols[color_cycle[0] % len(cols)])}"
+                        tag += f"\\1c{ass_color(cols[color_cycle[0] % len(cols)])}\\b1"
                     else:
-                        tag += f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}"
+                        tag += f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}\\b0"
                     body.append("{" + tag + "}" + txts[i])
                 nxt = grp[idxs[k + 1]]["s"] if k + 1 < len(idxs) else end
                 doc.add(s0, nxt if k + 1 < len(idxs) else e0,

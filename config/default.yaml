@@ -276,7 +276,7 @@ legendas:
       peso: Regular
       tamanho: 30
       cor: "#F2F2F2"
-      cor_destaque_lista: ["#3BE36B", "#FF3B30"]
+      cor_destaque_lista: ["#FFFFFF"]   # cliente: sem cores — destaque só no peso (negrito)
       posicao: dividida
       animacao: digitacao
       minusculas: true
@@ -412,11 +412,11 @@ motion:
     inicio_s: 1.5
     duracao_s: 4.0
     cor: "#FFFFFF"
-    cor_barra: "#22E06B"
+    cor_barra: "#FFFFFF"
   callout:                      # título de conceito (ex.: "PRONOIA" do ref1)
     ativo: true
     fonte: Permanent Marker
-    cor: "#B6F23A"
+    cor: "#FFFFFF"              # cliente: sem cores (era verde no ref1)
     tamanho: 96
     max: 3
     duracao_s: 2.6

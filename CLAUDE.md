@@ -1,7 +1,7 @@
 # Editor de vídeos — contexto do projeto e preferências do cliente
 
 Pipeline de edição automatizada (FFmpeg + Python). Entrada: `python editar.py bruto.mp4 --estilo <estilo> --plataforma reels`.
-Documentação: `README.md`, `docs/ETAPA1_briefing.md`, `docs/RESULTADOS.md`. Configuração: `config/default.yaml`,
+Documentação: `README.md`, `docs/MODELOS.md` (catálogo de estilos), `docs/ETAPA1_briefing.md`, `docs/RESULTADOS.md`. Configuração: `config/default.yaml`,
 presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 ## Fluxo de trabalho com o cliente
