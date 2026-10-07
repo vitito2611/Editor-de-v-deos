@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .subtitles import AssDoc, ass_color, esc, font_tags
+from .subtitles import AssDoc, ass_color, esc, font_tags, fonte_destaque
 from .utils import ROOT, log
 
 
@@ -104,7 +104,7 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
                 added.append({"tipo": "gancho", "t": 0.0, "texto": txt, "remotion": True})
                 lines = []
         if txt and lines:
-            st = {"fonte": "Inter", "peso": "Bold", "tamanho": 58 * k, "cor": "#FFFFFF", "sombra": 3, "sombra_alpha": 0.6}
+            st = {"fonte": "Rubik", "fonte_destaque": fonte_destaque(cfg["legendas"]), "peso": "Bold", "tamanho": 58 * k, "cor": "#FFFFFF", "sombra": 3, "sombra_alpha": 0.6}
             doc.add(0.0, gc["duracao_s"], "{\\an5\\pos(%d,%d)\\fad(150,200)%s}" % (W / 2, H * 0.3, font_tags(st))
                     + "\\N".join(esc(x) for x in lines), layer=5)
             added.append({"tipo": "gancho", "t": 0.0, "texto": txt})
@@ -118,7 +118,7 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
         bar_h = 110 * k
         doc.add(t0, t1, "{\\an7\\pos(%d,%d)\\p1\\bord0\\shad0\\1c%s\\fad(0,250)\\fscy0\\t(0,200,\\fscy100)}m 0 0 l %d 0 %d %d 0 %d{\\p0}"
                 % (x, y, ass_color(lt["cor_barra"]), 10 * k, 10 * k, bar_h, bar_h), layer=6)
-        st = {"fonte": "Inter", "peso": "Bold", "tamanho": 52 * k, "cor": lt["cor"], "sombra": 2}
+        st = {"fonte": "Rubik", "peso": "Bold", "tamanho": 52 * k, "cor": lt["cor"], "sombra": 2}
         doc.add(t0 + 0.12, t1, "{\\an7\\move(%d,%d,%d,%d,0,260)\\fad(200,250)%s}%s"
                 % (x - 30 * k, y, x + 26 * k, y, font_tags(st), esc(nome)), layer=6)
         if lt.get("descricao"):
@@ -140,7 +140,8 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
                 jobs.append({"tipo": "callout", "t": round(t, 3), "dur": co["duracao_s"], "texto": c["termo"], "y": round(y / H, 4)})
                 added.append({"tipo": "callout", "t": round(t, 2), "texto": c["termo"], "remotion": True})
                 continue
-            st = {"fonte": co["fonte"], "peso": "Regular", "tamanho": co["tamanho"] * k, "cor": co["cor"],
+            fco = fonte_destaque(dict(cfg["legendas"], fonte_destaque=co["fonte"])) or co["fonte"]
+            st = {"fonte": fco, "peso": "Regular", "tamanho": co["tamanho"] * k, "cor": co["cor"],
                   "contorno": 0, "sombra": 3, "sombra_alpha": 0.5}
             doc.add(t, t + co["duracao_s"], "{\\an5\\pos(%d,%d)\\frz-3\\fad(60,200)\\fscx30\\fscy30"
                     "\\t(0,140,\\fscx110\\fscy110)\\t(140,220,\\fscx100\\fscy100)\\t(220,%d,\\fscx106\\fscy106)%s}%s"
@@ -153,7 +154,7 @@ def build(doc: AssDoc, g, nlp_res: dict, words_out: list[dict], frases_out: list
         for n in nums[: cc["max"]]:
             t0, d = n["t_out"], cc["duracao_s"]
             steps = 24
-            st = {"fonte": "Inter", "peso": "Black", "tamanho": 120 * k, "cor": "#FFFFFF", "contorno": 0, "sombra": 4, "sombra_alpha": 0.6}
+            st = {"fonte": "Rubik", "fonte_destaque": "Rubik", "peso": "Black", "tamanho": 120 * k, "cor": "#FFFFFF", "contorno": 0, "sombra": 4, "sombra_alpha": 0.6}
             stu = dict(st, peso="Bold", tamanho=48 * k)
             # abaixo da faixa de legenda do topo (0.18H) e acima do rosto
             y = cy0 + ch * 0.30 if not (g.mode == "letterbox" and H > W) else cy0 - 150 * k

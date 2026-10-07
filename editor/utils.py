@@ -64,6 +64,12 @@ def ffmpeg(*args, quiet: bool = True) -> subprocess.CompletedProcess:
     return run(["ffmpeg", "-hide_banner", "-nostdin", "-y", "-loglevel", "error", *args], quiet)
 
 
+def arquivo_black_jack() -> Path | None:
+    """BlackJack.otf/.ttf em assets/fonts (licença Typadelic: uso livre, redistribuição proibida → não vai pro git)."""
+    achados = sorted((ROOT / "assets" / "fonts").glob("[Bb]lack*[Jj]ack*.[ot]tf"))
+    return achados[0] if achados else None
+
+
 def probe(path: Path) -> dict:
     """Metadados essenciais do vídeo (duração, resolução, fps, áudio)."""
     p = run(["ffprobe", "-v", "error", "-print_format", "json", "-show_format",

@@ -249,7 +249,8 @@ def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str) -> tuple[Path, dic
     html_txt = (f"<meta charset=\"utf-8\"><title>{html.escape(titulo)}</title>\n"
                 '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
                 '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800'
-                '&family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,600;1,700'
+                '&family=Rubik:ital,wght@0,400;0,500;0,700;0,800;0,900;1,700'
+                '&family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900'
                 '&family=JetBrains+Mono:wght@400;700&family=Permanent+Marker&display=swap">\n'
                 f"<style>{ESTUDIO_CSS}</style>\n"
                 f'<div class="wrap"><header><h1>{html.escape(titulo)}</h1><p>{html.escape(sub)}</p></header>'

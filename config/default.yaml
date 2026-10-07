@@ -146,6 +146,9 @@ gatilhos:
 # LEGENDAS DINÂMICAS (Etapa 5)
 # -----------------------------------------------------------------------------
 legendas:
+  fonte_base: Rubik              # cliente: legenda comum SEMPRE Rubik Bold (todos os modelos)
+  fonte_destaque: Black Jack     # cliente: quando a fonte troca para destacar, SEMPRE Black Jack (manuscrita)
+  fonte_destaque_reserva: Noto Serif   # usada só se BlackJack.otf/.ttf não estiver em assets/fonts
   ativo: true
   palavras_min: 2
   palavras_max: 4
@@ -425,7 +428,7 @@ motion:
     cor_barra: "#FFFFFF"
   callout:                      # título de conceito (ex.: "PRONOIA" do ref1)
     ativo: true
-    fonte: Permanent Marker
+    fonte: Black Jack           # cliente: destaque sempre em Black Jack (era Permanent Marker)
     cor: "#FFFFFF"              # cliente: sem cores (era verde no ref1)
     tamanho: 96
     max: 3
@@ -504,8 +507,8 @@ remotion:                       # motion graphics em React (remotion/src/Element
   ativo: true                   # false = mesmos elementos em ASS (sem Node). Sem Node instalado → ASS automático
   elementos: [card, contador, callout, gancho]
   tema:                         # sempre branco (preferência do cliente); cada modelo ajusta fonte/animação
-    fonte: Inter
-    fonte_titulo: Permanent Marker
+    fonte: Rubik                # cliente: Rubik Bold sempre
+    fonte_titulo: Black Jack    # cliente: destaque/títulos em Black Jack
     animacao: pop               # pop | suave | deslize | digitacao
     espacamento: 0              # letter-spacing (em)
     caixa_alta_destaque: true   # palavra-chave do card em CAIXA ALTA

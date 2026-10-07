@@ -31,19 +31,31 @@ export type Props = {
   texto?: string;
 };
 
+// Fontes do cliente em todos os modelos: Rubik Bold (texto comum) + Noto Serif (destaque).
 const FONTES: [string, string, string, string][] = [
-  ["Inter", "Inter-Regular.otf", "400", "normal"],
-  ["Inter", "Inter-Medium.otf", "500", "normal"],
-  ["Inter", "Inter-SemiBold.otf", "600", "normal"],
-  ["Inter", "Inter-Bold.otf", "700", "normal"],
-  ["Inter", "Inter-Black.otf", "900", "normal"],
-  ["Inter", "Inter-Italic.otf", "400", "italic"],
-  ["Inter", "Inter-SemiBoldItalic.otf", "600", "italic"],
-  ["Inter", "Inter-BoldItalic.otf", "700", "italic"],
-  ["Permanent Marker", "PermanentMarker-Regular.ttf", "400", "normal"],
-  ["JetBrains Mono", "JetBrainsMono-Regular.ttf", "400", "normal"],
-  ["JetBrains Mono", "JetBrainsMono-Bold.ttf", "700", "normal"],
+  ["Rubik", "Rubik-Regular.ttf", "400", "normal"],
+  ["Rubik", "Rubik-Medium.ttf", "500", "normal"],
+  ["Rubik", "Rubik-Bold.ttf", "700", "normal"],
+  ["Rubik", "Rubik-ExtraBold.ttf", "800", "normal"],
+  ["Rubik", "Rubik-Black.ttf", "900", "normal"],
+  ["Rubik", "Rubik-BoldItalic.ttf", "700", "italic"],
+  ["Noto Serif", "NotoSerif-Regular.ttf", "400", "normal"],
+  ["Noto Serif", "NotoSerif-Bold.ttf", "700", "normal"],
+  ["Noto Serif", "NotoSerif-Black.ttf", "900", "normal"],
+  ["Noto Serif", "NotoSerif-Italic.ttf", "400", "italic"],
+  ["Noto Serif", "NotoSerif-BoldItalic.ttf", "700", "italic"],
+  ["Noto Serif", "NotoSerif-BlackItalic.ttf", "900", "italic"],
+  // Black Jack (Typadelic) — copiada de assets/fonts pelo editor; a licença não permite ir pro git
+  ["Black Jack", "BlackJack.ttf", "400", "normal"],
 ];
+
+// Fonte manuscrita (Black Jack): sem negrito/itálico falso e um pouco maior, para destacar
+// sem deformar as letras.
+export const SCRIPT = ["Black Jack", "BlackJack"];
+export const estiloDestaque = (familia: string, peso: number, italico: boolean) =>
+  SCRIPT.includes(familia)
+    ? { fontFamily: familia, fontWeight: 400, fontStyle: "normal" as const, escala: 1.28 }
+    : { fontFamily: familia, fontWeight: peso, fontStyle: (italico ? "italic" : "normal") as "italic" | "normal", escala: 1 };
 
 // No Studio/render as fontes vêm de public/fonts; na página de revisão (Player) vêm do Google Fonts
 // (window.__FONTES_EXTERNAS) — mesmas famílias.
@@ -52,10 +64,11 @@ export const useFontes = () => {
   const [h] = useState(() => (externas() ? null : delayRender("fontes")));
   useEffect(() => {
     if (h === null) return;
+    // cada fonte carrega sozinha: se uma faltar (ex.: Black Jack fora desta máquina) as outras seguem
     Promise.all(FONTES.map(([fam, arq, weight, style]) => {
       const f = new FontFace(fam, `url(${staticFile("fonts/" + arq)})`, { weight, style });
-      return f.load().then((ok) => document.fonts.add(ok));
-    })).then(() => continueRender(h)).catch(() => continueRender(h));
+      return f.load().then((ok) => document.fonts.add(ok)).catch(() => undefined);
+    })).then(() => continueRender(h));
   }, [h]);
 };
 
@@ -121,15 +134,15 @@ const Frase: React.FC<{ p: Props; grande: boolean }> = ({ p, grande }) => {
               {ln.map((i) => {
                 const w = ws[i];
                 const f = frame - Math.round(w.s * fps);
-                const txt = big && t.caixa_alta_destaque ? w.w.toUpperCase() : w.w;
+                const txt = big && t.caixa_alta_destaque && !SCRIPT.includes(t.fonte_titulo) ? w.w.toUpperCase() : w.w;
                 const vis = t.animacao === "digitacao"
                   ? txt.slice(0, Math.max(0, Math.floor(f / Math.max(1, fps * 0.035))))
                   : txt;
                 return (
                   <span key={i} style={{
-                    fontFamily: t.fonte, color: "#FFFFFF", textShadow: SOMBRA,
-                    fontWeight: big ? 900 : li % 2 === 0 ? 500 : 600, fontStyle: ital ? "italic" : "normal",
-                    fontSize: big ? base * 1.9 : base, lineHeight: 1.05, letterSpacing: `${t.espacamento}em`,
+                    ...(big || ital ? estiloDestaque(t.fonte_titulo, big ? 900 : 700, ital) : { fontFamily: t.fonte, fontWeight: 700, fontStyle: "normal" as const }),
+                    color: "#FFFFFF", textShadow: SOMBRA,
+                    fontSize: (big ? base * 1.9 : base) * (big || ital ? estiloDestaque(t.fonte_titulo, 900, ital).escala : 1), lineHeight: 1.05, letterSpacing: `${t.espacamento}em`,
                     display: "inline-block", ...entrada(t.animacao, f, fps),
                   }}>{vis}</span>
                 );
@@ -196,9 +209,10 @@ const Callout: React.FC<{ p: Props }> = ({ p }) => {
         transform: `translateY(-50%) rotate(-3deg) scale(${(0.7 + 0.3 * pop) * resp})`,
       }}>
         <div style={{
-          display: "inline-block", fontFamily: p.tema.fonte_titulo, color: "#FFFFFF", fontSize: 104 * k,
+          display: "inline-block", ...estiloDestaque(p.tema.fonte_titulo, 700, false), color: "#FFFFFF",
+          fontSize: 104 * k * estiloDestaque(p.tema.fonte_titulo, 700, false).escala,
           textShadow: SOMBRA, clipPath: `inset(-20% ${100 - rev}% -20% -5%)`, letterSpacing: "0.02em",
-        }}>{(p.texto ?? "").toUpperCase()}</div>
+        }}>{SCRIPT.includes(p.tema.fonte_titulo) ? p.texto ?? "" : (p.texto ?? "").toUpperCase()}</div>
         <div style={{
           margin: `${4 * k}px auto 0`, height: 7 * k, width: "46%", background: "#FFFFFF", borderRadius: 4 * k,
           clipPath: `inset(0 ${100 - sub}% 0 0)`, boxShadow: SOMBRA,
@@ -222,6 +236,6 @@ export const metadados: CalculateMetadataFunction<Props> = ({ props }) => ({
 
 export const padrao: Props = {
   tipo: "card", W: 1080, H: 1920, fps: 30, dur: 2.4,
-  tema: { fonte: "Inter", fonte_titulo: "Permanent Marker", animacao: "pop", espacamento: 0, caixa_alta_destaque: true },
+  tema: { fonte: "Rubik", fonte_titulo: "Noto Serif", animacao: "pop", espacamento: 0, caixa_alta_destaque: true },
   palavras: [{ w: "não", s: 0 }, { w: "existe", s: 0.25 }, { w: "perfil", s: 0.55, kw: 0.6 }, { w: "perfeito", s: 0.9, kw: 0.9 }],
 };

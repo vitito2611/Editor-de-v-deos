@@ -34,6 +34,17 @@ def cfg_of(cfg: dict) -> dict:
     d = dict(DEFAULTS)
     d.update(cfg.get("remotion") or {})
     d["tema"] = dict(DEFAULTS["tema"], **(d.get("tema") or {}))
+    # fonte de destaque do cliente (Black Jack): copia para o Remotion; sem o arquivo, usa a reserva
+    if d["tema"].get("fonte_titulo") in ("Black Jack", "BlackJack"):
+        from .utils import arquivo_black_jack
+        bj = arquivo_black_jack()
+        if bj:
+            dst = DIR / "public" / "fonts" / "BlackJack.ttf"
+            if not dst.exists() or dst.stat().st_size != bj.stat().st_size:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(bj, dst)
+        else:
+            d["tema"]["fonte_titulo"] = (cfg.get("legendas") or {}).get("fonte_destaque_reserva", "Noto Serif")
     return d
 
 

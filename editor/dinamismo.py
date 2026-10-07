@@ -74,6 +74,19 @@ def _entities(words):
     return [c for c in out if len(" ".join(words[i]["w"] for i in c)) >= 3]
 
 
+def _carregar_roteiro(r):
+    import yaml
+    from .utils import ROOT
+    if isinstance(r, dict):
+        return r
+    p = Path(r)
+    return yaml.safe_load((p if p.is_absolute() else ROOT / p).read_text(encoding="utf-8"))
+
+
+def _dur_roteiro(r) -> float:
+    return sum(float(c.get("dur", 2.5)) for c in _carregar_roteiro(r)["cenas"])
+
+
 def plan(words_out, frases_out, cfg, total) -> list[dict]:
     dc = _cfg(cfg)
     cands = []
@@ -86,7 +99,8 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
         cands.append({"t": max(0, t - 0.1), "tipo": item.get("tipo", "video"), "busca": item.get("busca") or item.get("contem"),
                       "busca_en": item.get("busca_en"), "escolha": item.get("escolha", 0),
                       "texto": item.get("texto"), "prio": 5, "dur": item.get("dur"), "motivo": "plano manual",
-                      "arquivo_local": item.get("arquivo"), "credito": item.get("credito")})
+                      "arquivo_local": item.get("arquivo"), "credito": item.get("credito"),
+                      "roteiro": item.get("roteiro")})
     # 2) cards de frases de impacto
     pmin, pmax = dc["card_palavras"]
     for f in frases_out:
@@ -133,9 +147,11 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
             b = max(b, a + dc["dur_min_s"])
         if any(a < o["t"] + o["dur"] + gap and o["t"] < b + gap for o in chosen):
             continue
+        if c["tipo"] == "motion" and c.get("roteiro"):   # motion dura o que o roteiro manda
+            b = min(total - 0.3, a + _dur_roteiro(c["roteiro"]))
         if c["tipo"] == "card" and sum(o["tipo"] == "card" for o in chosen) >= dc["cards_max"]:
             continue
-        if covered + (b - a) > dc["cobertura_max"] * total:
+        if covered + (b - a) > dc["cobertura_max"] * total and not manual:   # o plano manual manda
             continue
         # densidade: não mais que 1 a cada intervalo_s * 0.6
         if not manual and any(abs(a - o["t"]) < dc["intervalo_s"] * 0.6 for o in chosen):
@@ -145,7 +161,7 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
         covered += b - a
     chosen.sort(key=lambda c: c["t"])
     log.info("  dinamismo: %d sobreposições planejadas (%s), cobertura %.0f%%", len(chosen),
-             {k: sum(c["tipo"] == k for c in chosen) for k in ("video", "foto", "card")}, 100 * covered / max(total, 1))
+             {k: sum(c["tipo"] == k for c in chosen) for k in ("video", "foto", "card", "motion")}, 100 * covered / max(total, 1))
     return chosen
 
 
@@ -201,7 +217,19 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
                 ok = True
                 if cred:
                     creditos.append(dict(cred, t=ev["t"], busca=ev["busca"]))
-        if not ok and ev["tipo"] != "card":
+        elif ev["tipo"] == "motion" and ev.get("roteiro"):
+            # motion em HyperFrames (modelo do exemplo do cliente) no tamanho do conteúdo
+            from . import motion_hf
+            rot = _carregar_roteiro(ev["roteiro"])
+            mp4 = motion_hf.renderizar(rot, out_dir / f"ev{k:02d}_motion_full.mp4", W, H)
+            if mp4:
+                ffmpeg("-i", str(mp4), "-t", f"{ev['dur']:.3f}", "-an", "-vf", f"scale={W}:{H},fps={fps:.6f},setsar=1",
+                       "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(dst))
+                ok = True
+        if not ok and ev["tipo"] == "motion":
+            log.info("  motion '%s' não renderizou (HyperFrames indisponível?) → mantém o orador", ev.get("busca"))
+            continue
+        if not ok and ev["tipo"] not in ("card", "motion"):
             if ev.get("texto") or ev.get("motivo", "").startswith("nome"):
                 ev = dict(ev, tipo="card", texto=ev.get("texto") or ev["busca"])
             else:
@@ -214,7 +242,7 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
                    "-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p", str(dst))
         final.append(dict(ev, arquivo=dst))
     log.info("  dinamismo: %d sobreposições renderizadas (%s)", len(final),
-             {k: sum(e["tipo"] == k for e in final) for k in ("video", "foto", "card")})
+             {k: sum(e["tipo"] == k for e in final) for k in ("video", "foto", "card", "motion")})
     return final, creditos
 
 
@@ -271,8 +299,13 @@ def ass_cards(doc: AssDoc, events, words_out, g, cfg, jobs: list | None = None):
                 ital = (not big) and li == len(lines) - 1 and len(lines) > 1
                 txt = " ".join(("{\\1a&HFF&\\4a&HFF&}" if i > wi else "{\\1a&H00&\\4a&H80&}") +
                                esc(ws[i]["w"].upper() if big else ws[i]["w"]) for i in ln)
-                segs.append("{\\fnInter\\b%d\\i%d\\fs%d\\1c&HFFFFFF&\\bord0\\shad4\\4c&H000000&\\4a&H80&}%s"
-                            % (WEIGHTS[weight], 1 if ital else 0, int(sz), txt))
+                from .subtitles import fonte_destaque
+                dest = fonte_destaque(cfg["legendas"]) or "Rubik"
+                fam = dest if (big or ital) else (cfg["legendas"].get("fonte_base") or "Rubik")   # Rubik + destaque do cliente
+                if fam == dest and dest in ("Black Jack", "BlackJack"):
+                    weight, ital, sz = "Regular", False, sz * 1.25
+                segs.append("{\\fn%s\\b%d\\i%d\\fs%d\\1c&HFFFFFF&\\bord0\\shad4\\4c&H000000&\\4a&H80&}%s"
+                            % (fam, WEIGHTS[weight], 1 if ital else 0, int(sz), txt))
             anim = "\\fscx92\\fscy92\\t(0,220,\\fscx100\\fscy100)" if wi == 0 else ""
             fade = "\\fad(0,120)" if wi == len(ws) - 1 else ""
             doc.add(s0, max(e0, s0 + 0.05), "{\\an5\\pos(%d,%d)%s%s}" % (W / 2, g.content_y + g.content_h * 0.47, anim, fade)

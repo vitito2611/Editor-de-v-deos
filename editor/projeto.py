@@ -50,7 +50,7 @@ def _legendas(words_out, g, faces, cfg, pular) -> list[dict]:
 
 
 def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_out, faces,
-             dyn_events: list[dict], rjobs: list[dict], card_spans) -> Path:
+             dyn_events: list[dict], rjobs: list[dict], card_spans, lut_fundo_card: bool = True) -> Path:
     """Escreve o projeto (mídia + projeto.json) e atualiza a lista de composições."""
     rc = cfg_of(cfg)
     sl = slug(nome)
@@ -65,9 +65,11 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         arq = Path(e["arquivo"])
         dst = d / "midia" / f"{k:02d}_{e['tipo']}.mp4"
         # B-roll/fotos/fundos de card recebem a mesma cor (LUT) que o vídeo base
-        ffmpeg("-i", str(arq), "-an", "-vf", lut or "null", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
+        # o fundo do card vem do próprio vídeo: se a cor já foi aplicada nos segmentos, não aplica de novo
+        filtro = lut if (lut and (e["tipo"] != "card" or lut_fundo_card)) else "null"
+        ffmpeg("-i", str(arq), "-an", "-vf", filtro, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
                "-pix_fmt", "yuv420p", str(dst))
-        c = {"id": f"C{k:02d}", "tipo": "broll" if e["tipo"] in ("video", "angulo_ia") else e["tipo"],
+        c = {"id": f"C{k:02d}", "tipo": "broll" if e["tipo"] in ("video", "angulo_ia", "motion") else e["tipo"],
              "t": round(e["t"], 3), "dur": round(e["dur"], 3), "arquivo": f"midia/{dst.name}",
              "corte_seco": bool(e.get("corte_seco")), "motivo": e.get("motivo", "")}
         if e["tipo"] == "foto":
@@ -75,6 +77,8 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
             c["nome"] = f"Foto: {e.get('busca', '')}"
         elif e["tipo"] == "video":
             c["nome"] = f"B-roll: {e.get('busca', '')}"
+        elif e["tipo"] == "motion":
+            c["nome"] = f"Motion: {e.get('busca') or 'HyperFrames'}"
         elif e["tipo"] == "card":
             j = cards_rem.get(round(e["t"], 2))
             c["palavras"] = j["palavras"] if j else [{"w": t, "s": 0.12 * i} for i, t in enumerate((e.get("texto") or "").split())]
@@ -100,7 +104,7 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
 
 def _fonte_legenda(cfg) -> str:
     st = cfg["legendas"]["estilos"][cfg["legendas"]["estilo_base"]]
-    return st.get("fonte", "Inter")
+    return cfg["legendas"].get("fonte_base") or st.get("fonte", "Rubik")
 
 
 def gerar_lista() -> None:

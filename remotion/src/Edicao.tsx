@@ -3,7 +3,7 @@ import {
   AbsoluteFill, CalculateMetadataFunction, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile,
   useCurrentFrame, useVideoConfig,
 } from "remotion";
-import { Elemento, Tema, useFontes } from "./Elemento";
+import { Elemento, Tema, useFontes, estiloDestaque, SCRIPT } from "./Elemento";
 
 // A edição inteira como composição Remotion — o que você vê no Studio (ou no Player da página de
 // revisão) é exatamente o que é renderizado. O editor Python (editor/projeto.py) gera o projeto:
@@ -64,12 +64,15 @@ const BlocoLegenda: React.FC<{ b: Legenda; p: Projeto }> = ({ b, p }) => {
               const big = destaque && i === kwi;
               return (
                 <span key={i} style={{
-                  fontFamily: p.tema.fonte_legenda, color: "#FFFFFF", textShadow: SOMBRA,
+                  // Rubik Bold no texto comum; a troca de fonte do destaque é sempre a do cliente (Black Jack)
+                  ...(big || li === 2 ? estiloDestaque(p.tema.fonte_titulo, big ? 900 : 700, !big)
+                    : { fontFamily: p.tema.fonte_legenda, fontWeight: 700, fontStyle: "normal" as const }),
+                  color: "#FFFFFF", textShadow: SOMBRA,
                   WebkitTextStroke: `${Math.max(1, 1.5 * k)}px rgba(0,0,0,0.35)`, paintOrder: "stroke fill",
-                  fontWeight: big ? 900 : li % 2 ? 500 : 700, fontStyle: !big && li === 2 ? "italic" : "normal",
-                  fontSize: big ? base * 1.7 : base, lineHeight: 1.08,
+                  fontSize: (big ? base * 1.7 : base) * (big || li === 2 ? estiloDestaque(p.tema.fonte_titulo, 900, false).escala : 1),
+                  lineHeight: 1.08,
                   opacity: f < 0 ? 0 : 1, transform: `scale(${0.82 + 0.18 * pop})`, display: "inline-block",
-                }}>{big && p.tema.caixa_alta_destaque ? w.w.toUpperCase() : w.w}</span>
+                }}>{big && p.tema.caixa_alta_destaque && !SCRIPT.includes(p.tema.fonte_titulo) ? w.w.toUpperCase() : w.w}</span>
               );
             })}
           </div>

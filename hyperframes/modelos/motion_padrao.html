@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=__W__, height=__H__" />
+    <title>__TITULO__</title>
+    <!-- Modelo de motion do editor (estilo do exemplo do cliente: fundo claro com brilho em gradiente,
+         texto cinético palavra a palavra, ícones flutuantes, colagem em anel, celular, logo, abas).
+         Fontes do cliente: Rubik (texto) + Noto Serif (destaque). Gerado por editor/motion_hf.py. -->
+    <script src="gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Medium.ttf"); font-weight: 500; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Black.ttf"); font-weight: 900; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-BoldItalic.ttf"); font-weight: 700; font-style: italic; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-BlackItalic.ttf"); font-weight: 900; font-style: italic; }
+      __FONTE_DEST_FACE__
+      :root {
+        --fundo: __FUNDO__; --texto: __TEXTO__; --acento: __ACENTO__;
+        --g1: __G1__; --g2: __G2__; --g3: __G3__;
+        --u: calc(min(__W__px, __H__px) / 1080);
+      }
+      html, body { margin: 0; background: var(--fundo); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--fundo);
+        font-family: "Rubik", sans-serif; font-weight: 700; color: var(--texto); }
+      .camada { position: absolute; inset: 0; }
+      .blob { position: absolute; border-radius: 50%; opacity: 0.9; }
+      .clip { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .palco { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+      .frase { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(14 * var(--u)) calc(22 * var(--u));
+        width: 86%; font-size: calc(var(--tam, 112) * var(--u)); line-height: 1.08; letter-spacing: -0.01em; text-align: center; }
+      .p { display: inline-block; }
+      .dest { font-family: __FONTE_DEST_CSS__; color: var(--acento); }
+      .icone { position: absolute; width: calc(var(--s) * var(--u)); height: calc(var(--s) * var(--u)); }
+      .letras { display: flex; font-size: calc(220 * var(--u)); font-weight: 900; color: var(--texto); }
+      .letra { display: inline-block; }
+      .guia { position: absolute; top: 18%; bottom: 18%; width: 2px; background: color-mix(in srgb, var(--acento) 35%, transparent); }
+      .anel { position: absolute; width: calc(var(--r) * 2 * var(--u)); height: calc(var(--r) * 2 * var(--u)); }
+      .foto { position: absolute; width: calc(var(--f) * var(--u)); height: calc(var(--f) * 1.25 * var(--u)); border-radius: calc(26 * var(--u));
+        background-size: cover; background-position: center; box-shadow: 0 calc(20 * var(--u)) calc(50 * var(--u)) rgba(60, 20, 120, 0.25); }
+      .centro { position: relative; font-size: calc(72 * var(--u)); width: 60%; text-align: center; }
+      .celular { position: relative; width: calc(520 * var(--u)); height: calc(1060 * var(--u)); border-radius: calc(80 * var(--u));
+        background: #0d0d10; padding: calc(18 * var(--u)); box-sizing: border-box; box-shadow: 0 calc(40 * var(--u)) calc(90 * var(--u)) rgba(60, 20, 120, 0.35); }
+      .tela { width: 100%; height: 100%; border-radius: calc(64 * var(--u)); overflow: hidden; background: linear-gradient(160deg, var(--g1), var(--g3)); position: relative; }
+      .tela img, .tela video { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .ilha { position: absolute; top: calc(26 * var(--u)); left: 50%; width: calc(150 * var(--u)); height: calc(42 * var(--u)); margin-left: calc(-75 * var(--u));
+        border-radius: calc(21 * var(--u)); background: #0d0d10; }
+      .rotulo { position: absolute; left: 0; right: 0; text-align: center; font-size: calc(70 * var(--u)); }
+      .logo { display: flex; align-items: center; gap: calc(26 * var(--u)); font-size: calc(150 * var(--u)); font-weight: 900; letter-spacing: -0.02em; }
+      .marca { width: calc(150 * var(--u)); height: calc(150 * var(--u)); }
+      .nome-logo { display: inline-block; }
+      .numero { font-size: calc(var(--tn, 300) * var(--u)); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+      .legenda-num { font-family: __FONTE_DEST_CSS__; font-size: calc(70 * var(--u)); color: var(--acento); margin-top: calc(20 * var(--u)); }
+      .pilha { display: flex; flex-direction: column; align-items: center; }
+      #abas { position: absolute; left: 0; right: 0; bottom: calc(70 * var(--u)); display: flex; justify-content: center; gap: calc(14 * var(--u)); }
+      .aba { font-size: calc(36 * var(--u)); font-weight: 500; padding: calc(18 * var(--u)) calc(32 * var(--u)); border-radius: calc(16 * var(--u));
+        background: rgba(255, 255, 255, 0.85); color: #1b1530; box-shadow: 0 calc(6 * var(--u)) calc(18 * var(--u)) rgba(60, 20, 120, 0.12); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="motion" data-start="0" data-width="__W__" data-height="__H__" data-duration="__DUR__">
+      <div class="camada" id="fundo">
+        <div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div>
+      </div>
+      __CENAS_HTML__
+      <div id="abas">__ABAS_HTML__</div>
+    </div>
+    <script>
+      const DADOS = __DADOS__;
+      const W = __W__, H = __H__, U = Math.min(W, H) / 1080;
+      // PRNG com semente: render determinístico (mesmo projeto = mesmo vídeo)
+      let semente = 7;
+      const rnd = () => { semente = (semente * 16807) % 2147483647; return (semente - 1) / 2147483646; };
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------------- fundo: brilho em gradiente que respira (como no exemplo)
+      // brilho só na parte de baixo, fundo branco em cima (como no exemplo)
+      const blobs = [["#b1", "--g1", 0.12, 1.06, 0.75], ["#b2", "--g2", 0.82, 1.08, 0.7], ["#b3", "--g3", 0.48, 1.12, 0.6]];
+      blobs.forEach(([sel, cor, x, y, s], i) => {
+        const el = document.querySelector(sel);
+        const d = Math.max(W, H) * s;
+        Object.assign(el.style, { width: d + "px", height: d + "px", left: (x * W - d / 2) + "px", top: (y * H - d / 2) + "px",
+          background: `radial-gradient(closest-side, var(${cor}) 0%, color-mix(in srgb, var(${cor}) 55%, transparent) 45%, transparent 100%)` });
+        tl.fromTo(el, { x: 0, y: 0, scale: 1 }, { x: (i - 1) * 60 * U, y: -50 * U, scale: 1.12, duration: DADOS.dur,
+          ease: "sine.inOut" }, 0);
+      });
+
+      // ---------------- cenas
+      DADOS.cenas.forEach((c, k) => {
+        const t0 = c.t, d = c.dur, id = `#c${k}`;
+        const el = (s) => document.querySelector(`${id} ${s}`);
+        const all = (s) => Array.from(document.querySelectorAll(`${id} ${s}`));
+        const palco = el(".palco");
+        // entrada/saída suaves de toda a cena (desfoque + escala), como as trocas do exemplo
+        tl.fromTo(palco, { opacity: 0, scale: 0.96, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.45, ease: "power2.out" }, t0);
+        tl.to(palco, { opacity: 0, scale: 1.03, filter: "blur(14px)", duration: 0.35, ease: "power2.in" }, t0 + d - 0.35);
+
+        if (c.tipo === "texto") {
+          const ps = all(".p");
+          const passo = Math.min(0.22, (d * 0.55) / Math.max(1, ps.length));
+          ps.forEach((p, i) => tl.fromTo(p, { opacity: 0, y: 40 * U, filter: "blur(10px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, t0 + 0.15 + i * passo));
+          all(".icone").forEach((ic, i) => {
+            const ang = rnd() * Math.PI * 2;
+            tl.fromTo(ic, { opacity: 0, scale: 0.2, rotation: -40 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.6, ease: "back.out(2)" }, t0 + 0.3 + i * 0.07);
+            tl.to(ic, { x: Math.cos(ang) * 60 * U, y: Math.sin(ang) * 60 * U - 30 * U, rotation: (rnd() - 0.5) * 50, duration: d - 0.4, ease: "sine.inOut" }, t0 + 0.4);
+          });
+        } else if (c.tipo === "soletrado") {
+          const ls = all(".letra");
+          const n = ls.length;
+          ls.forEach((l, i) => {
+            const off = (i - (n - 1) / 2) * Math.min(90, 520 / n) * U;   // espalha sem sair da tela
+            tl.fromTo(l, { x: off, opacity: 0, y: (i % 2 ? -1 : 1) * 30 * U }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t0 + 0.1 + i * 0.05);
+            tl.to(l, { x: 0, duration: 0.8, ease: "expo.inOut" }, t0 + d * 0.45);
+          });
+          all(".guia").forEach((g, i) => tl.fromTo(g, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.5, ease: "power2.out" }, t0 + 0.1 + i * 0.04));
+          all(".guia").forEach((g) => tl.to(g, { opacity: 0, duration: 0.4 }, t0 + d * 0.45));
+        } else if (c.tipo === "colagem") {
+          const anel = el(".anel");
+          tl.fromTo(anel, { rotation: -12 }, { rotation: 18, duration: d, ease: "none" }, t0);
+          all(".foto").forEach((f, i) => {
+            tl.fromTo(f, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, t0 + 0.1 + i * 0.09);
+            tl.fromTo(f, { rotation: 0 }, { rotation: -30, duration: d, ease: "none" }, t0);   // fotos ficam "de pé" enquanto o anel gira
+          });
+          tl.fromTo(el(".centro"), { opacity: 0, y: 20 * U }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t0 + 0.35);
+        } else if (c.tipo === "celular") {
+          const cel = el(".celular");
+          tl.fromTo(cel, { y: 500 * U, rotation: -8, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, t0 + 0.05);
+          tl.to(cel, { y: -24 * U, rotation: 2, duration: d - 1, ease: "sine.inOut" }, t0 + 0.95);
+          const r = el(".rotulo");
+          if (r) tl.fromTo(r, { opacity: 0, y: 30 * U }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t0 + 0.5);
+        } else if (c.tipo === "logo") {
+          const circ = el(".marca circle");
+          const comp = 2 * Math.PI * 58;
+          tl.fromTo(circ, { attr: { "stroke-dashoffset": comp } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.inOut" }, t0 + 0.1);
+          tl.fromTo(el(".marca"), { scale: 0.6, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.9, ease: "back.out(1.4)" }, t0 + 0.1);
+          tl.fromTo(el(".nome-logo"), { clipPath: "inset(0 100% 0 0)", x: -30 * U }, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.8, ease: "power3.out" }, t0 + 0.7);
+        } else if (c.tipo === "numero") {
+          const num = el(".numero");
+          const obj = { v: 0 };
+          const fmt = (v) => Math.round(v).toLocaleString("pt-BR") + (c.sufixo || "");
+          num.textContent = fmt(0);
+          tl.fromTo(num, { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, t0 + 0.05);
+          tl.to(obj, { v: c.valor, duration: Math.min(1.6, d - 0.8), ease: "power2.out", onUpdate: () => { num.textContent = fmt(obj.v); } }, t0 + 0.1);
+          const lg = el(".legenda-num");
+          if (lg) tl.fromTo(lg, { opacity: 0, y: 20 * U }, { opacity: 1, y: 0, duration: 0.5 }, t0 + 0.6);
+        }
+      });
+
+      // ---------------- abas de capítulo (a ativa fica escura, como no exemplo)
+      const abas = Array.from(document.querySelectorAll(".aba"));
+      if (abas.length) {
+        tl.fromTo("#abas", { opacity: 0, y: 40 * U }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+        DADOS.cenas.forEach((c) => {
+          if (c.capitulo == null) return;
+          abas.forEach((a, i) => tl.to(a, { backgroundColor: i === c.capitulo ? "#14102a" : "rgba(255,255,255,0.85)",
+            color: i === c.capitulo ? "#ffffff" : "#1b1530", duration: 0.25 }, c.t));
+        });
+      }
+      window.__timelines["motion"] = tl;
+    </script>
+  </body>
+</html>

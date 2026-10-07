@@ -15,4 +15,4 @@ musica: {humor: informativo}
 motion:
   callout: {ativo: false}
 remotion:
-  tema: {fonte: Inter, animacao: deslize, caixa_alta_destaque: false}
+  tema: {fonte: Rubik, animacao: deslize, caixa_alta_destaque: false}

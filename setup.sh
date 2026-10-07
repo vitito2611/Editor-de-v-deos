@@ -32,5 +32,13 @@ fi
 echo "==> Banco local de SFX e trilhas (sintetizado)"
 [ -f assets/music/library.yaml ] || .venv/bin/python -m editor.assets_gen
 
+echo "==> Remotion (motion em React / estúdio) e HyperFrames (motion em HTML+GSAP)"
+if command -v npm >/dev/null; then
+  (cd remotion && npm install --no-fund --no-audit)
+  (cd hyperframes && npm install --no-fund --no-audit && npx hyperframes telemetry disable && npx hyperframes browser ensure)
+  npx --yes skills experimental_install || true     # skills do HyperFrames (skills-lock.json)
+fi
+[ -n "$(ls assets/fonts/[Bb]lack*[Jj]ack* 2>/dev/null)" ] || echo "   ⚠ fonte Black Jack (destaque) ausente: coloque BlackJack.otf/.ttf em assets/fonts (fontsquirrel.com/fonts/blackjack). Até lá o destaque usa Noto Serif."
+
 echo "==> Verificação"
 .venv/bin/python -m editor.doctor

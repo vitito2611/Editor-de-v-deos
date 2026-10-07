@@ -36,6 +36,11 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 - Legendas: **sem cores** (nada de verde/amarelo/vermelho). Dinâmicas só com variação de fonte,
   peso, tamanho e itálico, em branco, logo abaixo do rosto (`dinamico_branco`).
+- **Fontes fixas em TODOS os vídeos e modelos:** legenda comum **Rubik Bold**; quando a fonte troca para
+  destacar (palavra-chave, peso maior, itálico, cards, títulos) **Black Jack** (manuscrita, bem diferente da
+  Rubik). Config: `legendas.fonte_base` / `fonte_destaque` (+ `fonte_destaque_reserva: Noto Serif`, usada só se
+  o arquivo faltar). Black Jack (Typadelic): uso livre em projetos, **redistribuição proibida** → o arquivo
+  fica só local em `assets/fonts/` (gitignored); fontsquirrel.com bloqueado na rede → pedir o .otf/.ttf ao cliente.
 - Edição dinâmica: troca de plano a cada ≤ 2,6 s, B-roll/fotos/cards nos momentos-chave, fotos das
   pessoas/marcas citadas (ex.: Zuckerberg, Steve Jobs) — só fontes com licença (Openverse/Wikimedia,
   Mixkit). Não usar fotos do Google (direitos autorais).
@@ -47,6 +52,15 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   muletas/frase abandonada cortados por `editor/erros.py` (revisão em `revisao/erros_gravacao.yaml`).
 
 ## Habilidades extras
+
+- **Vídeo em motion (HyperFrames, HTML+GSAP → MP4)** no estilo do exemplo do cliente
+  (`referencias/motion_exemplo.mp4`: fundo branco com brilho lilás/rosa embaixo, texto cinético com desfoque,
+  ícones flutuando, palavra soletrada, colagem em anel, celular, logo, abas de capítulo). Roteiro YAML →
+  `python -m editor.motion_hf config/motion/<x>.yaml output/x.mp4 [--horizontal] [--rapido]` (modelo em
+  `hyperframes/modelos/motion_padrao.html`, demo `config/motion/demo_editor.yaml`). Na edição: item do plano
+  `{contem: "...", tipo: motion, roteiro: config/motion/x.yaml}`. Skills oficiais do HyperFrames em
+  `.claude/skills/hyperframes*` (restaurar: `npx skills experimental_install`). **Nunca usar CSS `filter: blur`
+  grande** (fundo) no HyperFrames: render por software fica 4–5x mais lento (usar radial-gradient).
 
 - **Ângulos de câmera por IA** (Seedance 2.0 via MCP Higgsfield): ver `.claude/skills/angulos-ia/SKILL.md`
   e `editor/angulos.py`. Requer créditos Higgsfield e rede liberada para `upload.higgsfield.ai`.
@@ -60,6 +74,8 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 ## Velocidade
 
+- Cor/grão/vinheta aplicados nos segmentos quando o final sai do Remotion (base = montado + áudio, sem
+  recodificar); segmentos iguais são reaproveitados entre renders; Mac decodifica HEVC por hardware (VideoToolbox).
 - Mezanino HDR→SDR em cache compartilhado (`work/_fontes/`, superfast CRF 12, GOP 15); análise em cache;
   segmentos veryfast CRF 12 e reaproveitados se nada mudou; final preset fast. Vídeo 2 (51 s, 4K60 HDR):
   ~37 min → ~17 min na 1ª vez; ajustes de camadas ~3 min. Num Mac (Apple Silicon) é bem mais rápido.

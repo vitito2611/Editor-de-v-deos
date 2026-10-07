@@ -1,6 +1,6 @@
 # ref5 — brand film escuro: legenda monoespaçada dividida, keyword em negrito branco (cliente não quer cores),
 # flash branco nas transições, low-key teal & orange.
-# Legenda: preferência do cliente (branca, dinâmica, logo abaixo do rosto) com a fonte mono da marca.
+# Legenda: preferência do cliente (branca, dinâmica, logo abaixo do rosto) em Rubik Bold + Black Jack no destaque.
 # O mono_dividido original (frase no meio da tela, pequena) cobria a boca em selfie vertical.
 legendas:
   estilo_base: dinamico_branco
@@ -8,7 +8,7 @@ legendas:
   rotacao: {ativo: false}
   destaque: {ativo: false}
   estilos:
-    dinamico_branco: {fonte: JetBrains Mono, tamanho: 64, escala_destaque: 1.7}
+    dinamico_branco: {fonte: Rubik, tamanho: 64, escala_destaque: 1.7}
 cor: {look: dark_ref5}
 cortes:
   jump_zoom: {ativo: false}
@@ -21,4 +21,4 @@ motion:
   callout: {ativo: false}
 musica: {humor: sombrio}
 remotion:
-  tema: {fonte: JetBrains Mono, fonte_titulo: JetBrains Mono, animacao: digitacao, caixa_alta_destaque: false}
+  tema: {fonte: Rubik, fonte_titulo: Black Jack, animacao: digitacao, caixa_alta_destaque: false}

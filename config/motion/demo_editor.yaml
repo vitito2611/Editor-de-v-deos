@@ -1,0 +1,11 @@
+# Demo do modelo de motion (estilo do exemplo do cliente) — python -m editor.motion_hf config/motion/demo_editor.yaml output/motion_demo.mp4
+titulo: Editor com IA
+capitulos: [Intro, Problema, Solução, Ação]
+cenas:
+  - {tipo: texto, frase: "Todo dia tem um vídeo *novo* pra editar", dur: 3.2, capitulo: 0, icones: 7}
+  - {tipo: texto, frase: "e editar leva *horas.*", dur: 2.4, capitulo: 1, icones: 0, tamanho: 110}
+  - {tipo: colagem, texto: "você só quer o *resultado*", dur: 3.2, capitulo: 1, quantidade: 9}
+  - {tipo: soletrado, palavra: Simples, dur: 2.4, capitulo: 2}
+  - {tipo: numero, valor: 17, sufixo: " min", legenda: "do bruto ao vídeo pronto", dur: 2.6, capitulo: 2}
+  - {tipo: celular, rotulo: "Tudo *no celular*", dur: 3, capitulo: 3}
+  - {tipo: logo, nome: "Editor IA", dur: 2.6, capitulo: 3}

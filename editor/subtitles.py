@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .utils import hex_to_rgb, log
+from .utils import ROOT, hex_to_rgb, log
 
 WEIGHTS = {"Thin": 100, "Light": 300, "Regular": 400, "Medium": 500, "SemiBold": 600,
            "Bold": 700, "ExtraBold": 800, "Black": 900}
@@ -59,8 +59,8 @@ YCbCr Matrix: TV.709
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Plain,Inter,60,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
-Style: Box,Inter,60,&H00FFFFFF,&H00FFFFFF,&H64000000,&H00000000,0,0,0,0,100,100,0,0,3,14,0,5,0,0,0,1
+Style: Plain,Rubik,60,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: Box,Rubik,60,&H00FFFFFF,&H00FFFFFF,&H64000000,&H00000000,0,0,0,0,100,100,0,0,3,14,0,5,0,0,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -68,9 +68,29 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         path.write_text(head + "\n".join(self.events) + "\n", encoding="utf-8")
 
 
-def font_tags(st: dict, size: float | None = None, weight: str | None = None, italic: bool = False) -> str:
+SCRIPT = {"Black Jack", "BlackJack"}   # fontes manuscritas: sem negrito/itálico falso, um pouco maiores
+
+
+def _familia(st: dict, weight: str | None, italic: bool, destaque: bool = False) -> str:
+    """Regra do cliente: legenda comum em Rubik Bold; quando o estilo troca a fonte para destacar
+    (palavra-chave, peso acima de Bold ou itálico), a palavra vai para a fonte de destaque (Black Jack)."""
+    if destaque or italic or (weight in ("ExtraBold", "Black")):
+        return st.get("fonte_destaque") or st.get("fonte", "Rubik")
+    return st.get("fonte", "Rubik")
+
+
+def _ajuste_script(fam: str, w: int, italic: bool, size: float) -> tuple[int, bool, float]:
+    if fam in SCRIPT:
+        return 400, False, size * 1.3
+    return w, italic, size
+
+
+def font_tags(st: dict, size: float | None = None, weight: str | None = None, italic: bool = False,
+              destaque: bool = False) -> str:
     w = WEIGHTS.get(weight or st.get("peso", "Bold"), 700)
-    t = f"\\fn{st.get('fonte', 'Inter')}\\b{w}\\i{1 if italic else 0}\\fs{int(size or st['tamanho'])}"
+    fam = _familia(st, weight, italic, destaque)
+    w, italic, sz = _ajuste_script(fam, w, italic, size or st["tamanho"])
+    t = f"\\fn{fam}\\b{w}\\i{1 if italic else 0}\\fs{int(sz)}"
     t += f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}"
     bord = st.get("contorno", 0)
     t += f"\\bord{bord}\\3c{ass_color(st.get('contorno_cor', '#000000'))}"
@@ -189,6 +209,36 @@ def _word_txt(w: dict, st: dict, lc: dict) -> str:
     return esc(t)
 
 
+def fonte_destaque(lc: dict) -> str | None:
+    """A fonte de destaque pedida (Black Jack); se o arquivo ainda não estiver em assets/fonts,
+    usa a reserva (Noto Serif) para nunca sair com fonte trocada pelo sistema."""
+    dest = lc.get("fonte_destaque")
+    if dest in SCRIPT and not list((ROOT / "assets" / "fonts").glob("[Bb]lack*[Jj]ack*.[ot]tf")):
+        if not _AVISO.get("bj"):
+            log.warning("  fonte Black Jack não encontrada em assets/fonts → destaque em %s (reserva)",
+                        lc.get("fonte_destaque_reserva", "Noto Serif"))
+            _AVISO["bj"] = True
+        return lc.get("fonte_destaque_reserva", "Noto Serif")
+    return dest
+
+
+_AVISO: dict = {}
+
+
+def aplicar_fontes(lc: dict) -> dict:
+    """Fontes fixas do cliente em TODOS os estilos/modelos: Rubik Bold + Noto Serif no destaque."""
+    base, dest = lc.get("fonte_base"), fonte_destaque(lc)
+    styles = {k: dict(v) for k, v in lc["estilos"].items()}
+    if base:
+        for st in styles.values():
+            st["fonte"] = base
+            st["fonte_destaque"] = dest or base
+            if st.get("peso") in (None, "Regular", "Medium", "SemiBold", "Light"):
+                st["peso"] = "Bold"
+    lc["estilos"] = styles
+    return styles
+
+
 def _is_kw(w, lc):
     return lc["destaque"]["ativo"] and w.get("kw", 0) >= lc["destaque"]["score_min"]
 
@@ -224,8 +274,9 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
             elif active is not None and i == active and st.get("cor_ativa"):
                 tags += f"\\1c{ass_color(st['cor_ativa'])}\\fscx{hl_scale}\\fscy{hl_scale}"
             elif _is_kw(w, lc):
-                tags += f"\\1c{ass_color(hl['cor'])}\\fscx{hl_scale}\\fscy{hl_scale}"
-            reset = f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}\\fscx100\\fscy100\\alpha&H00&"
+                tags += f"\\1c{ass_color(hl['cor'])}\\fscx{hl_scale}\\fscy{hl_scale}\\fn{_familia(st, None, False, True)}"
+            reset = (f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}\\fscx100\\fscy100\\alpha&H00&"
+                     f"\\fn{st.get('fonte', 'Rubik')}")
             parts.append(("{" + tags + "}" if tags else "") + t + ("{" + reset + "}" if tags else ""))
         return " ".join(parts)
 
@@ -275,7 +326,7 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
                 kwline = any(grp[i].get("kw", 0) >= 0.6 for i in ln)
                 fs = size * (1.15 if kwline else 0.62)
                 body = " ".join(("{\\alpha&HFF&}" if i > wi else "{\\alpha&H00&}") + txts[i] for i in ln)
-                segs.append("{" + font_tags(st, fs, "Bold" if kwline else "SemiBold") + "}" + body)
+                segs.append("{" + font_tags(st, fs, "Bold", destaque=kwline) + "}" + body)
             doc.add(s0, e0, "{\\an5\\pos(%d,%d)%s}" % (x, y, "\\fad(0,120)" if wi == len(grp) - 1 else "") +
                     "\\N".join(segs), layer=2)
         return
@@ -296,9 +347,9 @@ def render_group(doc: AssDoc, grp: list[dict], start: float, end: float, st: dic
                 for i in idxs:
                     tag = "\\alpha&HFF&" if i > wi else "\\alpha&H00&"
                     if _is_kw(grp[i], lc):
-                        tag += f"\\1c{ass_color(cols[color_cycle[0] % len(cols)])}\\b1"
+                        tag += f"\\1c{ass_color(cols[color_cycle[0] % len(cols)])}\\b1\\fn{_familia(st, None, False, True)}"
                     else:
-                        tag += f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}\\b0"
+                        tag += f"\\1c{ass_color(st.get('cor', '#FFFFFF'))}\\b0\\fn{st.get('fonte', 'Rubik')}"
                     body.append("{" + tag + "}" + txts[i])
                 nxt = grp[idxs[k + 1]]["s"] if k + 1 < len(idxs) else end
                 doc.add(s0, nxt if k + 1 < len(idxs) else e0,
@@ -359,7 +410,9 @@ def render_dinamico(doc: AssDoc, grp, start, end, st, lc, placer, size, txts):
              f"\\shad{st.get('sombra', 3)}\\4c&H000000&\\4a&H90&\\1c&HFFFFFF&"
 
     def ft(sz, weight, italic=False):
-        return "\\fn%s\\b%d\\i%d\\fs%d" % (st.get("fonte", "Inter"), WEIGHTS[weight], 1 if italic else 0, int(sz)) + stroke
+        fam = _familia(st, weight, italic)
+        w, it, sz = _ajuste_script(fam, WEIGHTS[weight], italic, sz)
+        return "\\fn%s\\b%d\\i%d\\fs%d" % (fam, w, 1 if it else 0, int(sz)) + stroke
 
     if kw >= st.get("impacto_kw_min", 0.78) and len(grp) <= 2 and _DIN["n"] % 3 == 0:
         variant = "impacto"
@@ -417,7 +470,7 @@ def build(words_out: list[dict], frases_out: list[dict], g, faces, cfg: dict, do
     lc["evitar_rosto"] = cfg["legendas"]["evitar_rosto"]
     if not lc["ativo"] or not words_out:
         return []
-    styles = lc["estilos"]
+    styles = aplicar_fontes(lc)
     placer = Placer(g, faces, lc)
     base_name, imp_name = lc["estilo_base"], lc["estilo_impacto"]
     groups = group_words(words_out, lc, styles[base_name])

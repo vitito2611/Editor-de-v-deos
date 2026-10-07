@@ -4,6 +4,7 @@ Uso: `python editar.py bruto.mp4 --estilo <modelo> --plataforma <reels|tiktok|sh
 
 ## Regras que valem para TODOS os modelos
 - Legenda **sem cores** (só branco; variação de fonte, peso, tamanho e itálico).
+- **Fontes:** legenda comum em **Rubik Bold**; destaque (troca de fonte) em **Black Jack**, manuscrita.
 - SFX "plin"/brilho (Magic sparkle whoosh) **vetado para sempre** (`sfx.proibidos`).
 - Nada de cenas genéricas sem relação com a fala (ex.: pizza, carteira).
 - Fotos de pessoas/marcas citadas só com licença (Openverse/Wikimedia, Mixkit) — nunca Google.
@@ -12,6 +13,7 @@ Uso: `python editar.py bruto.mp4 --estilo <modelo> --plataforma <reels|tiktok|sh
 - iPhone HDR 4K60 → SDR 1440p30 automático. Áudio a -14 LUFS.
 - Brutos vêm do Drive ("Vídeos não editados"); entrega pelo chat (≤ 30 MB).
 - Glossário por vídeo em `transcricao.correcoes` (ex.: Zuckenberg → Zuckerberg).
+- **Motion em HyperFrames** (estilo do exemplo do cliente) pode entrar em qualquer modelo pelo plano (`tipo: motion`).
 - **Remotion ligado em todos os modelos** (`remotion.ativo`): cards de frase, contador, título de conceito
   e gancho animados em React, fundo transparente, sempre brancos. Sem Node → mesmos elementos em ASS.
 - Extra opcional: ângulos por IA (Seedance/Higgsfield — precisa de créditos e rede).

@@ -94,7 +94,10 @@ def _normalize_source(src: Path, g: dict) -> Path:
     # intermediário: superfast + CRF 12 (≈ sem perda visível, 2x mais rápido que fast) e GOP curto
     # (os segmentos fazem seek no mezanino — com GOP 250 cada seek decodificava até 8 s)
     tmp = dst.with_suffix(".tmp.mp4")
-    ffmpeg("-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
+    # Mac: o chip decodifica o HEVC 10-bit do iPhone por hardware (VideoToolbox) — a etapa mais lenta na nuvem
+    import sys as _sys
+    hw = ["-hwaccel", "videotoolbox"] if _sys.platform == "darwin" else []
+    ffmpeg(*hw, "-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
            "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
            "-c:a", "aac", "-b:a", "256k", "-map_metadata", "-1", str(tmp))
     tmp.replace(dst)
@@ -324,9 +327,24 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         rep["cor"] = {"layout": g.mode, "conteudo": [g.content_x, g.content_y, g.content_w, g.content_h, g.canvas_w, g.canvas_h], "look": cfg["cor"]["look"], "primaria": {str(k): v for k, v in primary.items()}}
     with timer.etapa("Render dos segmentos e montagem"):
         segdir = work / "segmentos"
-        for f in segdir.glob("*"):
-            f.unlink()
+        segdir.mkdir(parents=True, exist_ok=True)
         jobs = render.build_jobs(clips, [src], g, primary, segdir)
+        # com o projeto Remotion (layout cheio), cor/grão/vinheta vão direto nos segmentos: o vídeo
+        # base do Remotion vira só "montado + áudio" (sem um encode inteiro a mais)
+        from . import remotion_fx as _rfx
+        cor_nos_segmentos = (not preview and bool(_rfx.elementos(cfg)) and _rfx.cfg_of(cfg).get("edicao", True)
+                             and g.mode not in ("letterbox", "blur_fill"))
+        if cor_nos_segmentos:
+            post = [x for x in (lut, f"noise=alls={int(cfg['motion']['grao'])}:allf=t" if cfg["motion"].get("grao") else "",
+                                "vignette=PI/5" if cfg["motion"].get("vinheta") else "") if x]
+            if post:
+                for j in jobs:
+                    j["filtro"] = j["filtro"] + "," + ",".join(post)
+        # remove só segmentos que não fazem mais parte da edição (os iguais são reaproveitados)
+        vivos = {Path(j["out"]).name for j in jobs} | {Path(j["out"]).with_suffix(".sig").name for j in jobs}
+        for f in segdir.glob("*"):
+            if f.name not in vivos:
+                f.unlink()
         render.render_segments(jobs, g.fps, threads, preview)
         montado = render.assemble(jobs, g.fps, segdir / "montado.mp4", preview)
         vdur = probe(montado)["duracao"]
@@ -430,18 +448,27 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         if modo_projeto:
             from . import projeto
             base = work / "base.mp4"   # cortes + zoom + cor + áudio, sem camadas (intermediário de alta qualidade)
-            render.compose(montado, amaster, None, g, cfg, dict(plat, crf=14, preset="veryfast"), base, lut, [],
-                           overlays, preview, total)
+            if cor_nos_segmentos and not overlays:
+                # a cor já está nos segmentos: só junta vídeo + áudio, sem recodificar o vídeo
+                ffmpeg("-i", str(montado), "-i", str(amaster), "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+                       "-c:a", "aac", "-b:a", "256k", "-t", f"{total:.3f}", str(base))
+            else:
+                render.compose(montado, amaster, None, g, cfg, dict(plat, crf=14, preset="veryfast"), base,
+                               "" if cor_nos_segmentos else lut, [], overlays, preview, total)
             pj = projeto.exportar(Path(out).stem.replace("_com_trilha", ""), g, total, base, lut, cfg, words_out,
-                                  faces, dyn_events, rjobs, card_spans)
+                                  faces, dyn_events, rjobs, card_spans, lut_fundo_card=not cor_nos_segmentos)
             rep["projeto_remotion"] = str(pj)
             feito = projeto.renderizar(pj, out, plat["crf"])
             if not feito:   # sem Remotion funcional: mesmos elementos em ASS pelo FFmpeg
                 doc, rjobs, card_spans = montar_ass(set())
                 doc.write(ass)
         if not feito:
-            render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg, plat,
-                           out, lut, broll_out, overlays, preview, total, motion_clips)
+            cfg_c = cfg
+            if modo_projeto and cor_nos_segmentos:   # cor/grão já aplicados nos segmentos
+                cfg_c = dict(cfg, motion=dict(cfg["motion"], grao=0, vinheta=False))
+            render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg_c, plat,
+                           out, "" if (modo_projeto and cor_nos_segmentos) else lut, broll_out, overlays, preview, total,
+                           motion_clips)
         fin = probe(out)
         loud = analysis.loudness_stats(out)
         rep["saida"] = {"arquivo": str(out), "duracao": fin["duracao"], "resolucao": f"{fin['largura']}x{fin['altura']}",
