@@ -75,7 +75,7 @@ def plan(clips, decisions: list[dict], words_out: list[dict], frases_out: list[d
         for c in clips:
             if "smash_cut" in c.tags:
                 cand.append((c.out_start, sc["impacto"]["categoria"], "smash cut", 3))
-        for w in words_out:
+        for w in (words_out if sc["impacto"].get("palavras", True) else []):
             f = frases_out[w["sent"]] if "sent" in w and w["sent"] < len(frases_out) else None
             if w.get("kw", 0) >= sc["impacto"]["score_min"] and f and f.get("impacto", 0) >= 0.7:
                 cand.append((w["s"] - 0.02, sc["impacto"]["categoria"], f"palavra-chave '{w['w']}'", 1))
@@ -87,7 +87,7 @@ def plan(clips, decisions: list[dict], words_out: list[dict], frases_out: list[d
                     cand.append((f["s"] - 0.05, sc[cat]["categoria"], f"gatilho '{f['gatilhos'][cat][0]}'", 1))
     # --- riser antes de smash cut e glitch sonoro junto do glitch visual
     for c in clips:
-        if "smash_cut" in c.tags and bank.get("riser"):
+        if "smash_cut" in c.tags and bank.get("riser") and sc.get("riser", {}).get("ativo", True):
             cand.append((c.out_start, "riser", "subida antes do smash cut", 2.8))
         if "glitch" in c.tags and bank.get("glitch"):
             cand.append((c.out_start + 0.01, "glitch", "glitch visual", 2.7))

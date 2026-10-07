@@ -305,7 +305,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             if e["tipo"] == "card":
                 extras.append((e["t"] + 0.12, "impacto", "card de impacto", 2.2))
         zc = [c for c in clips if "jump_zoom" in c.tags]
-        extras += [(c.out_start, "transicao", "punch-in", 0.6) for c in zc[::2]]
+        if cfg["sfx"].get("punchin", True):
+            extras += [(c.out_start, "transicao", "punch-in", 0.6) for c in zc[::2]]
         events = sfx.plan(clips, decisions, words_out, frases_out, total, cfg, sr, extras)
         rep["sfx"] = [{k: v for k, v in e.items() if k != "audio"} for e in events]
         amaster, minfo = audio.mix_and_master(vtrack, mtrack, events, sr, cfg, plat, work)

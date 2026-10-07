@@ -356,6 +356,8 @@ sfx:
   variacao_volume_db: 2.0
   intervalo_min_s: 2.5
   max_por_minuto: 10
+  punchin: true                 # whoosh também em trocas de zoom (punch-ins)
+  riser: {ativo: true}          # subida antes do smash cut
   transicao:
     ativo: true
     em: [smash, topico, zoom_reset, transicao]
@@ -363,6 +365,7 @@ sfx:
   impacto:
     ativo: true
     score_min: 0.78
+    palavras: true              # impacto em palavras-chave fortes
     categoria: impacto
   atencao:
     ativo: true
