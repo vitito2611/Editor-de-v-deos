@@ -29,9 +29,17 @@ def slug(nome: str) -> str:
     return ("Edicao-" + s)[:60]
 
 
-def _legendas(words_out, g, faces, cfg, pular) -> list[dict]:
+VARIANTE = {"dinamico": "dinamico", "cinetico": "cinetico"}   # resto → "simples" (frase inteira, discreta)
+
+
+def _legendas(words_out, g, faces, cfg, pular, estilos_log=None) -> list[dict]:
+    """Blocos de legenda para o Remotion, respeitando o estilo de cada modelo: o estilo de cada bloco
+    vem da mesma decisão das legendas ASS (base × impacto)."""
+    from .subtitles import aplicar_fontes
     lc = dict(cfg["legendas"])
-    st = lc["estilos"][lc["estilo_base"]]
+    estilos = aplicar_fontes(lc)
+    st = estilos[lc["estilo_base"]]
+    por_t = {round(r["t"], 2): r["estilo"] for r in (estilos_log or [])}
     placer = Placer(g, faces, lc)
     size = st.get("tamanho", 64) * (g.canvas_w / 1080 if g.canvas_h > g.canvas_w else g.canvas_h / 1080)
     ws = [w for w in words_out if not any(a - 0.05 <= w["s"] < b for a, b in pular)]
@@ -42,15 +50,23 @@ def _legendas(words_out, g, faces, cfg, pular) -> list[dict]:
         nxt = grupos[k + 1][0]["s"] if k + 1 < len(grupos) else grp[-1]["e"] + 0.4
         t1 = min(nxt, grp[-1]["e"] + 0.6)
         nchars = sum(len(w["w"]) + 1 for w in grp)
-        _, y = placer.anchor(st.get("posicao", "peito"), t0, size, nchars, 2)
+        nome = por_t.get(round(t0, 2), lc["estilo_base"])
+        sb = estilos.get(nome, st)
+        tam = sb.get("tamanho", 64)
+        pos = sb.get("posicao", "peito")
+        if pos == "centro":
+            pos = "peito"          # preferência do cliente: legenda logo abaixo do rosto, sem cobrir a boca
+        _, y = placer.anchor(pos, t0, tam * size / max(1, st.get("tamanho", 64)), nchars, 2)
         out.append({"id": f"L{k:03d}", "t": round(t0, 3), "dur": round(max(0.2, t1 - t0), 3),
                     "palavras": [{"w": w["w"], "s": round(w["s"], 3), "kw": round(w.get("kw", 0), 3)} for w in grp],
-                    "y": round(y / g.canvas_h, 4)})
+                    "y": round(y / g.canvas_h, 4), "estilo": VARIANTE.get(sb.get("animacao"), "simples"),
+                    "tamanho": tam})
     return out
 
 
 def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_out, faces,
-             dyn_events: list[dict], rjobs: list[dict], card_spans, lut_fundo_card: bool = True) -> Path:
+             dyn_events: list[dict], rjobs: list[dict], card_spans, lut_fundo_card: bool = True,
+             estilos_log=None) -> Path:
     """Escreve o projeto (mídia + projeto.json) e atualiza a lista de composições."""
     rc = cfg_of(cfg)
     sl = slug(nome)
@@ -91,7 +107,7 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         "raiz": f"projetos/{sl}/", "base": "base.mp4",
         "tema": dict(rc["tema"], fonte_legenda=_fonte_legenda(cfg),
                      tamanho_legenda=cfg["legendas"]["estilos"][cfg["legendas"]["estilo_base"]].get("tamanho", 64)),
-        "legendas": _legendas(words_out, g, faces, cfg, card_spans),
+        "legendas": _legendas(words_out, g, faces, cfg, card_spans, estilos_log),
         "camadas": sorted(camadas, key=lambda c: c["t"]),
     }
     pj = d / "projeto.json"

@@ -28,12 +28,12 @@
       .blob { position: absolute; border-radius: 50%; opacity: 0.9; }
       .clip { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
       .palco { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-      .frase { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(14 * var(--u)) calc(22 * var(--u));
+      .frase { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(14 * var(--u)) calc(22 * var(--u)); max-width: 80%;
         width: 86%; font-size: calc(var(--tam, 112) * var(--u)); line-height: 1.08; letter-spacing: -0.01em; text-align: center; }
       .p { display: inline-block; }
       .dest { font-family: __FONTE_DEST_CSS__; color: var(--acento); }
       .icone { position: absolute; width: calc(var(--s) * var(--u)); height: calc(var(--s) * var(--u)); }
-      .letras { display: flex; font-size: calc(220 * var(--u)); font-weight: 900; color: var(--texto); }
+      .letras { display: flex; font-size: calc(var(--tl, 220) * var(--u)); font-weight: 900; color: var(--texto); }
       .letra { display: inline-block; }
       .guia { position: absolute; top: 18%; bottom: 18%; width: 2px; background: color-mix(in srgb, var(--acento) 35%, transparent); }
       .anel { position: absolute; width: calc(var(--r) * 2 * var(--u)); height: calc(var(--r) * 2 * var(--u)); }
@@ -44,6 +44,15 @@
         background: #0d0d10; padding: calc(18 * var(--u)); box-sizing: border-box; box-shadow: 0 calc(40 * var(--u)) calc(90 * var(--u)) rgba(60, 20, 120, 0.35); }
       .tela { width: 100%; height: 100%; border-radius: calc(64 * var(--u)); overflow: hidden; background: linear-gradient(160deg, var(--g1), var(--g3)); position: relative; }
       .tela img, .tela video { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .app { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(110 * var(--u)) calc(34 * var(--u)) calc(40 * var(--u));
+        box-sizing: border-box; gap: calc(22 * var(--u)); font-family: "Rubik", sans-serif; }
+      .app-topo { font-size: calc(34 * var(--u)); font-weight: 700; color: #14102a; text-align: center; }
+      .onda { display: flex; align-items: center; justify-content: center; gap: calc(9 * var(--u)); height: calc(150 * var(--u)); }
+      .barra { width: calc(14 * var(--u)); height: calc(120 * var(--u)); border-radius: calc(7 * var(--u)); background: var(--acento); }
+      .bolha { max-width: 82%; font-size: calc(28 * var(--u)); font-weight: 500; line-height: 1.3; padding: calc(18 * var(--u)) calc(22 * var(--u));
+        border-radius: calc(26 * var(--u)); }
+      .bolha.eu { align-self: flex-end; background: #14102a; color: #fff; border-bottom-right-radius: calc(6 * var(--u)); }
+      .bolha.ia { align-self: flex-start; background: rgba(255, 255, 255, 0.92); color: #14102a; border-bottom-left-radius: calc(6 * var(--u)); }
       .ilha { position: absolute; top: calc(26 * var(--u)); left: 50%; width: calc(150 * var(--u)); height: calc(42 * var(--u)); margin-left: calc(-75 * var(--u));
         border-radius: calc(21 * var(--u)); background: #0d0d10; }
       .rotulo { position: absolute; left: 0; right: 0; text-align: center; font-size: calc(70 * var(--u)); }
@@ -89,8 +98,9 @@
       // ---------------- cenas
       DADOS.cenas.forEach((c, k) => {
         const t0 = c.t, d = c.dur, id = `#c${k}`;
-        const el = (s) => document.querySelector(`${id} ${s}`);
-        const all = (s) => Array.from(document.querySelectorAll(`${id} ${s}`));
+        const sec = document.getElementById("c" + k);
+        const el = (s) => sec.querySelector(s);
+        const all = (s) => Array.from(sec.querySelectorAll(s));
         const palco = el(".palco");
         // entrada/saída suaves de toda a cena (desfoque + escala), como as trocas do exemplo
         tl.fromTo(palco, { opacity: 0, scale: 0.96, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.45, ease: "power2.out" }, t0);
@@ -130,6 +140,13 @@
           tl.to(cel, { y: -24 * U, rotation: 2, duration: d - 1, ease: "sine.inOut" }, t0 + 0.95);
           const r = el(".rotulo");
           if (r) tl.fromTo(r, { opacity: 0, y: 30 * U }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t0 + 0.5);
+          // assistente de voz: onda "falando" (determinística) e mensagens entrando
+          all(".barra").forEach((b, i) => {
+            tl.fromTo(b, { scaleY: 0.15 }, { scaleY: 0.35 + 0.65 * Math.abs(Math.sin(i * 1.7)), duration: 0.22, ease: "sine.inOut",
+              repeat: Math.max(1, Math.floor((d - 0.8) / 0.22)), yoyo: true }, t0 + 0.7 + i * 0.03);
+          });
+          all(".bolha").forEach((b, i) => tl.fromTo(b, { opacity: 0, y: 24 * U, scale: 0.92 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.6)" }, t0 + 0.9 + i * Math.min(0.7, (d - 1.4) / 2)));
         } else if (c.tipo === "logo") {
           const circ = el(".marca circle");
           const comp = 2 * Math.PI * 58;

@@ -58,7 +58,9 @@ def detectar(words: list[dict], cfg: dict) -> list[dict]:
                 a = t[i:i + k]
                 if not all(a) or usado[i:i + k].any():
                     continue
-                if t[i + k:i + 2 * k] == a and not (k == 2 and a[0] == a[1]):
+                fim_frase = words[i + k - 1]["w"].rstrip()[-1:] in ".?!"
+                # "vão sumir. Vão sumir todos?" é retórica (a 1ª vez fecha a frase), não erro
+                if t[i + k:i + 2 * k] == a and not (k == 2 and a[0] == a[1]) and not fim_frase:
                     add(i, i + k, "recomeço", f"'{' '.join(w['w'] for w in words[i:i + k])}' repetido em seguida")
     # 2) frase abandonada: as 2–3 primeiras palavras de um trecho reaparecem depois de uma pausa,
     #    dentro de poucas palavras ("Hoje eu vou… [pausa] Hoje eu vou falar")
@@ -72,6 +74,15 @@ def detectar(words: list[dict], cfg: dict) -> list[dict]:
             for j in range(i + 3, min(n - 1, i + ec["janela_palavras"])):
                 if t[j:j + 2] == a and not usado[i:j].any():
                     pausa = words[j]["s"] - words[j - 1]["e"]
+                    # frase completa antes do recomeço = repetição intencional, não erro
+                    if any(w["w"].rstrip()[-1:] in ".?!" for w in words[i:j]):
+                        break
+                    # recomeço de verdade continua IGUAL ("hoje eu vou… hoje eu vou falar"); se diverge
+                    # ("a IA não veio… a IA veio para somar") é contraste retórico e fica
+                    curto = (j - i) <= 3
+                    igual = j + 2 < n and i + 2 < j and t[i + 2] == t[j + 2]
+                    if not (curto or igual):
+                        break
                     if pausa >= ec["pausa_recomeco_s"] or words[j - 1]["w"][-1:] in ",.…-":
                         add(i, j, "frase abandonada",
                             f"recomeçou '{words[j]['w']} {words[j + 1]['w']}' depois de pausa de {pausa:.2f}s")

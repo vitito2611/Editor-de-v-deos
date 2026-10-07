@@ -65,9 +65,10 @@ def _icones(n: int, rng: random.Random, pal: dict) -> str:
     formas = ["circle", "star", "pill", "ring"]
     out = []
     for i in range(n):
-        ang = 2 * math.pi * i / max(1, n) + rng.uniform(-0.3, 0.3)
-        rx, ry = 0.36 + rng.uniform(-0.05, 0.06), 0.2 + rng.uniform(-0.04, 0.06)
-        x, y = 50 + 100 * rx * math.cos(ang), 50 + 100 * ry * math.sin(ang)
+        # metade em cima, metade embaixo do texto — nunca na faixa central onde está a frase
+        lado = -1 if i % 2 == 0 else 1
+        x = 12 + 76 * ((i // 2 + rng.uniform(0.1, 0.9)) / max(1, (n + 1) // 2))
+        y = 50 + lado * rng.uniform(14, 24)
         s = rng.randint(70, 130)
         f = formas[i % len(formas)]
         gid = f"gi{i}_{rng.randint(0, 99999)}"
@@ -114,8 +115,9 @@ def montar(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
         elif tipo == "soletrado":
             letras = "".join(f'<span class="letra">{html.escape(ch)}</span>' for ch in c["palavra"])
             n = len(c["palavra"])
+            tl_ = min(220, int((900 if H > W else 1500) / max(1, n) * 1.6))   # cabe na largura
             guias = "".join(f'<div class="guia" style="left:{50 + (i - (n - 2) / 2) * 8.3:.1f}%"></div>' for i in range(n - 1))
-            corpo = guias + f'<div class="letras">{letras}</div>'
+            corpo = guias + f'<div class="letras" style="--tl:{tl_}">{letras}</div>'
         elif tipo == "colagem":
             imgs = c.get("imagens") or []
             n = max(len(imgs), int(c.get("quantidade", 8)))
@@ -136,6 +138,13 @@ def montar(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
                      f'<div class="centro">{_frase(c.get("texto", ""))}</div>')
         elif tipo == "celular":
             dentro = ""
+            if not c.get("imagem"):
+                # tela de app de assistente de voz (onda + mensagens), sem precisar de print
+                msgs = c.get("mensagens") or [["eu", "Como fecho mais tratamentos?"], ["ia", "Vamos montar o plano juntos."]]
+                barras = "".join('<div class="barra"></div>' for _ in range(12))
+                bolhas = "".join(f'<div class="bolha {html.escape(q)}">{html.escape(t)}</div>' for q, t in msgs)
+                dentro = (f'<div class="app"><div class="app-topo">{html.escape(c.get("app", "Assistente IA"))}</div>'
+                          f'<div class="onda">{barras}</div>{bolhas}</div>')
             if c.get("imagem"):
                 src = Path(c["imagem"])
                 dst = pasta / "assets" / f"tela{k}{src.suffix.lower()}"

@@ -456,7 +456,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
                 render.compose(montado, amaster, None, g, cfg, dict(plat, crf=14, preset="veryfast"), base,
                                "" if cor_nos_segmentos else lut, [], overlays, preview, total)
             pj = projeto.exportar(Path(out).stem.replace("_com_trilha", ""), g, total, base, lut, cfg, words_out,
-                                  faces, dyn_events, rjobs, card_spans, lut_fundo_card=not cor_nos_segmentos)
+                                  faces, dyn_events, rjobs, card_spans, lut_fundo_card=not cor_nos_segmentos,
+                                  estilos_log=rep.get("legendas"))
             rep["projeto_remotion"] = str(pj)
             feito = projeto.renderizar(pj, out, plat["crf"])
             if not feito:   # sem Remotion funcional: mesmos elementos em ASS pelo FFmpeg

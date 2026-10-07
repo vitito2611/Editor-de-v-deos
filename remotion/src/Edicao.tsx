@@ -13,7 +13,11 @@ import { Elemento, Tema, useFontes, estiloDestaque, SCRIPT } from "./Elemento";
 // Regra do cliente: tudo em branco; destaque só por fonte, peso, tamanho e itálico.
 
 export type Palavra = { w: string; s: number; kw?: number };
-export type Legenda = { id: string; t: number; dur: number; palavras: Palavra[]; y: number; oculto?: boolean };
+export type Legenda = {
+  id: string; t: number; dur: number; palavras: Palavra[]; y: number; oculto?: boolean;
+  estilo?: "dinamico" | "cinetico" | "simples";   // segue o modelo (ex.: referencia1 = simples + cinetico)
+  tamanho?: number;
+};
 export type Camada = {
   id: string; tipo: "broll" | "foto" | "card" | "contador" | "callout" | "gancho";
   t: number; dur: number; oculto?: boolean; nome?: string;
@@ -38,14 +42,35 @@ const midia = (p: Projeto, f: string) =>
   /^(https?:|blob:|data:|\.\/|\/)/.test(f) || p.raiz === "" ? f : staticFile(p.raiz + f);
 
 // ----------------------------------------------------------------------------- legenda dinâmica branca
+// "simples": frase inteira, discreta, entra de uma vez (ex.: legenda pequena no peito do referencia1)
+const LegendaSimples: React.FC<{ b: Legenda; p: Projeto }> = ({ b, p }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const k = Math.min(p.W, p.H) / 1080;
+  const ent = interpolate(frame, [0, 0.18 * fps], [0, 1], { extrapolateRight: "clamp" });
+  const sai = interpolate(frame, [durationInFrames - 0.12 * fps, durationInFrames], [1, 0], { extrapolateLeft: "clamp" });
+  return (
+    <AbsoluteFill>
+      <div style={{
+        position: "absolute", left: "8%", width: "84%", top: `${b.y * 100}%`, textAlign: "center",
+        transform: `translateY(calc(-50% + ${(1 - ent) * 10 * k}px))`, opacity: Math.min(ent, sai),
+        fontFamily: p.tema.fonte_legenda, fontWeight: 700, color: "#FFFFFF", fontSize: (b.tamanho ?? 46) * k,
+        lineHeight: 1.15, textShadow: SOMBRA,
+      }}>{b.palavras.map((w) => w.w).join(" ")}</div>
+    </AbsoluteFill>
+  );
+};
+
 const BlocoLegenda: React.FC<{ b: Legenda; p: Projeto }> = ({ b, p }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const k = Math.min(p.W, p.H) / 1080;
-  const base = p.tema.tamanho_legenda * k;
+  // cinético (frase de impacto): base maior e palavra-chave sempre gigante na fonte de destaque
+  const cinetico = b.estilo === "cinetico";
+  const base = (cinetico ? Math.min(b.tamanho ?? 96, 84) : p.tema.tamanho_legenda) * k;
   const ws = b.palavras;
   const kwi = ws.reduce((m, w, i) => ((w.kw ?? 0) > (ws[m]?.kw ?? -1) ? i : m), 0);
-  const destaque = (ws[kwi]?.kw ?? 0) >= 0.6 && ws.length > 1;
+  const destaque = ((ws[kwi]?.kw ?? 0) >= 0.6 || cinetico) && ws.length > 1;
   const linhas: number[][] = destaque
     ? [ws.map((_, i) => i).filter((i) => i < kwi), [kwi], ws.map((_, i) => i).filter((i) => i > kwi)].filter((l) => l.length)
     : [ws.map((_, i) => i)];
@@ -129,7 +154,7 @@ export const Edicao: React.FC<Projeto> = (p) => {
       {p.legendas.filter((b) => !b.oculto).map((b) => (
         <Sequence key={b.id} name={`Legenda: ${b.palavras.map((w) => w.w).join(" ")}`} from={Math.round(b.t * fps)}
           durationInFrames={Math.max(1, Math.round(b.dur * fps))} layout="none">
-          <BlocoLegenda b={b} p={p} />
+          {b.estilo === "simples" ? <LegendaSimples b={b} p={p} /> : <BlocoLegenda b={b} p={p} />}
         </Sequence>
       ))}
     </AbsoluteFill>

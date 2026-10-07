@@ -1,0 +1,48 @@
+# Plano do vídeo "1007 (3)" — "A IA vai roubar o teu emprego?" — estilo referencia1.
+# Uso: python editar.py entrada/video3.mov --estilo referencia1 --plataforma reels --config config/planos/video3_ia_emprego.yaml
+# Cliente: tudo que foi combinado (legenda branca Rubik Bold + destaque Black Jack, troca de plano <= 2,6 s,
+# SFX nível v2 sem "plin", duas versões) e, NO LUGAR DE FOTOS, vídeos em motion (HyperFrames, estilo do exemplo).
+transcricao:
+  correcoes: {"Iá": "IA", "Ayá": "IA", "I": "IA", "Iar": "IA", "ar": "IA", "As": "A", "concordo100%": "concordo 100%"}
+cortes:
+  jump_zoom: {ativo: true, modo: variado, zoom_niveis: [1.0, 1.1, 1.04, 1.16, 1.07], dividir_max_s: 2.6}
+legendas:
+  estilos:
+    cinetico: {posicao: peito}          # frase de impacto do ref1 sem cobrir a boca
+sfx:                                    # nível aprovado na v2
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
+silencio:
+  pausa_preservada_s: 0.22
+motion:
+  contador: {ativo: false}              # números entram como motion (HyperFrames)
+dinamismo:
+  ativo: true
+  intervalo_s: 2.6
+  gap_min_s: 0.9
+  auto_palavras: false                  # nada de foto/B-roll genérico: só o plano
+  fotos_entidades: false
+  cards_max: 1
+  plano:
+    - contem: "Alguns empregos"
+      tipo: motion
+      roteiro: {titulo: empregos, cenas: [{tipo: texto, frase: "Alguns empregos *vão sumir*", dur: 2.4, icones: 5}]}
+    - contem: "repetição"
+      tipo: motion
+      roteiro: {titulo: repeticao, cenas: [{tipo: texto, frase: "Repetição. Tarefa *mecânica.*", dur: 2.4, icones: 0, tamanho: 104}]}
+    - contem: "ele multiplica"
+      tipo: motion
+      roteiro: {titulo: multiplica, cenas: [{tipo: soletrado, palavra: Multiplica, dur: 2.2}]}
+    - contem: "em uma hora"
+      tipo: motion
+      roteiro: {titulo: hora, cenas: [{tipo: numero, valor: 1, sufixo: " hora", legenda: "o que levava o dia todinho", dur: 2.6}]}
+    - contem: "veio para somar"
+      tipo: motion
+      roteiro: {titulo: somar, cenas: [{tipo: texto, frase: "A IA veio para *somar*", dur: 2.2, icones: 6}]}
+    - contem: "um assistente"
+      tipo: motion
+      roteiro: {titulo: assistente, cenas: [{tipo: celular, rotulo: "Assistente de IA *por voz*", dur: 3.0}]}
+    - contem: "totalmente editado"
+      tipo: motion
+      roteiro: {titulo: editado, cenas: [{tipo: texto, frase: "Editado *100% por IA*", dur: 2.2, icones: 6, tamanho: 96}]}
