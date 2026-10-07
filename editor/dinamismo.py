@@ -85,7 +85,8 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
             continue
         cands.append({"t": max(0, t - 0.1), "tipo": item.get("tipo", "video"), "busca": item.get("busca") or item.get("contem"),
                       "busca_en": item.get("busca_en"), "escolha": item.get("escolha", 0),
-                      "texto": item.get("texto"), "prio": 5, "dur": item.get("dur"), "motivo": "plano manual"})
+                      "texto": item.get("texto"), "prio": 5, "dur": item.get("dur"), "motivo": "plano manual",
+                      "arquivo_local": item.get("arquivo"), "credito": item.get("credito")})
     # 2) cards de frases de impacto
     pmin, pmax = dc["card_palavras"]
     for f in frases_out:
@@ -177,7 +178,13 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
                 ok = True
         elif ev["tipo"] == "foto":
             img, cred = None, None
-            if not ev.get("entidade"):
+            if ev.get("arquivo_local"):   # foto escolhida a dedo no plano (licença conferida)
+                from .utils import ROOT
+                f = Path(ev["arquivo_local"])
+                img = f if f.is_absolute() else ROOT / f
+                img = img if img.exists() else None
+                cred = {"fonte": ev.get("credito") or str(f)} if img else None
+            if img is None and not ev.get("entidade"):
                 img = stock.pexels_photo(ev["busca"], cfg)
             if img is None:   # pessoas/marcas e fallback: Openverse (CC, inclui Wikimedia/Flickr)
                 r = stock.openverse_photo(ev["busca"], skip=ev.get("escolha", 0))
@@ -223,6 +230,20 @@ def ass_cards(doc: AssDoc, events, words_out, g, cfg, jobs: list | None = None):
             continue
         a, b = ev["t"], ev["t"] + ev["dur"]
         ws = [w for w in words_out if a - 0.05 <= w["s"] < b] or [{"w": t, "s": a, "kw": 0} for t in (ev.get("texto") or "").split()]
+        if ev.get("texto") and ev.get("motivo") == "plano manual":
+            # texto do plano manda: cada palavra entra quando é falada (ou em sequência), e a que
+            # estiver em CAIXA ALTA no plano vira o destaque (ex.: "comenta SKILL")
+            falado = {re.sub(r"[^\wÀ-ú]", "", w["w"].lower()): w for w in ws}
+            toks = ev["texto"].split()
+            novo = []
+            for i, tk in enumerate(toks):
+                w0 = falado.get(re.sub(r"[^\wÀ-ú]", "", tk.lower()))
+                s0 = w0["s"] if w0 else a + 0.12 * i
+                kw = 1.0 if (tk.isupper() and len(tk) > 1) else (w0.get("kw", 0) * 0.5 if w0 else 0)
+                novo.append({"w": tk, "s": s0, "kw": kw})
+            for i in range(1, len(novo)):        # mantém a ordem do texto
+                novo[i]["s"] = max(novo[i]["s"], novo[i - 1]["s"] + 0.08)
+            ws = novo
         if not ws:
             continue
         spans.append((a, b))

@@ -31,6 +31,17 @@ class Parada(Exception):
     """Interrupção intencional (revisão manual / modo sugestão)."""
 
 
+def _rot90(src: Path) -> bool:
+    from .utils import run as _run
+    p = _run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+              "stream_side_data=rotation", "-of", "csv=p=0", str(src)])
+    try:
+        vals = [v for v in (p.stdout or "").replace(",", " ").split() if v.lstrip("-").isdigit()]
+        return any(abs(int(v)) in (90, 270) for v in vals)
+    except (ValueError, IndexError):
+        return False
+
+
 def _normalize_source(src: Path, g: dict) -> Path:
     """Fonte intermediária ("mezanino") quando necessário:
     • HDR (HLG / PQ, ex.: iPhone Dolby Vision) → SDR Rec.709 com tone mapping (hable)
@@ -45,6 +56,8 @@ def _normalize_source(src: Path, g: dict) -> Path:
     trc = st.get("color_transfer", "")
     hdr = g.get("hdr_para_sdr", True) and trc in ("arib-std-b67", "smpte2084")
     w, h = int(st["width"]), int(st["height"])
+    if _rot90(src):
+        w, h = h, w          # iPhone grava deitado + flag de rotação; o FFmpeg gira antes dos filtros
     num, den = map(int, st["r_frame_rate"].split("/"))
     fps = num / den
     maxh = g.get("fonte_max_lado", 2560)

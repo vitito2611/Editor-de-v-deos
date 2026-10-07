@@ -155,7 +155,14 @@ class Placer:
             p = (W / 2, cy0 + ch * 0.9)
         else:
             p = (W / 2, cy0 + ch * 0.5)
-        if self.lc.get("evitar_rosto") and f and pos in ("inferior", "superior", "centro", "peito"):
+        if pos == "peito" and f and self.lc.get("evitar_rosto") and self._overlap(p, size, nchars, nlines, f):
+            # preferência do cliente: legenda logo ABAIXO do rosto — desce, nunca sobe para o topo
+            for k in (0.80, 0.84, 0.88):
+                q = (W / 2, cy0 + ch * k)
+                if not self._overlap(q, size, nchars, nlines, f):
+                    return q
+            return (W / 2, cy0 + ch * 0.84)
+        if self.lc.get("evitar_rosto") and f and pos in ("inferior", "superior", "centro"):
             if self._overlap(p, size, nchars, nlines, f):
                 for alt in ("inferior", "superior", "centro"):
                     if alt != pos:

@@ -192,12 +192,17 @@ def annotate(words: list[dict], cfg: dict) -> dict:
     callouts.sort(key=lambda c: c["s"])
     # ---- números para contador
     numeros = []
+    mult_ok = set()
     for i, w in enumerate(words):
         if w["num"]:
+            if i in mult_ok:          # "mil" já somado ao número anterior ("45 mil")
+                continue
             v = parse_number(w["w"])
             nxt = clean(words[i + 1]["w"]) if i + 1 < len(words) else ""
             if nxt in ("mil", "milhões", "milhão", "bilhões") and v and v < 1000:
                 v *= NUM_WORDS[nxt]
+                mult_ok.add(i + 1)
+                nxt = clean(words[i + 2]["w"]) if i + 2 < len(words) else ""
             unidade = nxt if nxt in ("anos", "dias", "meses", "km", "reais", "pessoas", "%", "por", "vezes", "mil", "milhões") else ""
             if "%" in w["w"] or nxt == "por":
                 unidade = "%"

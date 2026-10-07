@@ -1,11 +1,14 @@
 # ref5 — brand film escuro: legenda monoespaçada dividida, keyword em negrito branco (cliente não quer cores),
 # flash branco nas transições, low-key teal & orange.
+# Legenda: preferência do cliente (branca, dinâmica, logo abaixo do rosto) com a fonte mono da marca.
+# O mono_dividido original (frase no meio da tela, pequena) cobria a boca em selfie vertical.
 legendas:
-  estilo_base: mono_dividido
-  estilo_impacto: mono_dividido
+  estilo_base: dinamico_branco
+  estilo_impacto: dinamico_branco
   rotacao: {ativo: false}
-  destaque: {ativo: true, score_min: 0.7}
-  evitar_rosto: false
+  destaque: {ativo: false}
+  estilos:
+    dinamico_branco: {fonte: JetBrains Mono, tamanho: 64, escala_destaque: 1.7}
 cor: {look: dark_ref5}
 cortes:
   jump_zoom: {ativo: false}

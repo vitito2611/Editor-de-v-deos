@@ -10,6 +10,8 @@ Saída: lista de palavras [{"w": str, "s": float, "e": float}] em tempo da fonte
 """
 from __future__ import annotations
 
+import re
+
 from pathlib import Path
 
 import numpy as np
@@ -124,17 +126,30 @@ def transcribe(audio16k: np.ndarray, cfg: dict, threads: int = 4) -> list[dict]:
 
 def apply_corrections(words: list[dict], corr: dict) -> list[dict]:
     """Aplica o glossário (sem diferenciar maiúsculas; preserva pontuação e capitalização)."""
-    if not corr:
-        return words
-    low = {str(k).lower(): str(v) for k, v in corr.items()}
+    low = {str(k).lower(): str(v) for k, v in (corr or {}).items()}
     for w in words:
         core = w["w"].strip(".,!?;:…")
         rep = low.get(core.lower())
         if rep:
-            if core[:1].isupper():
+            if core[:1].isupper() and rep[:1].islower():
                 rep = rep[:1].upper() + rep[1:]
             w["w"] = w["w"].replace(core, rep, 1)
-    return words
+        # ASR às vezes cola preposição + número ("de45", "de10") → "de 45"
+        w["w"] = re.sub(r"^([A-Za-zÀ-ú]{1,4})(\d)", r"\1 \2", w["w"])
+    # palavras com espaço (correção "x: a b" ou separação acima) viram vários tokens com tempo proporcional
+    out = []
+    for w in words:
+        parts = w["w"].split()
+        if len(parts) <= 1:
+            out.append(w)
+            continue
+        tot = sum(len(x) for x in parts)
+        t = w["s"]
+        for x in parts:
+            d = (w["e"] - w["s"]) * len(x) / tot
+            out.append(dict(w, w=x, s=round(t, 3), e=round(t + d, 3)))
+            t += d
+    return out
 
 
 def to_srt(words: list[dict], path: Path, per_line: int = 7) -> None:

@@ -1,0 +1,41 @@
+# Plano do vídeo "Vídeo 07/10/26" (IA + Santa Cruz volta à Série B) — estilo brand_dark.
+# Uso: python editar.py entrada/video2.mov --estilo brand_dark --plataforma reels --config config/planos/video2_santa_cruz.yaml
+# Preferências do cliente (CLAUDE.md): legenda só branca, troca de plano <= 2,6 s, B-roll/fotos/cards
+# ligados à fala, fotos só com licença (Openverse/Wikimedia), SFX nível v2 sem "plin", Remotion ligado.
+transcricao:
+  correcoes: {"Iá": "IA", "I": "IA", "ensina": "ensino"}
+cortes:
+  jump_zoom:                    # brand_dark não tinha punch-in; o cliente quer troca de plano <= 2,6 s
+    ativo: true
+    modo: variado
+    zoom_niveis: [1.0, 1.12, 1.05, 1.2, 1.08]
+    dividir_max_s: 2.6
+sfx:                            # nível aprovado na v2 do viral_reels
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
+silencio:
+  pausa_preservada_s: 0.22
+motion:
+  contador: {ativo: true, max: 3}
+dinamismo:
+  ativo: true
+  intervalo_s: 2.6
+  gap_min_s: 0.9
+  cobertura_max: 0.55
+  auto_palavras: false          # só o plano + cards de impacto (nada de cena genérica)
+  plano:
+    - {contem: "totalmente editado", tipo: card, texto: "editado com IA"}
+    - {contem: "começar a editar", tipo: video, busca: "edição de vídeo", busca_en: "video editing timeline computer"}
+    # fotos CC BY (Flickr via Openverse) — baixar de novo se o cache sumir:
+    #   arruda_estadio.jpg     https://live.staticflickr.com/8237/8488172608_2b818ec684_b.jpg  "Estádio do Arruda - Santa Cruz 1 x 2 Fortaleza (17/02/2013)", CC BY
+    #   santa_cruz_torcida.jpg https://live.staticflickr.com/3392/3309576704_9d75e3978d_b.jpg  "Torcedores do Santa Cruz acompanham a troça Minha Cobra", CC BY
+    - {contem: "Santa Cruz está", tipo: foto, busca: "Estádio do Arruda", arquivo: assets/cache_stock/fotos/arruda_estadio.jpg, credito: "Estádio do Arruda (Flickr, CC BY)", dur: 1.8}
+    - {contem: "série B", tipo: card, texto: "Série B"}
+    - {contem: "presença de mais", tipo: video, busca: "estádio lotado", busca_en: "stadium crowd"}
+    - {contem: "time do povo", tipo: foto, busca: "torcida do Santa Cruz", arquivo: assets/cache_stock/fotos/santa_cruz_torcida.jpg, credito: "Torcedores do Santa Cruz (Flickr, CC BY)", dur: 1.6}
+    - {contem: "volta a segunda divisão", tipo: card}
+    - {contem: "torcida marcou presença", tipo: video, busca: "torcida", busca_en: "crowd celebrating stadium"}
+    - {contem: "Fogo de artifício", tipo: video, busca: "fogos", busca_en: "fireworks night"}
+    - {contem: "não deixe de me seguir", tipo: card}
+    - {contem: "palavra skill", tipo: card, texto: "comenta SKILL"}

@@ -39,6 +39,6 @@ sem SFX, trilha emocional.
 Remotion: animação `suave`, letras espaçadas, sem caixa alta.
 
 ## 5. `brand_dark` — brand film escuro
-Legenda monoespaçada dividida esquerda/direita (palavra-chave em negrito branco), flash
+Legenda dinâmica branca em fonte mono (JetBrains Mono) logo abaixo do rosto, flash
 branco nas transições, grão + vinheta, low-key teal & orange, trilha sombria.
 Remotion: animação `digitacao` (máquina de escrever) em JetBrains Mono.
