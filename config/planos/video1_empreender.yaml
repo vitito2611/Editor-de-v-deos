@@ -1,5 +1,5 @@
-# Plano de dinamismo do vídeo "perfil pra empreender" (estilo viral_reels) — v3.
-# v3: menos imagens (cliente pediu), sem a cena da pizza; mantidas as principais.
+# Plano de dinamismo do vídeo "perfil pra empreender" (estilo viral_reels) — versão final.
+# Base: v2 (aprovada). Removidos a pedido do cliente: carteira ("papel amassado") e pizza ("startup").
 # Uso: python editar.py bruto.MOV --estilo viral_reels --config config/planos/video1_empreender.yaml
 transcricao:
   correcoes: {Zuckenberg: Zuckerberg}
@@ -7,15 +7,17 @@ dinamismo:
   ativo: true
   intervalo_s: 2.6
   gap_min_s: 0.9
-  cobertura_max: 0.4
+  cobertura_max: 0.55
   auto_palavras: false        # só o plano manual + cards de impacto
-  cards_max: 2
   plano:
     - {contem: "empresários", tipo: video, busca: "empresários", busca_en: "business people meeting"}
     - {contem: "Zuckerberg", tipo: foto, busca: "Mark Zuckerberg", escolha: 2, dur: 1.3}
     - {contem: "Steve Jobs", tipo: foto, busca: "Steve Jobs WWDC", escolha: 2, dur: 1.6}
     - {contem: "zona de conforto", tipo: video, busca: "sofá", busca_en: "sofa phone"}
+    - {contem: "Y Combinator", tipo: card, texto: "Y Combinator"}
     - {contem: "não existe perfil perfeito", tipo: card}
+    - {contem: "quietos", tipo: video, busca: "tímido", busca_en: "man thinking"}
     - {contem: "chegam longe", tipo: video, busca: "montanha", busca_en: "man on top of mountain"}
     - {contem: "não desistir", tipo: video, busca: "corrida", busca_en: "runner training"}
     - {contem: "O que eu tenho a perder", tipo: card}
+    - {contem: "construindo minha startup", tipo: video, busca: "programando", busca_en: "typing laptop night"}

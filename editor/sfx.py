@@ -21,7 +21,10 @@ from .utils import ROOT, load_audio, log
 def load_bank(cfg: dict, sr: int) -> dict[str, list[tuple[str, np.ndarray]]]:
     base = ROOT / cfg["sfx"]["pasta"]
     bank: dict[str, list] = {}
-    files = [f for f in sorted(base.glob("*/*")) if f.suffix.lower() in (".wav", ".mp3", ".ogg", ".flac")]
+    # efeitos vetados pelo cliente (nome do arquivo ou trecho dele) nunca entram no banco
+    proibidos = [str(p).lower() for p in cfg["sfx"].get("proibidos") or []]
+    files = [f for f in sorted(base.glob("*/*")) if f.suffix.lower() in (".wav", ".mp3", ".ogg", ".flac")
+             and not any(p in f.name.lower() for p in proibidos)]
     for cat in {f.parent.name for f in files}:
         cf = [f for f in files if f.parent.name == cat]
         reais = [f for f in cf if not f.name.endswith(".wav") or f.name.startswith("mx_")]

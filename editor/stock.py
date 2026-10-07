@@ -207,6 +207,8 @@ MIXKIT_SFX = {   # categoria do pipeline → páginas de efeitos do Mixkit (orde
     "riser": ["riser", "cinematic"],
     "glitch": ["glitch"],
 }
+# ids de efeitos do Mixkit vetados pelo cliente (nunca baixar de novo)
+MIXKIT_PROIBIDOS = {"2350"}   # "Magic sparkle whoosh" — o "plin" de brilho
 MIXKIT_MUSIC = {   # humor do pipeline → páginas de trilhas do Mixkit
     "energetico": ["hip-hop", "mood/energetic", "genre/electronica"],
     "informativo": ["mood/inspiring", "corporate", "technology"],
@@ -237,7 +239,7 @@ def _mixkit_pull(base: str, mapping: dict, dest: Path, per: int, label: str) -> 
             for u in _mixkit_mp3s(f"https://mixkit.co/{base}/{pg}/"):
                 if got >= per:
                     break
-                if u in seen:
+                if u in seen or any(f"/{pid}/" in u for pid in MIXKIT_PROIBIDOS):
                     continue
                 seen.add(u)
                 ident = re.findall(r"/(\d+)/", u)

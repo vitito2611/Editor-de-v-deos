@@ -1,7 +1,7 @@
-# Viral (Reels/TikTok): ritmo alto — troca de enquadramento a cada <= 2,6 s (punch-ins),
-# B-roll/fotos/cards nos momentos-chave, legenda dinâmica SÓ EM BRANCO (varia fonte/peso/
-# tamanho). Efeitos sonoros contidos: whoosh só na entrada de imagens e impacto no gancho.
-# Preferências do cliente: sem cores na legenda, sem glitch, poucos efeitos sonoros.
+# Viral (Reels/TikTok) — versão aprovada pelo cliente (v2 do vídeo 1):
+# troca de cena a cada <= 2,6 s (punch-ins, B-roll, fotos, cards de motion), legenda dinâmica
+# SÓ EM BRANCO (varia fonte/peso/tamanho), SFX nas trocas de cena, trilha energética.
+# Vetos do cliente: legenda colorida; efeito "plin"/brilho (sfx.proibidos no default.yaml).
 legendas:
   estilo_base: dinamico_branco
   estilo_impacto: dinamico_branco
@@ -14,17 +14,13 @@ cortes:
     zoom_niveis: [1.0, 1.16, 1.06, 1.26, 1.10]
     dividir_max_s: 2.6          # nenhum plano dura mais que isso
   transicoes:
-    whip_pan: {ativo: false}
-    flash_branco: {ativo: false}
-    glitch: {ativo: false}      # cliente não gostou
+    whip_pan: {ativo: true, intervalo_min_s: 12}
+    glitch: {ativo: true}
 sfx:
-  humor: {ativo: false}
-  punchin: false                # sem whoosh nas trocas de zoom
-  riser: {ativo: false}
-  impacto: {palavras: false}    # impacto só no smash cut (gancho)
-  intervalo_min_s: 2.5
-  max_por_minuto: 9
-  volume_rel_voz_db: -12
+  humor: {ativo: true}
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
 silencio:
   # ritmo viral: pausas preservadas ficam bem curtas, e gesticular não segura a pausa
   pausa_preservada_s: 0.22
@@ -32,7 +28,6 @@ silencio:
     continuidade_visual: {ativo: false}
 dinamismo:
   ativo: true
-  cards_max: 2
 musica:
   humor: energetico
   volume_db: -17

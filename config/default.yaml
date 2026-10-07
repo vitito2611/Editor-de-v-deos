@@ -357,6 +357,8 @@ sfx:
   intervalo_min_s: 2.5
   max_por_minuto: 10
   punchin: true                 # whoosh também em trocas de zoom (punch-ins)
+  # efeitos vetados (trecho do nome do arquivo). "2350" = Magic sparkle whoosh, o "plin" de brilho
+  proibidos: ["2350", "sparkle", "magic", "shimmer", "twinkle", "chime"]
   riser: {ativo: true}          # subida antes do smash cut
   transicao:
     ativo: true
