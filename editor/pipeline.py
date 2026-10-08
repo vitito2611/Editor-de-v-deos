@@ -194,7 +194,9 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
     # ------------------------------------------------------------------ análise
     with timer.etapa("Análise inicial"):
         src, joins = _prepare_sources(inputs, work, False)
-        src = _remove_bars(_normalize_source(src, cfg["geral"]), cfg["geral"].get("remover_tarjas", True))
+        # saída 4K precisa do bruto em resolução cheia (o mezanino normal é 1440p)
+        geral = dict(cfg["geral"], fonte_max_lado=max(cfg["geral"].get("fonte_max_lado", 2560), plat["largura"], plat["altura"]))
+        src = _remove_bars(_normalize_source(src, geral), cfg["geral"].get("remover_tarjas", True))
         akey = _cache_key(src, "analise1")
         afile = work / "analise.json"
         if afile.exists() and read_json(afile).get("chave") == akey:

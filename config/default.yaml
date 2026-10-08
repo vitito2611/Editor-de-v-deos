@@ -522,6 +522,8 @@ plataformas:
   tiktok:  {largura: 1080, altura: 1920, duracao_max_s: 180, lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}
   shorts:  {largura: 1080, altura: 1920, duracao_max_s: 60,  lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}
   youtube: {largura: 1920, altura: 1080, duracao_max_s: null, lufs: -14, crf: 18, preset: fast, audio_kbps: 256, maxrate_kbps: 20000}
+  # 4K real (2160x3840): lê o bruto em resolução cheia. Pensado para rodar no Mac do cliente com --drive.
+  reels_4k: {largura: 2160, altura: 3840, duracao_max_s: 90, lufs: -14, crf: 16, preset: fast, audio_kbps: 256, maxrate_kbps: 45000}
   youtube_vertical: {largura: 1080, altura: 1920, duracao_max_s: null, lufs: -14, crf: 18, preset: fast, audio_kbps: 256, maxrate_kbps: 16000}
   ao_exceder_duracao: avisar    # avisar | cortar (corta no fim de frase mais próximo)
 

@@ -13,6 +13,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   (`create_file`) só aceita conteúdo base64 dentro da chamada — inviável para vídeo; até haver outra
   via, entregar por link (Artifact) ou chat (SendUserFile ≤ 30 MB) e avisar o cliente.
 - Vídeos de iPhone vêm em HDR (HLG/Dolby Vision) 4K60: o pipeline já converte para SDR e 1440p30.
+- **4K no Drive (escolha do cliente: rodar no Mac dele)**: `--plataforma reels_4k` (2160x3840, lê o bruto em
+  resolução cheia) + `--drive "Nome"` (copia com/sem trilha para a pasta "Vídeos editados" do Google Drive para
+  Desktop — `editor/entrega.py`, `EDITOR_PASTA_DRIVE` força o caminho). Passo a passo: `docs/MAC.md`. Na nuvem o
+  4K funciona mas não sobe (10 s de 4K levaram 6 min aqui; ~45 MB por 10 s).
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).

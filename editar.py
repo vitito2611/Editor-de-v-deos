@@ -22,7 +22,7 @@ def main(argv=None):
                                  epilog=__doc__)
     ap.add_argument("entradas", nargs="+", type=Path, help="vídeo(s) bruto(s)")
     ap.add_argument("--estilo", default="viral_reels", help=f"preset: {', '.join(estilos_disponiveis())} ou caminho .yaml")
-    ap.add_argument("--plataforma", default="reels", help="reels | tiktok | shorts | youtube | youtube_vertical")
+    ap.add_argument("--plataforma", default="reels", help="reels | reels_4k | tiktok | shorts | youtube | youtube_vertical")
     ap.add_argument("--config", type=Path, help="YAML extra com ajustes finos")
     ap.add_argument("--set", action="append", default=[], metavar="CHAVE=VALOR", help="sobrescreve uma chave (ex.: silencio.limiar_db=-40)")
     ap.add_argument("--preview", action="store_true", help="versão rápida em baixa resolução")
@@ -30,6 +30,9 @@ def main(argv=None):
     ap.add_argument("--revisar", action="store_true", help="para após o corte de silêncios para revisão manual")
     ap.add_argument("--usar-revisao", action="store_true", help="usa os arquivos editados em work/.../revisao/")
     ap.add_argument("--saida", type=Path, help="arquivo de saída (padrão: output/<nome>_<estilo>_<plataforma>.mp4)")
+    ap.add_argument("--drive", nargs="?", const="", metavar="NOME",
+                    help="salva com e sem trilha na pasta 'Vídeos editados' do Google Drive (Drive para Desktop); "
+                         "NOME opcional do arquivo")
     a = ap.parse_args(argv)
     for p in a.entradas:
         if not p.exists():
@@ -42,6 +45,11 @@ def main(argv=None):
         print(f"\n⏸  {e}")
         return 2
     print(f"\n✅ {rep['saida']['arquivo']}")
+    if a.drive is not None:
+        from editor.entrega import entregar
+        nome = a.drive or Path(rep["saida"]["arquivo"]).stem.replace("_com_trilha", "")
+        for f in entregar([Path(rep["saida"]["arquivo"]), Path(rep["saida"].get("sem_trilha") or "")], nome):
+            print(f"☁  {f}")
     return 0
 
 
