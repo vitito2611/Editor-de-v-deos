@@ -19,6 +19,11 @@ Bônus: o chip do Mac decodifica o vídeo do iPhone por hardware, então fica be
 7. **Claude Code no Mac**: no app Claude, abra a aba Code e escolha a pasta `~/Editor-de-v-deos`.
    O Claude lê o `CLAUDE.md` e lembra de todas as suas preferências.
 
+### Conferir a instalação
+
+No Terminal: `cd ~/Editor-de-v-deos && git pull && .venv/bin/python -m editor.doctor`
+(✔ = ok, ✘ = falta — com a dica → de como resolver).
+
 ## 2. Todo vídeo
 
 Peça no chat do Claude Code (no Mac), por exemplo: *"edite o vídeo X do Drive no estilo referencia1 em 4K e
