@@ -10,10 +10,11 @@ Bônus: o chip do Mac decodifica o vídeo do iPhone por hardware, então fica be
    rodando. Confira no Finder que aparece "Google Drive > Meu Drive > Edição de vídeo - Claude > Vídeos editados".
 2. **Homebrew** (gerenciador de programas): abra o app Terminal e cole
    `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-3. **Programas**: no Terminal, `brew install ffmpeg python@3.13 node git`
+3. **Programas**: no Terminal, `brew install ffmpeg ffmpeg-full python@3.13 node git`
+   (o `ffmpeg-full` traz o libass, que desenha as legendas — o `ffmpeg` comum do Homebrew veio sem)
 4. **Projeto**: `git clone https://github.com/vitito2611/Editor-de-v-deos.git ~/Editor-de-v-deos`
    e depois `cd ~/Editor-de-v-deos && git checkout claude/automated-video-editing-pipeline-5feprt`
-5. **Instalar tudo**: `./setup.sh` (baixa modelos, Remotion, HyperFrames…)
+5. **Instalar tudo**: `PYTHON=python3.13 ./setup.sh` (baixa modelos, Remotion, HyperFrames…)
 6. **Fonte Black Jack** (destaque): copie o arquivo `BlackJack.otf`/`.ttf` para `assets/fonts/`.
    (A licença não deixa ela ir para o GitHub, por isso é manual.)
 7. **Claude Code no Mac**: no app Claude, abra a aba Code e escolha a pasta `~/Editor-de-v-deos`.

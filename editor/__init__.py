@@ -17,3 +17,11 @@ Módulos (um por etapa):
 """
 
 __version__ = "1.0.0"
+
+# Mac: o "ffmpeg" do Homebrew vem sem libass; o completo ("ffmpeg-full") é keg-only → entra na frente do PATH
+import os as _os
+
+for _d in ("/opt/homebrew/opt/ffmpeg-full/bin", "/usr/local/opt/ffmpeg-full/bin"):
+    if _os.path.isfile(_os.path.join(_d, "ffmpeg")) and _d not in _os.environ.get("PATH", ""):
+        _os.environ["PATH"] = _d + _os.pathsep + _os.environ.get("PATH", "")
+        break

@@ -11,6 +11,14 @@ if ! command -v ffmpeg >/dev/null; then
   elif command -v apt-get >/dev/null; then sudo apt-get update && sudo apt-get install -y ffmpeg
   else echo "Instale o FFmpeg manualmente"; exit 1; fi
 fi
+# o "ffmpeg" do Homebrew agora vem enxuto (sem libass); o completo é o "ffmpeg-full" (keg-only)
+if [[ "$OSTYPE" == darwin* ]] && ! ffmpeg -hide_banner -filters 2>/dev/null | grep -q " ass "; then
+  echo "    FFmpeg do Homebrew sem libass → instalando ffmpeg-full (versão completa)"
+  brew install ffmpeg-full
+  FULL="$(brew --prefix ffmpeg-full)/bin"
+  export PATH="$FULL:$PATH"
+  grep -q "ffmpeg-full" ~/.zprofile 2>/dev/null || echo "export PATH=\"$FULL:\$PATH\"  # ffmpeg-full (editor de vídeos)" >> ~/.zprofile
+fi
 ffmpeg -hide_banner -filters | grep -q " ass " || { echo "FFmpeg sem libass (legendas)."; exit 1; }
 
 echo "==> Ambiente Python (.venv)"
