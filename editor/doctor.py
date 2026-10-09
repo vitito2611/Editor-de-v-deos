@@ -7,6 +7,7 @@ from __future__ import annotations
 import importlib
 import shutil
 import subprocess
+from pathlib import Path
 
 from .utils import ROOT
 
@@ -63,9 +64,9 @@ def main() -> int:
     return 0 if ok else 1
 
 
-def _cmd(args: list[str]) -> str:
+def _cmd(args: list[str], cwd=None) -> str:
     try:
-        return subprocess.run(args, capture_output=True, text=True, timeout=60, cwd=ROOT).stdout.strip()
+        return subprocess.run(args, capture_output=True, text=True, timeout=60, cwd=cwd or ROOT).stdout.strip()
     except Exception:  # noqa: BLE001
         return ""
 
@@ -101,8 +102,11 @@ def _extras() -> bool:
     linha((ROOT / "remotion/node_modules/@remotion/renderer").exists(), "Remotion instalado", "cd remotion && npm install")
     linha((ROOT / "hyperframes/node_modules/hyperframes").exists(), "HyperFrames instalado", "cd hyperframes && npm install")
     linha((ROOT / "hyperframes/node_modules/gsap/dist/gsap.min.js").exists(), "GSAP (animações do motion)", "cd hyperframes && npm install")
-    chrome = _cmd(["npx", "hyperframes", "browser", "path"]) if node and (ROOT / "hyperframes").exists() else ""
-    linha("chrome" in chrome.lower() or "headless" in chrome.lower(), "navegador de render do HyperFrames",
+    # roda o hyperframes da pasta hyperframes/ (na raiz o npx não acha o pacote e pede para instalar)
+    hf = ROOT / "hyperframes" / "node_modules" / ".bin" / "hyperframes"
+    chrome = _cmd([str(hf), "browser", "path"], cwd=hf.parents[2]) if node and hf.exists() else ""
+    chrome = chrome.splitlines()[-1].strip() if chrome else ""
+    linha(bool(chrome) and Path(chrome).exists(), "navegador de render do HyperFrames",
           "cd hyperframes && npx hyperframes browser ensure")
     linha((ROOT / ".claude/skills/hyperframes/SKILL.md").exists(), "skills do HyperFrames",
           "npx skills experimental_install", obrigatorio=False)
