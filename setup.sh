@@ -12,14 +12,16 @@ if ! command -v ffmpeg >/dev/null; then
   else echo "Instale o FFmpeg manualmente"; exit 1; fi
 fi
 # o "ffmpeg" do Homebrew agora vem enxuto (sem libass); o completo é o "ffmpeg-full" (keg-only)
-if [[ "$OSTYPE" == darwin* ]] && ! ffmpeg -hide_banner -filters 2>/dev/null | grep -q " ass "; then
+# (lê a lista inteira antes do grep: com "set -o pipefail", "ffmpeg | grep -q" falha por SIGPIPE no Mac)
+tem_libass() { grep -q " ass " <<<"$(ffmpeg -hide_banner -filters 2>/dev/null)"; }
+if [[ "$OSTYPE" == darwin* ]] && ! tem_libass; then
   echo "    FFmpeg do Homebrew sem libass → instalando ffmpeg-full (versão completa)"
-  brew install ffmpeg-full
+  brew list ffmpeg-full >/dev/null 2>&1 || brew install ffmpeg-full
   FULL="$(brew --prefix ffmpeg-full)/bin"
   export PATH="$FULL:$PATH"
   grep -q "ffmpeg-full" ~/.zprofile 2>/dev/null || echo "export PATH=\"$FULL:\$PATH\"  # ffmpeg-full (editor de vídeos)" >> ~/.zprofile
 fi
-ffmpeg -hide_banner -filters | grep -q " ass " || { echo "FFmpeg sem libass (legendas)."; exit 1; }
+tem_libass || { echo "FFmpeg sem libass (legendas): $(command -v ffmpeg)"; exit 1; }
 
 echo "==> Ambiente Python (.venv)"
 PY=${PYTHON:-python3}
