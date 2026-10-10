@@ -12,7 +12,7 @@ import { Alteracoes, COR_NEUTRA, Cor, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, ma
 type Look = Partial<Cor>;
 declare global {
   interface Window {
-    PROJETO: Projeto & { looks?: Record<string, Look>; fonte_destaque_local?: boolean };
+    PROJETO: Projeto & { looks?: Record<string, Look>; titulo?: string };
     claude?: { use: (n: string) => Promise<any> }; __FONTES_EXTERNAS?: boolean;
   }
 }
@@ -217,7 +217,7 @@ const App: React.FC = () => {
       <header className="barra">
         <div className="titulo">
           <span className="selo">Estúdio</span>
-          <h1>{base.nome}</h1>
+          <h1>{base.titulo ?? base.nome}</h1>
         </div>
         <div className="acoes-topo">
           <span className={"salvo" + (pendente ? " pend" : "")} role="status">
@@ -599,7 +599,7 @@ const PainelCortes: React.FC<PProps & { mapa: ReturnType<typeof mapaCortes>; t: 
 const Timeline: React.FC<{ ef: EfP; alt: Alteracoes; base: Window["PROJETO"]; t: number; tocando: boolean; ir: (s: number) => void; sel: Sel;
   selecionar: (s: Sel) => void; moverItem: (k: "camada" | "legenda", id: string, t: number, d?: number) => void;
   marcas: { i: number | null; o: number | null } }> = ({ ef, alt, t, tocando, ir, sel, selecionar, moverItem, marcas }) => {
-  const [zoom, setZoom] = useState(28);   // px por segundo
+  const [zoom, setZoom] = useState(40);   // px por segundo
   const rolo = useRef<HTMLDivElement>(null);
   const W = Math.max(1, ef.dur * zoom);
   const arr = useRef<{ kind: "camada" | "legenda"; id: string; x0: number; t0: number; d0: number; modo: "mover" | "fim"; moveu: boolean } | null>(null);

@@ -27,7 +27,7 @@ export const COR_NEUTRA: Cor = {
   sombras: [0, 0, 0], luzes: [0, 0, 0], vinheta: 0, grao: 0,
 };
 
-export type Sfx = { id: string; t: number; arquivo: string; ganho_db: number; nome: string; oculto?: boolean };
+export type Sfx = { id: string; t: number; arquivo: string; ganho_db: number; nome: string; oculto?: boolean; categoria?: string };
 export type AudioProj = {
   voz: string;                     // faixa de voz (montada, limpa)
   trilha?: string | null;          // trilha com ducking
@@ -35,6 +35,7 @@ export type AudioProj = {
   vol: { voz: number; trilha: number; sfx: number };   // dB
   ganho_master_db: number;         // ganho do master (prévia ≈ final; o final é remasterizado)
   trilha_ativa: boolean;
+  lufs_alvo?: number | null;
 };
 
 export type EstiloLegendas = {

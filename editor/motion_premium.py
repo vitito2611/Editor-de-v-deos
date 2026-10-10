@@ -87,7 +87,7 @@ def montar_premium(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
                   "__ACENTO_RGB__": _rgb(pal["acento"]), "__MARCA_RGB__": _rgb(pal["marca"]),
                   "__CENAS_HTML__": "\n      ".join(blocos),
                   "__DADOS__": json.dumps({"dur": round(t, 3), "cenas": cenas, "poeira": roteiro.get("poeira", 46),
-                                           "pre_roll": roteiro.get("pre_roll", 0.3)},
+                                           "pre_roll": roteiro.get("pre_roll", 0.45)},
                                           ensure_ascii=False)}.items():
         doc = doc.replace(kk, v)
     (pasta / "index.html").write_text(doc, encoding="utf-8")

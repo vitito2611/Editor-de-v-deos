@@ -343,6 +343,7 @@ def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str, cfg: dict | None =
     if cfg:
         proj["looks"] = {k: dict(v) for k, v in (cfg.get("cor") or {}).get("looks", {}).items()}
     proj["raiz"] = ""
+    proj["titulo"] = titulo
     dados = json.dumps(proj, ensure_ascii=False).replace("</", "<\\/")
     html_txt = (f"<title>{html.escape(titulo)}</title>\n"
                 '<link rel="preconnect" href="https://fonts.googleapis.com">\n'

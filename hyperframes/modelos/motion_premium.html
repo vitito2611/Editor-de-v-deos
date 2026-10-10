@@ -871,13 +871,21 @@
           const sec = document.getElementById("c" + k);
           const P = sec.querySelector(".palco");
           // o conteúdo já entra DURANTE a transição (como na referência: nada de tela vazia depois do corte)
-          // 1ª cena (motion inserido com corte seco no vídeo): começa já em movimento, sem quadro vazio
-          const adianta = k === 0 ? (D.pre_roll ?? 0.3) : c.ov * 0.6;
+          const adianta = k === 0 ? 0 : c.ov * 0.6;
           CENAS[c.tipo](c, P, c.t - adianta, c.dur + adianta);
           if (c.ov > 0 && TRANS[c.transicao]) TRANS[c.transicao](sec, ant, c.t, c.ov);
           ant = sec;
         });
-        window.__timelines["motion"] = tl;
+        // motion inserido com corte seco no vídeo: começa já em movimento (pre_roll), sem quadros vazios.
+        // (posição negativa no GSAP empurra a timeline inteira; por isso uma timeline externa toca a interna adiantada)
+        const pre = D.pre_roll ?? 0;
+        if (pre > 0) {
+          const raiz = gsap.timeline({ paused: true });
+          raiz.add(tl.tweenFromTo(pre, pre + D.dur, { ease: "none", duration: D.dur }), 0);
+          window.__timelines["motion"] = raiz;
+        } else {
+          window.__timelines["motion"] = tl;
+        }
       }
       document.fonts.ready.then(montar);
     </script>
