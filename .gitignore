@@ -47,3 +47,8 @@ hyperframes/node_modules/
 .claude/skills/remotion-to-hyperframes/
 .claude/skills/slideshow/
 .claude/skills/talking-head-recut/
+
+# vídeos de referência do cliente (grandes; ficam no Drive)
+referencias/*.mp4
+referencias/**/*.mp4
+referencias/**/*.jpg
