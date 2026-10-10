@@ -1,0 +1,35 @@
+# Showreel do modelo "premium" com a identidade da Zeal (referência de movimento: referencias/motion2/ref.mp4)
+# python -m editor.motion_hf config/motion/zeal_showreel.yaml output/zeal_showreel.mp4
+titulo: Zeal showreel
+modelo: premium
+pre_roll: 0
+cenas:
+  - {tipo: linha, rotulo: "Clínicas odontológicas", titulo: "Sua clínica|atendendo *24h.*", destaque: "Sem perder|nenhum paciente.", dur: 3.4}
+  - {tipo: logo, nome: zeal, slogan: "assistente de IA por voz", transicao: iris, dur: 2.8}
+  - tipo: celular
+    transicao: listras
+    rotulo: "Como funciona"
+    titulo: "A IA atende.|Você *cuida.*"
+    chamada_nome: "Maria Souza"
+    chamada: "ligando…"
+    falas: [[pac, "Oi! Queria marcar uma avaliação."], [ia, "Claro! Tenho quinta às 14h30. Pode ser?"], [pac, "Perfeito, obrigada!"]]
+    cartao: {titulo: "Consulta agendada", linhas: [[Quando, "Qui · 14:30"], [Procedimento, "Avaliação"]]}
+    selos: ["Confirmado no WhatsApp", "Lembrete enviado"]
+    dur: 5.8
+  - tipo: grafico
+    transicao: chicote
+    rotulo: "Sua agenda"
+    titulo: "Cada ligação|vira *consulta.*"
+    tags: [Agendamentos, Confirmações, Retornos, Lembretes, Reagendamentos]
+    pontos: [1.2, 1.6, 2.1, 2.0, 3.0, 3.9, 4.6, 5.6, 6.6]
+    projecao: 2
+    marcos: [{i: 2, texto: "Seg"}, {i: 4, texto: "Qua"}, {i: 6, texto: "Sex"}, {i: 8, texto: "Próx."}]
+    contadores: [{valor: 24, sufixo: "h", legenda: "atendendo|todo dia"}, {valor: 0, legenda: "ligações|perdidas"}]
+    dur: 4.4
+  - tipo: passos
+    transicao: chicote
+    rotulo: "Zeal"
+    titulo: "Em *4 passos.*"
+    passos: [{icone: tel, texto: "Paciente liga"}, {icone: ia, texto: "A IA atende"}, {icone: agenda, texto: "Agenda sozinha"}, {icone: whats, texto: "Confirma no WhatsApp"}]
+    dur: 4.8
+  - {tipo: cta, transicao: esfera, titulo: "Sua recepção|no piloto automático.", destaque: "Conheça a Zeal.", botao: "Agendar demonstração", url: "zealtecnologia.com", dur: 3.8}

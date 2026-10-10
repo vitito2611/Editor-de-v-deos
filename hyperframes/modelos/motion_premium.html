@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=__W__, height=__H__" />
+    <title>__TITULO__</title>
+    <!-- Modelo "premium" de motion do editor (pedido do cliente: nível profissional, referência
+         referencias/motion2/ref.mp4 — copiar o MOVIMENTO, não a paleta). Identidade da Zeal: roxo
+         #5D2E8C, ciano #24D0DC, branco, fundo quase preto. Fontes: Rubik (texto) + Black Jack (destaque).
+         Linguagem: linha de luz que revela o texto, máscaras, câmera sempre viva, celular 3D com
+         interface real, gráfico que se desenha, caminho de etapas, botão com cursor, transições
+         iris / listras / chicote / esfera. Gerado por editor/motion_premium.py.
+         Regras de render: nada de filter: blur grande (só o desfoque de movimento de ~8 quadros do chicote). -->
+    <script src="gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Medium.ttf"); font-weight: 500; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Black.ttf"); font-weight: 900; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-BoldItalic.ttf"); font-weight: 700; font-style: italic; }
+      __FONTE_DEST_FACE__
+      :root {
+        --fundo: __FUNDO__; --fundo2: __FUNDO2__; --texto: __TEXTO__; --acento: __ACENTO__; --marca: __MARCA__;
+        --acento-rgb: __ACENTO_RGB__; --marca-rgb: __MARCA_RGB__;
+        --suave: rgba(236, 232, 255, 0.62); --linha: rgba(236, 232, 255, 0.12);
+        --u: calc(min(__W__px, __H__px) / 1080);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--fundo); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--fundo);
+        font-family: "Rubik", sans-serif; font-weight: 700; color: var(--texto); }
+      .clip { position: absolute; inset: 0; }
+      .inner { position: absolute; inset: 0; overflow: hidden; }
+      .bg { position: absolute; inset: -10%; }
+      .bg.escuro { background: radial-gradient(ellipse 70% 45% at 50% 46%, rgba(var(--marca-rgb), 0.30) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 50% 110%, rgba(var(--marca-rgb), 0.35) 0%, transparent 70%), var(--fundo); }
+      .bg.roxo { background: radial-gradient(ellipse 80% 55% at 50% 35%, #3b1d63 0%, #24113f 45%, #12081f 100%); }
+      .bg.profundo { background: radial-gradient(ellipse 80% 60% at 30% 20%, rgba(var(--acento-rgb), 0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 90% 60% at 70% 100%, rgba(var(--marca-rgb), 0.45) 0%, transparent 70%), #0a0614; }
+      .palco { position: absolute; inset: 0; transform-origin: 50% 50%; }
+      .vinheta { position: absolute; inset: 0; pointer-events: none;
+        background: radial-gradient(ellipse 75% 65% at 50% 48%, transparent 55%, rgba(0, 0, 0, 0.62) 100%); }
+      #poeira { position: absolute; inset: 0; pointer-events: none; }
+      .grao { position: absolute; border-radius: 50%; background: #fff; }
+
+      /* tipografia */
+      .rotulo { position: absolute; font-size: calc(24 * var(--u)); letter-spacing: 0.32em; font-weight: 700; color: var(--acento);
+        text-transform: uppercase; white-space: nowrap; display: flex; align-items: center; gap: calc(16 * var(--u)); }
+      .rotulo i { display: block; width: calc(44 * var(--u)); height: calc(3 * var(--u)); background: var(--acento); border-radius: 2px;
+        box-shadow: 0 0 calc(12 * var(--u)) rgba(var(--acento-rgb), 0.8); transform-origin: 0 50%; }
+      .bloco { position: absolute; display: flex; flex-direction: column; line-height: 1.04; letter-spacing: -0.02em; }
+      .bloco.centro { align-items: center; text-align: center; }
+      .mask { display: block; overflow: hidden; padding: 0.06em 0.08em 0.14em; margin: -0.06em -0.08em -0.14em; }
+      .ln { display: block; white-space: nowrap; }
+      .dest { font-family: __FONTE_DEST_CSS__; color: var(--acento);
+        text-shadow: 0 0 calc(26 * var(--u)) rgba(var(--acento-rgb), 0.55); }
+      .acento { color: var(--acento); text-shadow: 0 0 calc(22 * var(--u)) rgba(var(--acento-rgb), 0.45); }
+      .peq { font-weight: 500; color: var(--suave); letter-spacing: 0; }
+      svg { overflow: visible; }
+
+      /* cena linha */
+      .ponto { position: absolute; width: calc(16 * var(--u)); height: calc(16 * var(--u)); border-radius: 50%; background: #fff;
+        box-shadow: 0 0 calc(10 * var(--u)) var(--acento), 0 0 calc(34 * var(--u)) var(--acento), 0 0 calc(70 * var(--u)) rgba(var(--acento-rgb), 0.6); }
+
+      /* logo */
+      .marca-z { position: absolute; }
+      .palavra { position: absolute; font-weight: 700; letter-spacing: -0.04em; display: flex; }
+      .palavra span { display: inline-block; }
+      .slogan { position: absolute; font-weight: 500; color: var(--acento); text-transform: uppercase; white-space: nowrap; }
+
+      /* celular 3D */
+      .cena3d { position: absolute; left: 50%; top: 0; width: 0; height: 0; perspective: calc(2600 * var(--u)); }
+      .fone { position: absolute; width: calc(540 * var(--u)); height: calc(1100 * var(--u)); left: calc(-270 * var(--u)); top: calc(-550 * var(--u));
+        transform-style: preserve-3d; }
+      .fone .corpo { position: absolute; inset: 0; border-radius: calc(86 * var(--u)); padding: calc(15 * var(--u));
+        background: linear-gradient(135deg, #3a3550 0%, #121019 30%, #0b0a10 70%, #2c2840 100%);
+        box-shadow: 0 0 0 calc(2 * var(--u)) rgba(255, 255, 255, 0.10), 0 calc(80 * var(--u)) calc(140 * var(--u)) rgba(0, 0, 0, 0.65),
+          0 0 calc(160 * var(--u)) rgba(var(--marca-rgb), 0.35); }
+      .tela { position: relative; width: 100%; height: 100%; border-radius: calc(72 * var(--u)); overflow: hidden;
+        background: linear-gradient(170deg, #1a1030 0%, #0d0819 55%, #0b1420 100%); }
+      .ilha { position: absolute; top: calc(22 * var(--u)); left: 50%; width: calc(150 * var(--u)); height: calc(42 * var(--u));
+        margin-left: calc(-75 * var(--u)); border-radius: calc(21 * var(--u)); background: #000; z-index: 5; }
+      .status { position: absolute; top: calc(28 * var(--u)); left: calc(48 * var(--u)); right: calc(48 * var(--u)); display: flex;
+        justify-content: space-between; font-size: calc(24 * var(--u)); font-weight: 700; color: #fff; }
+      .estado { position: absolute; inset: 0; padding: calc(120 * var(--u)) calc(36 * var(--u)) calc(40 * var(--u)); display: flex;
+        flex-direction: column; align-items: center; }
+      .avatar { position: relative; width: calc(190 * var(--u)); height: calc(190 * var(--u)); border-radius: 50%; margin-top: calc(120 * var(--u));
+        background: radial-gradient(circle at 35% 30%, #4a2a78, #23123d); display: flex; align-items: center; justify-content: center;
+        border: calc(3 * var(--u)) solid rgba(var(--acento-rgb), 0.6); }
+      .onda-anel { position: absolute; left: 50%; top: 50%; width: calc(190 * var(--u)); height: calc(190 * var(--u)); margin: calc(-95 * var(--u));
+        border-radius: 50%; border: calc(3 * var(--u)) solid var(--acento); }
+      .nome { margin-top: calc(46 * var(--u)); font-size: calc(46 * var(--u)); color: #fff; }
+      .sub-fone { margin-top: calc(10 * var(--u)); font-size: calc(28 * var(--u)); font-weight: 500; color: var(--suave); }
+      .botoes { position: absolute; bottom: calc(120 * var(--u)); left: 0; right: 0; display: flex; justify-content: space-around; }
+      .bt { width: calc(120 * var(--u)); height: calc(120 * var(--u)); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+      .bt.nao { background: #e5484d; } .bt.sim { background: #2fcf6f; }
+      .topo-app { width: 100%; display: flex; align-items: center; gap: calc(16 * var(--u)); font-size: calc(30 * var(--u)); color: #fff; }
+      .orbe { position: relative; width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #d9fbff 0%, var(--acento) 38%, var(--marca) 100%);
+        box-shadow: 0 0 calc(30 * var(--u)) rgba(var(--acento-rgb), 0.7); }
+      .topo-app span { white-space: nowrap; }
+      .ao-vivo { margin-left: auto; font-size: calc(20 * var(--u)); font-weight: 700; color: var(--acento); letter-spacing: 0.12em;
+        padding: calc(8 * var(--u)) calc(14 * var(--u)); border-radius: calc(20 * var(--u)); background: rgba(var(--acento-rgb), 0.12); }
+      .barras { display: flex; align-items: center; justify-content: center; gap: calc(9 * var(--u)); height: calc(150 * var(--u)); margin: calc(26 * var(--u)) 0; }
+      .barras i { display: block; width: calc(11 * var(--u)); height: calc(120 * var(--u)); border-radius: calc(6 * var(--u));
+        background: linear-gradient(180deg, #d9fbff, var(--acento)); }
+      .bolha { max-width: 86%; font-size: calc(27 * var(--u)); font-weight: 500; line-height: 1.32; padding: calc(18 * var(--u)) calc(22 * var(--u));
+        border-radius: calc(26 * var(--u)); margin-top: calc(14 * var(--u)); color: #fff; }
+      .bolha.pac { align-self: flex-start; background: rgba(255, 255, 255, 0.08); border-bottom-left-radius: calc(6 * var(--u)); }
+      .bolha.ia { align-self: flex-end; background: linear-gradient(135deg, rgba(var(--acento-rgb), 0.95), rgba(var(--acento-rgb), 0.75));
+        color: #061318; border-bottom-right-radius: calc(6 * var(--u)); }
+      .cartao { position: absolute; width: calc(600 * var(--u)); left: calc(-300 * var(--u)); border-radius: calc(36 * var(--u)); padding: calc(34 * var(--u));
+        background: linear-gradient(160deg, #ffffff 0%, #f1edfa 100%); color: #1b1230;
+        box-shadow: 0 calc(60 * var(--u)) calc(120 * var(--u)) rgba(0, 0, 0, 0.55), 0 0 0 calc(3 * var(--u)) rgba(var(--acento-rgb), 0.9),
+          0 0 calc(70 * var(--u)) rgba(var(--acento-rgb), 0.45); }
+      .cartao .cab { display: flex; align-items: center; gap: calc(18 * var(--u)); font-size: calc(38 * var(--u)); }
+      .ok { width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%; background: var(--acento); flex: none;
+        display: flex; align-items: center; justify-content: center; }
+      .cartao .lin { display: flex; justify-content: space-between; font-size: calc(28 * var(--u)); font-weight: 500; color: #5b4f75;
+        margin-top: calc(20 * var(--u)); padding-top: calc(18 * var(--u)); border-top: 1px solid #e3dcf0; }
+      .cartao .lin b { color: #1b1230; font-weight: 700; }
+      .barra-prog { height: calc(12 * var(--u)); border-radius: calc(6 * var(--u)); background: #e3dcf0; margin-top: calc(24 * var(--u)); overflow: hidden; }
+      .barra-prog i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--marca), var(--acento)); transform-origin: 0 50%; }
+      .selo { position: absolute; white-space: nowrap; display: flex; align-items: center; gap: calc(12 * var(--u)); font-size: calc(26 * var(--u));
+        padding: calc(14 * var(--u)) calc(22 * var(--u)); border-radius: calc(40 * var(--u)); background: #16102a; color: #fff;
+        border: calc(2 * var(--u)) solid rgba(var(--acento-rgb), 0.7); box-shadow: 0 calc(20 * var(--u)) calc(40 * var(--u)) rgba(0, 0, 0, 0.5); }
+      .selo .okp { width: calc(30 * var(--u)); height: calc(30 * var(--u)); border-radius: 50%; background: var(--acento); flex: none;
+        display: flex; align-items: center; justify-content: center; }
+      .foco { position: absolute; border-radius: calc(30 * var(--u)); border: calc(4 * var(--u)) solid var(--acento);
+        box-shadow: 0 0 calc(30 * var(--u)) rgba(var(--acento-rgb), 0.7), inset 0 0 calc(20 * var(--u)) rgba(var(--acento-rgb), 0.3); }
+
+      /* gráfico / caminho */
+      .chips { position: absolute; display: flex; gap: calc(14 * var(--u)); white-space: nowrap; }
+      .chip { font-size: calc(22 * var(--u)); font-weight: 500; color: var(--suave); padding: calc(10 * var(--u)) calc(20 * var(--u));
+        border-radius: calc(30 * var(--u)); border: 1px solid var(--linha); background: rgba(255, 255, 255, 0.03); }
+      .contador { position: absolute; display: flex; align-items: center; gap: calc(16 * var(--u)); }
+      .contador .num { font-size: calc(96 * var(--u)); font-weight: 700; letter-spacing: -0.03em; }
+      .contador .leg { font-size: calc(24 * var(--u)); font-weight: 500; color: var(--suave); line-height: 1.2; }
+      .contador .bul { width: calc(18 * var(--u)); height: calc(18 * var(--u)); border-radius: 50%; background: var(--acento);
+        box-shadow: 0 0 calc(18 * var(--u)) var(--acento); }
+      .rot-svg { font-family: "Rubik"; font-weight: 700; fill: #fff; }
+      .no { position: absolute; width: calc(150 * var(--u)); height: calc(150 * var(--u)); margin: calc(-75 * var(--u));
+        border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ffffff 0%, #ece6f8 100%); display: flex; align-items: center;
+        justify-content: center; box-shadow: 0 0 0 calc(10 * var(--u)) rgba(var(--acento-rgb), 0.18), 0 calc(20 * var(--u)) calc(50 * var(--u)) rgba(0, 0, 0, 0.45); }
+      .no .badge { position: absolute; right: calc(-6 * var(--u)); top: calc(-6 * var(--u)); width: calc(50 * var(--u)); height: calc(50 * var(--u));
+        border-radius: 50%; background: var(--acento); color: #061318; font-size: calc(20 * var(--u)); font-weight: 900; display: flex;
+        align-items: center; justify-content: center; box-shadow: 0 0 calc(20 * var(--u)) rgba(var(--acento-rgb), 0.8); }
+      .no-rot { position: absolute; font-size: calc(34 * var(--u)); color: #fff; white-space: nowrap; }
+      .anel { position: absolute; border-radius: 50%; border: calc(3 * var(--u)) solid var(--acento); }
+
+      /* cta */
+      .botao { position: absolute; display: flex; align-items: center; gap: calc(18 * var(--u)); padding: calc(34 * var(--u)) calc(58 * var(--u));
+        border-radius: calc(80 * var(--u)); font-size: calc(40 * var(--u)); color: #061318; white-space: nowrap; overflow: hidden;
+        background: linear-gradient(135deg, #8ff0f6 0%, var(--acento) 45%, #18a8b8 100%);
+        box-shadow: 0 0 calc(60 * var(--u)) rgba(var(--acento-rgb), 0.55), 0 calc(24 * var(--u)) calc(50 * var(--u)) rgba(0, 0, 0, 0.45); }
+      .brilho { position: absolute; top: -20%; bottom: -20%; width: 30%; left: 0;
+        background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.75) 50%, transparent 100%); }
+      .cursor { position: absolute; width: calc(70 * var(--u)); height: calc(70 * var(--u)); }
+      .url { position: absolute; font-size: calc(30 * var(--u)); font-weight: 500; color: var(--suave); letter-spacing: 0.06em; white-space: nowrap; }
+
+
+      /* cards de profissões / ciclo / comparação / soma / timeline */
+      .vidro { position: absolute; border-radius: calc(28 * var(--u)); background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+        border: calc(2 * var(--u)) solid rgba(236, 232, 255, 0.14); box-shadow: 0 calc(30 * var(--u)) calc(60 * var(--u)) rgba(0, 0, 0, 0.45); }
+      .vidro .ic { width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: calc(18 * var(--u)); background: rgba(var(--marca-rgb), 0.55);
+        display: flex; align-items: center; justify-content: center; }
+      .vidro .ic > div { width: 58%; height: 58%; }
+      .vidro .nm { font-size: calc(30 * var(--u)); margin-top: calc(18 * var(--u)); color: #fff; white-space: nowrap; }
+      .vidro .ln2 { height: calc(10 * var(--u)); border-radius: 5px; background: rgba(236,232,255,0.16); margin-top: calc(12 * var(--u)); }
+      .vidro.fica { border-color: var(--acento); background: linear-gradient(160deg, rgba(var(--acento-rgb), 0.22), rgba(var(--acento-rgb), 0.06));
+        box-shadow: 0 0 calc(50 * var(--u)) rgba(var(--acento-rgb), 0.45), 0 calc(30 * var(--u)) calc(60 * var(--u)) rgba(0, 0, 0, 0.45); }
+      .vidro.fica .ic { background: var(--acento); }
+      .tarefa-chip { position: absolute; white-space: nowrap; font-size: calc(34 * var(--u)); padding: calc(16 * var(--u)) calc(28 * var(--u));
+        border-radius: calc(40 * var(--u)); background: #1b1230; border: calc(2 * var(--u)) solid rgba(var(--acento-rgb), 0.6); color: #fff;
+        box-shadow: 0 calc(16 * var(--u)) calc(40 * var(--u)) rgba(0,0,0,0.5); }
+      .cmp-rot { position: absolute; font-size: calc(34 * var(--u)); color: var(--suave); font-weight: 500; }
+      .cmp-val { position: absolute; font-size: calc(80 * var(--u)); font-weight: 700; color: #fff; white-space: nowrap; }
+      .cmp-barra { position: absolute; height: calc(110 * var(--u)); border-radius: calc(40 * var(--u)); transform-origin: 0 50%; }
+      .orbe-g { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center;
+        font-weight: 700; color: #fff; }
+      .janela { position: absolute; border-radius: calc(30 * var(--u)); background: #120c1e; border: calc(2 * var(--u)) solid rgba(236,232,255,0.12);
+        box-shadow: 0 calc(40 * var(--u)) calc(90 * var(--u)) rgba(0,0,0,0.6), 0 0 calc(80 * var(--u)) rgba(var(--marca-rgb), 0.35); overflow: hidden; }
+      .janela .barra-j { height: calc(56 * var(--u)); display: flex; align-items: center; gap: calc(12 * var(--u)); padding: 0 calc(24 * var(--u));
+        border-bottom: 1px solid rgba(236,232,255,0.08); }
+      .janela .barra-j i { width: calc(16 * var(--u)); height: calc(16 * var(--u)); border-radius: 50%; background: rgba(236,232,255,0.2); }
+      .clipe-j { position: absolute; height: calc(70 * var(--u)); border-radius: calc(12 * var(--u)); }
+
+      /* transições */
+      .listras { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 30; }
+      .listra { position: absolute; height: calc(330 * var(--u)); width: calc(3600 * var(--u)); left: calc(-1800 * var(--u)); }
+      .esfera { position: absolute; left: 50%; top: 50%; border-radius: 50%; z-index: 30; pointer-events: none;
+        background: radial-gradient(circle at 40% 35%, #1d1233 0%, #0a0614 60%, #05030a 100%);
+        box-shadow: 0 0 0 calc(4 * var(--u)) rgba(var(--acento-rgb), 0.85), 0 0 calc(60 * var(--u)) rgba(var(--acento-rgb), 0.6); }
+      .flash { position: absolute; inset: 0; background: #fff; z-index: 31; pointer-events: none; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="motion" data-start="0" data-width="__W__" data-height="__H__" data-duration="__DUR__">
+      __CENAS_HTML__
+      <div id="poeira"></div>
+    </div>
+    <script>
+      const D = __DADOS__;
+      const W = __W__, H = __H__, U = Math.min(W, H) / 1080, VERT = H >= W;
+      let semente = 7;
+      const rnd = () => { semente = (semente * 16807) % 2147483647; return (semente - 1) / 2147483646; };
+      const tl = gsap.timeline({ paused: true });
+      const EXPO = "expo.out", FLUI = "power3.inOut", SUAVE = "sine.inOut", MOLA = "back.out(1.7)";
+      const NS = "http://www.w3.org/2000/svg";
+      const ACENTO = getComputedStyle(document.documentElement).getPropertyValue("--acento").trim();
+      const MARCA = getComputedStyle(document.documentElement).getPropertyValue("--marca").trim();
+
+      // ------------------------------------------------------------------ utilitários de DOM
+      const mk = (tag, cls, pai, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (pai) pai.appendChild(e); return e; };
+      const sv = (tag, attrs, pai) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (pai) pai.appendChild(e); return e; };
+      const px = (v) => v * U + "px";
+      const pos = (e, x, y) => { e.style.left = px(x); e.style.top = px(y); return e; };
+      // coordenadas de projeto: 1080 de largura útil centralizada; Y em unidades de 1920 (vertical) ou 1080 (horizontal)
+      const X0 = (W / U - 1080) / 2, AY = H / U;
+      const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      // "*palavra*" = destaque (fonte de destaque, ciano) · "|" = quebra de linha
+      function linhas(txt) {
+        return String(txt || "").split("|").map((l) => esc(l.trim()).replace(/\*([^*]+)\*/g, '<span class="dest">$1</span>'));
+      }
+      function bloco(pai, txt, { x = 540, y = 400, tam = 96, centro = true, cls = "" } = {}) {
+        const b = mk("div", "bloco" + (centro ? " centro" : "") + (cls ? " " + cls : ""), pai);
+        b.style.fontSize = px(tam);
+        if (centro) { b.style.left = px(X0 + x - 540); b.style.width = px(1080); } else { b.style.left = px(X0 + x); }
+        b.style.top = px(y);
+        linhas(txt).forEach((h) => { const m = mk("span", "mask", b); mk("span", "ln", m, h); });
+        return b;
+      }
+      // texto sobe de dentro da máscara, linha a linha (com leve rotação, como na referência)
+      function revela(b, t, { de = 1, stagger = 0.11, dur = 0.95, rot = 4 } = {}) {
+        b.querySelectorAll(".ln").forEach((l, i) =>
+          tl.fromTo(l, { yPercent: 115 * de, rotation: rot * de, transformOrigin: "0% 100%" },
+            { yPercent: 0, rotation: 0, duration: dur, ease: EXPO }, t + i * stagger));
+      }
+      function rotulo(pai, txt, x, y, t, centro) {
+        if (!txt) return null;
+        const r = mk("div", "rotulo", pai, "<i></i><span>" + esc(txt) + "</span>");
+        r.style.top = px(y);
+        if (centro) { r.style.left = "50%"; r.style.transform = "translateX(-50%)"; } else r.style.left = px(X0 + x);
+        tl.fromTo(r.querySelector("i"), { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: EXPO }, t);
+        espalha(r.querySelector("span"), t + 0.05, false);
+        return r;
+      }
+      // letras que se aproximam (no lugar de animar letter-spacing, que treme no render quadro a quadro)
+      function espalha(el, t, centro, abre = 14, dur = 0.9) {
+        const txt = el.textContent; el.textContent = "";
+        const cs = [...txt].map((ch) => { const s = mk("span", "", el, ch === " " ? "&nbsp;" : esc(ch)); s.style.display = "inline-block"; return s; });
+        const n = cs.length;
+        cs.forEach((s, i) => tl.fromTo(s, { x: (centro ? i - (n - 1) / 2 : i) * abre * U, opacity: 0 },
+          { x: 0, opacity: 1, duration: dur, ease: EXPO }, t + (centro ? Math.abs(i - (n - 1) / 2) * 0.012 : i * 0.012)));
+      }
+      // linha de luz em SVG: halo largo + núcleo + centro branco (brilho sem filter)
+      function luz(svg, d, larg = 5, extra = {}) {
+        const g = sv("g", {}, svg);
+        const ps = [[larg * 6, 0.07], [larg * 2.6, 0.18], [larg, 1], [Math.max(1.5, larg * 0.35), 1]].map(([w, o], i) =>
+          sv("path", Object.assign({ d, fill: "none", stroke: i === 3 ? "#ffffff" : ACENTO, "stroke-width": w, opacity: o,
+            "stroke-linecap": "round", "stroke-linejoin": "round" }, extra), g));
+        return { g, ps };
+      }
+      // anel/onda que só aparece no próprio tempo (fromTo com opacidade > 0 mostraria o anel antes da hora)
+      function onda(el, t, s0, s1, dur, o0 = 0.9) {
+        tl.fromTo(el, { scale: s0, opacity: 0 }, { opacity: o0, duration: 0.01 }, t);
+        tl.fromTo(el, { scale: s0 }, { scale: s1, opacity: 0, duration: dur, ease: "power2.out", immediateRender: false }, t + 0.01);
+      }
+      function desenha(ps, t, dur, ease = FLUI) {
+        const len = ps[0].getTotalLength();
+        ps.forEach((p) => { p.setAttribute("stroke-dasharray", len + " " + len); });
+        tl.fromTo(ps, { attr: { "stroke-dashoffset": len } }, { attr: { "stroke-dashoffset": 0 }, duration: dur, ease }, t);
+        return len;
+      }
+      function camera(palco, t, d, { s0 = 1, s1 = 1.06, y1 = -14, r1 = 0 } = {}) {
+        tl.fromTo(palco, { scale: s0, y: 0, rotation: 0 }, { scale: s1, y: y1 * U, rotation: r1, duration: d, ease: "none" }, t);
+      }
+      const ICONES = {
+        tel: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+        ia: '<path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16 10.2 11.3 5.5 9.5 10.2 7.7z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+        agenda: '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M8.5 15l2.2 2.2 4.8-4.8"/>',
+        check: '<path d="M4.5 12.5l4.8 4.8L19.5 7"/>',
+        zap: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+        chat: '<path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.4-5.4A8.5 8.5 0 1 1 21 12z"/>',
+        dente: '<path d="M7.5 3C5 3 3.5 5 3.5 7.6c0 3 1.4 4.3 1.9 7.3.4 2.6.9 6.1 2.6 6.1 1.6 0 1.6-3.6 2.3-5.4.4-1 .9-1.4 1.7-1.4s1.3.4 1.7 1.4c.7 1.8.7 5.4 2.3 5.4 1.7 0 2.2-3.5 2.6-6.1.5-3 1.9-4.3 1.9-7.3C20.5 5 19 3 16.5 3c-1.9 0-2.8 1-4.5 1S9.4 3 7.5 3z"/>',
+        relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+        grafico: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>',
+        whats: '<path d="M20.5 11.8a8.6 8.6 0 0 1-12.7 7.5L3 20.6l1.3-4.6a8.6 8.6 0 1 1 16.2-4.2z"/><path d="M8.8 8.6c.3 2.8 2.9 5.4 5.6 5.7l1-1.1 1.6.8c-.3 1-1.2 1.6-2.2 1.5-3.5-.4-6.4-3.3-6.8-6.8-.1-1 .5-1.9 1.5-2.2l.8 1.6z"/>',
+      };
+      const icone = (nome, cor = "currentColor", larg = 2) =>
+        `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="${cor}" stroke-width="${larg}" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] || ICONES.ia}</svg>`;
+      // Z da Zeal (do logo: faixa branca diagonal + duas folhas ciano)
+      const ZEAL_Z = (id) => `<svg viewBox="0 0 384 384" width="100%" height="100%">
+        <g class="z-faixa"><path d="M243 64 H322 Q330 64 330 72 V148 L155 323 H76 Q68 323 68 315 V238 Z" fill="#ffffff"/></g>
+        <g class="z-folha1"><path d="M118 64 H216 L134 146 H70 Q62 146 64 136 Q72 64 118 64 Z" fill="${ACENTO}"/></g>
+        <g class="z-folha2"><path d="M270 323 H172 L254 241 H318 Q326 241 324 251 Q316 323 270 323 Z" fill="${ACENTO}"/></g>
+        <clipPath id="zc${id}"><path d="M243 64 H322 Q330 64 330 72 V148 L155 323 H76 Q68 323 68 315 V238 Z"/><path d="M118 64 H216 L134 146 H70 Q62 146 64 136 Q72 64 118 64 Z"/><path d="M270 323 H172 L254 241 H318 Q326 241 324 251 Q316 323 270 323 Z"/></clipPath>
+        <g clip-path="url(#zc${id})"><rect class="z-brilho" x="-140" y="-40" width="90" height="480" fill="#ffffff" opacity="0.85" transform="rotate(30 192 192)"/></g>
+      </svg>`;
+
+      // ------------------------------------------------------------------ cenas
+      const CENAS = {};
+
+      CENAS.linha = (c, P, t, d) => {
+        const cy = c.y || AY * 0.44;
+        // grade de pontos em anel (como a referência) — gira devagar
+        const gs = sv("svg", { width: px(900), height: px(900), viewBox: "-450 -450 900 900" }, P);
+        Object.assign(gs.style, { position: "absolute", left: px(X0 + 90), top: px(cy - 450) });
+        [200, 290, 380].forEach((r, j) => { const n = 28 + j * 14; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2;
+          sv("circle", { cx: Math.cos(a) * r, cy: Math.sin(a) * r, r: 2.4, fill: ACENTO, opacity: 0.55 - j * 0.12 }, gs); } });
+        tl.fromTo(gs, { opacity: 0, scale: 0.6, rotation: -20 }, { opacity: 0.55, scale: 1, rotation: 0, duration: 1.4, ease: EXPO }, t + 0.1);
+        tl.to(gs, { opacity: 0.18, rotation: 25, duration: d - 1.4, ease: "none" }, t + 1.5);
+        const ponto = mk("div", "ponto", P);
+        pos(ponto, X0 + 532, cy - 8);
+        tl.fromTo(ponto, { scale: 0 }, { scale: 1, duration: 0.35, ease: MOLA }, t);
+        const meia = (c.largura || 760) / 2;
+        const svg = sv("svg", { width: px(1080), height: px(60), viewBox: "0 -30 1080 60" }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(X0), top: px(cy - 30) });
+        const L = luz(svg, `M${540 - meia} 0 H${540 + meia}`, 4);
+        tl.fromTo(L.g, { scaleX: 0, transformOrigin: "540px 0px" }, { scaleX: 1, duration: 0.75, ease: "expo.inOut" }, t + 0.3);
+        tl.to(ponto, { scale: 0, duration: 0.3, ease: "power2.in" }, t + 0.45);
+        // pulso de luz correndo na linha
+        const pulso = sv("rect", { x: 540 - meia - 60, y: -5, width: 120, height: 10, rx: 5, fill: "#ffffff", opacity: 0 }, svg);
+        tl.set(pulso, { opacity: 0.9 }, t + 0.9);
+        tl.fromTo(pulso, { attr: { x: 540 - meia - 60 } }, { attr: { x: 540 + meia - 60 }, opacity: 0, duration: 1.1, ease: "power2.inOut", immediateRender: false }, t + 0.9);
+        const tam = c.tamanho || 92;
+        if (c.rotulo) rotulo(P, c.rotulo, 0, cy - tam * 2.6 - 70, t + 0.5, true);
+        const cima = bloco(P, c.titulo, { y: cy - tam * linhas(c.titulo).length * 1.08 - 18, tam });
+        revela(cima, t + 0.55, { de: 1 });
+        if (c.destaque) {
+          const baixo = bloco(P, c.destaque, { y: cy + 16, tam: tam * 0.92, cls: "acento" });
+          revela(baixo, t + 1.0, { de: -1, rot: 3 });
+        }
+        camera(P, t, d, { s1: 1.07, y1: -10 });
+      };
+
+      CENAS.texto = (c, P, t, d) => {
+        const tam = c.tamanho || 110;
+        const n = linhas(c.titulo).length;
+        const y = (c.y || AY * 0.46) - (tam * 1.04 * n) / 2;
+        if (c.rotulo) rotulo(P, c.rotulo, 0, y - 90, t + 0.1, true);
+        const b = bloco(P, c.titulo, { y, tam });
+        revela(b, t + 0.15, { stagger: 0.12 });
+        // sublinhado de luz sob o destaque
+        const svg = sv("svg", { width: px(1080), height: px(40), viewBox: "0 -20 1080 40" }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(X0), top: px(y + tam * 1.06 * n + 14) });
+        const L = luz(svg, "M300 0 H780", 3);
+        tl.fromTo(L.g, { scaleX: 0, transformOrigin: "540px 0px" }, { scaleX: 1, duration: 0.9, ease: "expo.inOut" }, t + 0.5);
+        if (c.sub) { const s = bloco(P, c.sub, { y: y + tam * 1.06 * n + 60, tam: 40, cls: "peq" }); revela(s, t + 0.7); }
+        camera(P, t, d, { s1: 1.08 });
+      };
+
+      CENAS.logo = (c, P, t, d) => {
+        const tamZ = c.tamanho || 330, cy = c.y || AY * 0.42;
+        const z = mk("div", "marca-z", P, ZEAL_Z("L" + t));
+        Object.assign(z.style, { width: px(tamZ), height: px(tamZ), left: px(X0 + 540 - tamZ / 2), top: px(cy - tamZ / 2) });
+        const fx = z.querySelector(".z-faixa"), f1 = z.querySelector(".z-folha1"), f2 = z.querySelector(".z-folha2");
+        tl.fromTo(fx, { scale: 0.1, rotation: -120, opacity: 0, svgOrigin: "199 193" }, { scale: 1, rotation: 0, opacity: 1, duration: 1.0, ease: "expo.out" }, t + 0.1);
+        tl.fromTo(f1, { x: -260, y: -260, rotation: -40, opacity: 0, svgOrigin: "140 105" }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, t + 0.35);
+        tl.fromTo(f2, { x: 260, y: 260, rotation: -40, opacity: 0, svgOrigin: "248 282" }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, t + 0.42);
+        tl.fromTo(z.querySelector(".z-brilho"), { attr: { x: -160 } }, { attr: { x: 460 }, duration: 0.9, ease: "power2.inOut" }, t + 1.15);
+        // onda de choque quando o Z fecha
+        [0, 0.12].forEach((o, i) => {
+          const a = mk("div", "anel", P);
+          Object.assign(a.style, { width: px(tamZ), height: px(tamZ), left: px(X0 + 540 - tamZ / 2), top: px(cy - tamZ / 2) });
+          onda(a, t + 0.75 + o, 0.7, 2.4 + i * 0.5, 1.1);
+        });
+        const nome = c.nome || "zeal";
+        const pw = mk("div", "palavra", P);
+        pw.style.fontSize = px(c.tamanho_nome || 150);
+        pw.style.left = "50%"; pw.style.transform = "translateX(-50%)"; pw.style.top = px(cy + tamZ / 2 + 30);
+        [...nome].forEach((ch, i) => { const m = mk("span", "mask", pw); const s = mk("span", "", m, esc(ch));
+          tl.fromTo(s, { yPercent: 110 }, { yPercent: 0, duration: 0.8, ease: EXPO }, t + 0.8 + i * 0.06); });
+        if (c.slogan) {
+          const s = mk("div", "slogan", P, esc(c.slogan));
+          s.style.fontSize = px(30); s.style.left = "50%"; s.style.transform = "translateX(-50%)";
+          s.style.top = px(cy + tamZ / 2 + 30 + (c.tamanho_nome || 150) * 1.15);
+          s.style.letterSpacing = "0.42em";
+          espalha(s, t + 1.15, true, 22, 1.2);
+        }
+        camera(P, t, d, { s0: 1.0, s1: 1.05, y1: -6 });
+      };
+
+      CENAS.celular = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.075;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.15, false);
+        if (c.titulo) { const b = bloco(P, c.titulo, { x: 70, y: topo + 50, tam: c.tamanho || 74, centro: false }); revela(b, t + 0.25); }
+        const cy = c.fone_y || AY * 0.60;
+        const c3 = mk("div", "cena3d", P); c3.style.top = px(cy);
+        const fone = mk("div", "fone", c3);
+        const corpo = mk("div", "corpo", fone);
+        const tela = mk("div", "tela", corpo);
+        mk("div", "ilha", tela);
+        mk("div", "status", tela, "<span>9:41</span><span>●●● ▮</span>");
+        // estado 1: chamada chegando
+        const e1 = mk("div", "estado", tela);
+        const av = mk("div", "avatar", e1, `<div style="width:${px(92)};height:${px(92)}">${icone("user", "#ffffff", 1.6)}</div>`);
+        const aneis = [0, 1, 2].map(() => mk("div", "onda-anel", av));
+        mk("div", "nome", e1, esc(c.chamada_nome || "Paciente"));
+        mk("div", "sub-fone", e1, esc(c.chamada || "ligando…"));
+        const bts = mk("div", "botoes", e1);
+        mk("div", "bt nao", bts, `<div style="width:${px(54)};height:${px(54)};transform:rotate(135deg)">${icone("tel", "#fff", 2.2)}</div>`);
+        const sim = mk("div", "bt sim", bts, `<div style="width:${px(54)};height:${px(54)}">${icone("tel", "#fff", 2.2)}</div>`);
+        // estado 2: assistente atendendo
+        const e2 = mk("div", "estado", tela);
+        e2.style.justifyContent = "flex-start";
+        mk("div", "topo-app", e2, `<div class="orbe"></div><span>${esc(c.app || "Assistente Zeal")}</span><span class="ao-vivo">AO VIVO</span>`);
+        const barras = mk("div", "barras", e2);
+        const nb = 22; for (let i = 0; i < nb; i++) mk("i", "", barras);
+        const falas = c.falas || [["pac", "Oi, queria marcar uma avaliação."], ["ia", "Claro! Tenho quinta às 14h30. Pode ser?"], ["pac", "Perfeito!"]];
+        const bol = falas.map(([q, txt]) => mk("div", "bolha " + (q === "ia" ? "ia" : "pac"), e2, esc(txt)));
+        // cartão que SAI da tela (profundidade)
+        const card = c.cartao || { titulo: "Consulta agendada", linhas: [["Quando", "Qui · 14:30"], ["Com", "Dra. Ana"]] };
+        const ct = mk("div", "cartao", c3);
+        ct.style.top = px(-120);
+        ct.innerHTML = `<div class="cab"><div class="ok"><div style="width:${px(38)};height:${px(38)}">${icone("check", "#061318", 3)}</div></div><span>${esc(card.titulo)}</span></div>` +
+          (card.linhas || []).map(([a, b]) => `<div class="lin"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join("") +
+          `<div class="barra-prog"><i></i></div>`;
+        const selos = (c.selos || ["Confirmado no WhatsApp", "Lembrete enviado"]).map((s, i) => {
+          const e = mk("div", "selo", c3, `<span class="okp"><span style="width:${px(18)};height:${px(18)}">${icone("check", "#061318", 3.5)}</span></span>${esc(s)}`);
+          e.style.top = px(i === 0 ? -260 : 250); e.style.left = px(i === 0 ? -360 : -60);
+          return e;
+        });
+        // --- tempos (escalam com a duração)
+        const k = Math.max(1, (d - 0.4) / 5.4);
+        const semCham = !!c.sem_chamada;
+        const tA = t + 0.15, tAtende = semCham ? t + 0.1 : t + 1.55 * k, tCard = semCham ? t + Math.max(1.6, d * 0.5) : t + 3.55 * k;
+        if (semCham) e1.style.display = "none";
+        tl.fromTo(fone, { y: (semCham ? 420 : 900) * U, rotationX: 38, rotationY: -38, rotationZ: 8 },
+          { y: 0, rotationX: 10, rotationY: -18, rotationZ: 2, duration: semCham ? 0.9 : 1.3, ease: "expo.out" }, semCham ? t : tA);
+        tl.to(fone, { rotationX: 4, rotationY: -6, rotationZ: 0, y: -16 * U, duration: d - 1.4, ease: SUAVE }, tA + 1.25);
+        aneis.forEach((a, i) => { onda(a, tA + 0.3 + i * 0.33, 1, 1.9, 1.0, 0.8); onda(a, tA + 1.3 + i * 0.33, 1, 1.9, 1.0, 0.8); });
+        tl.fromTo(sim, { scale: 1 }, { scale: 1.12, duration: 0.3, yoyo: true, repeat: 3, ease: SUAVE }, tA + 0.5);
+        tl.to(sim, { scale: 0.85, duration: 0.12, ease: "power2.in" }, tAtende - 0.18);
+        tl.fromTo(e1, { opacity: 1, scale: 1 }, { opacity: 0, scale: 0.92, duration: 0.35, ease: "power2.in" }, tAtende);
+        tl.fromTo(e2, { opacity: 0, y: 40 * U }, { opacity: 1, y: 0, duration: 0.6, ease: EXPO }, tAtende + 0.2);
+        barras.querySelectorAll("i").forEach((b, i) => {
+          const amp = 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6));
+          tl.fromTo(b, { scaleY: 0.12 }, { scaleY: amp, duration: 0.22, ease: SUAVE, yoyo: true, repeat: Math.max(1, Math.floor((d - 1.6 * k) / 0.22)) }, tAtende + 0.3 + i * 0.018);
+        });
+        const passo = (tCard - tAtende - 0.6) / Math.max(1, bol.length);
+        bol.forEach((b, i) => tl.fromTo(b, { opacity: 0, y: 26 * U, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: EXPO, transformOrigin: i % 2 ? "100% 100%" : "0% 100%" }, tAtende + 0.55 + i * passo));
+        // cartão pula para fora do celular
+        tl.to(tela, { opacity: 0.55, duration: 0.5, ease: SUAVE }, tCard);
+        tl.fromTo(ct, { z: 0, y: 160 * U, scale: 0.55, opacity: 0, rotationY: -18 },
+          { z: 260 * U, y: 0, scale: 1, opacity: 1, rotationY: -6, duration: 0.95, ease: "expo.out" }, tCard);
+        tl.fromTo(ct.querySelector(".barra-prog i"), { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: FLUI }, tCard + 0.4);
+        tl.fromTo(ct.querySelector(".ok"), { scale: 0 }, { scale: 1, duration: 0.5, ease: "back.out(2.6)" }, tCard + 0.35);
+        selos.forEach((s, i) => tl.fromTo(s, { opacity: 0, scale: 0.6, z: 340 * U }, { opacity: 1, scale: 1, z: 340 * U, duration: 0.6, ease: MOLA }, tCard + 0.6 + i * 0.22));
+        camera(P, t, d, { s1: 1.04, y1: -8 });
+      };
+
+      function suave(pts) {   // Catmull-Rom → Bézier
+        let s = `M${pts[0][0]} ${pts[0][1]}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+          s += ` C${p1[0] + (p2[0] - p0[0]) / 6} ${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6} ${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]} ${p2[1]}`;
+        }
+        return s;
+      }
+
+      CENAS.grafico = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.075;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.1, false);
+        const tb = bloco(P, c.titulo || "Resultado", { x: 70, y: topo + 50, tam: c.tamanho || 84, centro: false });
+        revela(tb, t + 0.2);
+        if (c.sub) { const s = bloco(P, c.sub, { x: 70, y: topo + 50 + (c.tamanho || 84) * 1.1 * linhas(c.titulo).length + 10, tam: 34, centro: false, cls: "peq" }); revela(s, t + 0.45); }
+        if (c.tags) {
+          const ch = mk("div", "chips", P); ch.style.top = px(topo + 330); ch.style.left = px(X0 + 70);
+          c.tags.concat(c.tags).forEach((x) => mk("div", "chip", ch, esc(x)));
+          tl.fromTo(ch, { x: 300 * U, opacity: 0 }, { x: -200 * U, opacity: 1, duration: d, ease: "none" }, t + 0.3);
+        }
+        const gw = 900, gh = c.altura || 620, gx = X0 + 90, gy = c.grafico_y || AY * 0.36;
+        const svg = sv("svg", { width: px(gw), height: px(gh), viewBox: `0 0 ${gw} ${gh}` }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(gx), top: px(gy) });
+        const def = sv("defs", {}, svg);
+        const lg = sv("linearGradient", { id: "ga" + t, x1: 0, y1: 0, x2: 0, y2: 1 }, def);
+        sv("stop", { offset: 0, "stop-color": ACENTO, "stop-opacity": 0.42 }, lg); sv("stop", { offset: 1, "stop-color": ACENTO, "stop-opacity": 0 }, lg);
+        for (let i = 0; i <= 5; i++) {
+          const l = sv("line", { x1: 0, x2: gw, y1: (gh * i) / 5, y2: (gh * i) / 5, stroke: "rgba(236,232,255,0.14)", "stroke-width": 2 }, svg);
+          tl.fromTo(l, { opacity: 0 }, { opacity: 1, duration: 0.6 }, t + 0.2 + i * 0.05);
+        }
+        const v = c.pontos || [1, 2, 2.4, 3.6, 4.2, 5.6, 7];
+        const mx = Math.max(...v) * 1.1, n = v.length;
+        const pts = v.map((y, i) => [(gw * i) / (n - 1), gh - (gh * y) / mx]);
+        const solidos = c.projecao ? n - c.projecao : n;
+        const dS = suave(pts.slice(0, solidos));
+        const area = sv("path", { d: dS + ` L${pts[solidos - 1][0]} ${gh} L0 ${gh} Z`, fill: `url(#ga${t})` }, svg);
+        const L = luz(svg, dS, 5);
+        const tD = t + 0.35, durD = Math.min(2.0, d * 0.45);
+        desenha(L.ps, tD, durD, "power2.inOut");
+        const cp = sv("clipPath", { id: "gc" + t }, def);
+        const cr = sv("rect", { x: 0, y: -50, width: 0, height: gh + 100 }, cp);
+        area.setAttribute("clip-path", `url(#gc${t})`);
+        tl.fromTo(cr, { attr: { width: 0 } }, { attr: { width: pts[solidos - 1][0] }, duration: durD, ease: "power2.inOut" }, tD);
+        if (c.projecao) {
+          const dp = suave(pts.slice(solidos - 1));
+          const pp = sv("path", { d: dp, fill: "none", stroke: ACENTO, "stroke-width": 3, "stroke-dasharray": "10 12", opacity: 0.9 }, svg);
+          const cpp = sv("clipPath", { id: "gp" + t }, def);
+          const r2 = sv("rect", { x: pts[solidos - 1][0], y: -50, width: 0, height: gh + 100 }, cpp);
+          pp.setAttribute("clip-path", `url(#gp${t})`);
+          tl.fromTo(r2, { attr: { width: 0 } }, { attr: { width: gw } }, tD + durD - 0.1).duration(0.9);
+        }
+        // pontos e rótulos acendem quando a linha passa
+        (c.marcos || []).forEach((m) => {
+          const i = m.i, [x, y] = pts[i];
+          const fr = x / pts[solidos - 1][0];
+          const tp = tD + Math.min(1, fr) * durD;
+          const proj = i >= solidos;
+          const g = sv("g", {}, svg);
+          sv("circle", { cx: x, cy: y, r: 22, fill: ACENTO, opacity: 0.25 }, g);
+          sv("circle", { cx: x, cy: y, r: 11, fill: proj ? "#0a0614" : "#ffffff", stroke: ACENTO, "stroke-width": 4 }, g);
+          const tx = sv("text", { x: x - 14, y: y - 34, class: "rot-svg", "font-size": 26 }, g); tx.textContent = m.texto;
+          tl.fromTo(g, { scale: 0, opacity: 0, svgOrigin: `${x} ${y}` }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2.4)" }, proj ? tD + durD + 0.4 : tp);
+        });
+        // cabeça brilhante que acompanha o traço
+        const cab = sv("circle", { r: 13, fill: "#ffffff" }, svg);
+        const hal = sv("circle", { r: 34, fill: ACENTO, opacity: 0.35 }, svg);
+        const caminho = L.ps[2], tot = caminho.getTotalLength();
+        const amostras = Array.from({ length: 121 }, (_, i) => caminho.getPointAtLength((tot * i) / 120));
+        const pr = { p: 0 };
+        const mover = () => { const a = amostras[Math.round(pr.p * 120)]; [cab, hal].forEach((e) => { e.setAttribute("cx", a.x); e.setAttribute("cy", a.y); }); };
+        mover();
+        tl.fromTo(pr, { p: 0 }, { p: 1, duration: durD, ease: "power2.inOut", onUpdate: mover }, tD);
+        tl.fromTo([cab, hal], { opacity: 0 }, { opacity: 1, duration: 0.2 }, tD);
+        // contadores
+        (c.contadores || []).forEach((k, i) => {
+          const e = mk("div", "contador", P, `<span class="bul"></span><span class="num">0</span><span class="leg">${linhas(k.legenda).join("<br>")}</span>`);
+          e.style.top = px(gy + gh + 70); e.style.left = px(X0 + 70 + i * 480);
+          const num = e.querySelector(".num"), o = { v: 0 };
+          const fmt = () => { num.textContent = (k.prefixo || "") + Math.round(o.v).toLocaleString("pt-BR") + (k.sufixo || ""); };
+          fmt();
+          tl.fromTo(e, { opacity: 0, y: 30 * U }, { opacity: 1, y: 0, duration: 0.6, ease: EXPO }, tD + 0.3 + i * 0.25);
+          tl.fromTo(o, { v: 0 }, { v: k.valor, duration: durD, ease: "power2.out", onUpdate: fmt }, tD + 0.3 + i * 0.25);
+        });
+        camera(P, t, d, { s1: 1.05, y1: -10 });
+      };
+
+      CENAS.passos = (c, P, t, d) => {
+        const ps = c.passos || [{ icone: "tel", texto: "Paciente liga" }, { icone: "ia", texto: "A IA atende" }, { icone: "agenda", texto: "Agenda" }, { icone: "check", texto: "Confirma" }];
+        const topo = c.titulo_y || AY * 0.07;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.1, false);
+        const tb = bloco(P, c.titulo || "Como funciona", { x: 70, y: topo + 50, tam: c.tamanho || 84, centro: false });
+        revela(tb, t + 0.2);
+        const n = ps.length, y0 = topo + 340, passoY = Math.min(330, (AY - y0 - 220) / Math.max(1, n - 1));
+        const nos = ps.map((p, i) => [X0 + (i % 2 === 0 ? 300 : 780), y0 + 90 + i * passoY]);
+        const svg = sv("svg", { width: px(W / U), height: px(AY), viewBox: `0 0 ${W / U} ${AY}` }, P);
+        Object.assign(svg.style, { position: "absolute", left: 0, top: 0 });
+        const ini = [X0 + 560, y0 - 60], fim = [nos[n - 1][0] + (n % 2 ? 260 : -260), nos[n - 1][1] + 170];
+        const pts = [ini, ...nos, fim];
+        const dP = suave(pts);
+        const L = luz(svg, dP, 5);
+        const tD = t + 0.45, durD = Math.max(1.6, d * 0.62);
+        const tot = L.ps[2].getTotalLength();
+        desenha(L.ps, tD, durD, "none");
+        // tempo em que a linha chega em cada nó (mede o comprimento até o ponto mais próximo)
+        const amostras = Array.from({ length: 301 }, (_, i) => L.ps[2].getPointAtLength((tot * i) / 300));
+        const fracNo = nos.map(([x, y]) => { let b = 0, bd = 1e9; amostras.forEach((a, i) => { const dd = (a.x - x) ** 2 + (a.y - y) ** 2; if (dd < bd) { bd = dd; b = i; } }); return b / 300; });
+        nos.forEach(([x, y], i) => {
+          const tn = tD + fracNo[i] * durD;
+          const no = mk("div", "no", P, `<div style="width:${px(62)};height:${px(62)};color:${MARCA}">${icone(ps[i].icone, MARCA, 2)}</div><div class="badge">${String(i + 1).padStart(2, "0")}</div>`);
+          pos(no, x, y);
+          tl.fromTo(no, { scale: 0, rotation: -30 }, { scale: 1, rotation: 0, duration: 0.7, ease: "back.out(2.2)" }, tn - 0.15);
+          const a = mk("div", "anel", P); Object.assign(a.style, { width: px(150), height: px(150), left: px(x - 75), top: px(y - 75) });
+          onda(a, tn, 0.9, 2.2, 0.9);
+          const r = mk("div", "no-rot", P, linhas(ps[i].texto).join("<br>"));
+          r.style.top = px(y + 96); r.style.left = px(x - 200); r.style.width = px(400); r.style.textAlign = "center";
+          tl.fromTo(r, { opacity: 0, y: 20 * U }, { opacity: 1, y: 0, duration: 0.6, ease: EXPO }, tn + 0.1);
+        });
+        const cab = sv("circle", { r: 12, fill: "#fff" }, svg), hal = sv("circle", { r: 32, fill: ACENTO, opacity: 0.35 }, svg);
+        const pr = { p: 0 };
+        const mover = () => { const a = amostras[Math.round(pr.p * 300)]; [cab, hal].forEach((e) => { e.setAttribute("cx", a.x); e.setAttribute("cy", a.y); }); };
+        mover();
+        tl.fromTo(pr, { p: 0 }, { p: 1, duration: durD, ease: "none", onUpdate: mover }, tD);
+        // câmera acompanha a linha descendo
+        tl.fromTo(P, { y: 40 * U, scale: 1.02 }, { y: -60 * U, scale: 1.0, duration: d, ease: SUAVE }, t);
+      };
+
+      CENAS.cta = (c, P, t, d) => {
+        const cy = c.y || AY * 0.36;
+        const tz = 150;
+        const z = mk("div", "marca-z", P, ZEAL_Z("C" + t));
+        Object.assign(z.style, { width: px(tz), height: px(tz), left: px(X0 + 540 - tz / 2), top: px(cy - tz) });
+        tl.fromTo(z, { scale: 0.4, opacity: 0, rotation: -25 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.9, ease: EXPO }, t + 0.1);
+        tl.fromTo(z.querySelector(".z-brilho"), { attr: { x: -160 } }, { attr: { x: 460 } , duration: 0.9, ease: "power2.inOut" }, t + 0.7);
+        const tam = c.tamanho || 88;
+        const b1 = bloco(P, c.titulo || "Sua recepção|no piloto automático.", { y: cy + 50, tam });
+        revela(b1, t + 0.35);
+        const n1 = linhas(c.titulo || "a|b").length;
+        let y = cy + 50 + tam * 1.06 * n1 + 20;
+        if (c.destaque) { const b2 = bloco(P, c.destaque, { y, tam: tam * 0.95, cls: "acento" }); revela(b2, t + 0.75); y += tam * 1.0 * linhas(c.destaque).length + 30; }
+        const bt = mk("div", "botao", P, `<span>${esc(c.botao || "Conheça a Zeal")}</span><span style="width:${px(40)};height:${px(40)};display:inline-block">` +
+          `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#061318" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><i class="brilho"></i>`);
+        bt.style.left = "50%"; bt.style.top = px(y + 40);
+        tl.fromTo(bt, { scale: 0.3, opacity: 0, xPercent: -50 }, { scale: 1, opacity: 1, xPercent: -50, duration: 0.8, ease: MOLA }, t + 1.0);
+        tl.fromTo(bt.querySelector(".brilho"), { xPercent: -150 }, { xPercent: 450, duration: 1.0, ease: "power2.inOut" }, t + 1.5);
+        // cursor desliza até o botão e clica
+        const cur = mk("div", "cursor", P, `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M4 2l16 9.5-7 1.6-3.6 6.6z" fill="#ffffff" stroke="#0a0614" stroke-width="1.4" stroke-linejoin="round"/></svg>`);
+        const bx = X0 + 560, by = y + 40 + 60;
+        pos(cur, bx + 60, by + 10);
+        tl.fromTo(cur, { x: 270 * U, y: 350 * U, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 1.0, ease: "power3.out" }, t + 1.6);
+        tl.to(cur, { scale: 0.82, duration: 0.1, yoyo: true, repeat: 1 }, t + 2.65);
+        tl.to(bt, { scale: 0.94, xPercent: -50, duration: 0.1, yoyo: true, repeat: 1 }, t + 2.65);
+        const rp = mk("div", "anel", P); Object.assign(rp.style, { width: px(80), height: px(80), left: px(bx + 30), top: px(by - 30) });
+        onda(rp, t + 2.68, 0.2, 3, 0.8, 1);
+        if (c.url) {
+          const u = mk("div", "url", P, ""); u.style.left = "50%"; u.style.transform = "translateX(-50%)"; u.style.top = px(y + 230);
+          const pr = { n: 0 };
+          const esc2 = () => { u.textContent = c.url.slice(0, Math.round(pr.n)); };
+          esc2();
+          tl.fromTo(pr, { n: 0 }, { n: c.url.length, duration: 0.9, ease: "none", onUpdate: esc2 }, t + 2.0);
+        }
+        camera(P, t, d, { s1: 1.05, y1: -8 });
+      };
+
+      CENAS.numero = (c, P, t, d) => {
+        const cy = c.y || AY * 0.45;
+        if (c.rotulo) rotulo(P, c.rotulo, 0, cy - 330, t + 0.1, true);
+        const svg = sv("svg", { width: px(560), height: px(560), viewBox: "-280 -280 560 560" }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(X0 + 260), top: px(cy - 280) });
+        sv("circle", { r: 250, fill: "none", stroke: "rgba(236,232,255,0.08)", "stroke-width": 16 }, svg);
+        const arc = luz(svg, "M0 -250 A250 250 0 1 1 -0.01 -250", 8);
+        desenha(arc.ps, t + 0.2, Math.min(1.8, d * 0.6), "power2.inOut");
+        const e = mk("div", "bloco centro", P, `<span class="ln" style="font-size:${px(c.tamanho || 190)};letter-spacing:-0.04em"></span>`);
+        e.style.left = px(X0); e.style.width = px(1080); e.style.top = px(cy - (c.tamanho || 190) * 0.62);
+        const num = e.querySelector(".ln"), o = { v: c.de ?? 1 };
+        const fmt = () => { num.textContent = (c.prefixo || "") + Math.round(o.v).toLocaleString("pt-BR") + (c.sufixo || ""); };
+        fmt();
+        tl.fromTo(o, { v: c.de ?? 1 }, { v: c.valor || 100, duration: Math.min(1.8, d * 0.6), ease: "power2.out", onUpdate: fmt }, t + 0.2);
+        tl.fromTo(e, { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: EXPO }, t + 0.1);
+        if (c.legenda) { const b = bloco(P, c.legenda, { y: cy + 330, tam: 54 }); revela(b, t + 0.6); }
+        camera(P, t, d, { s1: 1.07 });
+      };
+
+
+      CENAS.cards = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.08;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.05, false);
+        const tb = bloco(P, c.titulo || "Alguns empregos|vão *sumir.*", { x: 70, y: topo + 50, tam: c.tamanho || 88, centro: false });
+        revela(tb, t + 0.1, { dur: 0.8 });
+        const itens = c.itens || [["Digitação", "chat"], ["Planilhas", "grafico"], ["Cadastro", "user"], ["Triagem", "check"],
+          ["Relatórios", "agenda"], ["Conferência", "relogio"], ["Arquivo", "zap"], ["Atendimento", "tel"], ["Agendamento", "agenda"]];
+        const fica = new Set(c.ficam || [4]);
+        const cw = 290, ch = 230, gx = 30, gy = 30, x0 = X0 + (1080 - 3 * cw - 2 * gx) / 2, y0 = c.grade_y || AY * 0.36;
+        const tSai = t + Math.max(1.0, d * 0.45);
+        itens.slice(0, 9).forEach(([nm, ic], i) => {
+          const col = i % 3, lin = Math.floor(i / 3);
+          const k = mk("div", "vidro" + (fica.has(i) ? " fica" : ""), P,
+            `<div class="ic"><div>${icone(ic, "#ffffff", 2)}</div></div><div class="nm">${esc(nm)}</div><div class="ln2"></div><div class="ln2" style="width:60%"></div>`);
+          Object.assign(k.style, { width: px(cw), height: px(ch), padding: px(28) });
+          pos(k, x0 + col * (cw + gx), y0 + lin * (ch + gy));
+          tl.fromTo(k, { opacity: 0, y: 80 * U, rotationX: -50, scale: 0.9 }, { opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 0.7, ease: EXPO }, t + 0.1 + (col + lin) * 0.05);
+          if (fica.has(i)) {
+            tl.to(k, { scale: 1.12, duration: 0.8, ease: FLUI }, tSai + 0.2);
+          } else {
+            const ang = (rnd() - 0.5) * 70;
+            tl.to(k, { y: (500 + rnd() * 300) * U, x: (rnd() - 0.5) * 240 * U, rotation: ang, opacity: 0, duration: 1.0 + rnd() * 0.3, ease: "power3.in" }, tSai + rnd() * 0.25);
+          }
+        });
+        camera(P, t, d, { s1: 1.05, y1: -10 });
+      };
+
+      CENAS.ciclo = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.08;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.05, false);
+        const tb = bloco(P, c.titulo || "Repetição.|Tarefa *mecânica.*", { x: 70, y: topo + 50, tam: c.tamanho || 88, centro: false });
+        revela(tb, t + 0.1, { dur: 0.8 });
+        const cy = c.y || AY * 0.56, R = 300;
+        const svg = sv("svg", { width: px(800), height: px(800), viewBox: "-400 -400 800 800" }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(X0 + 140), top: px(cy - 400) });
+        sv("circle", { r: R, fill: "none", stroke: "rgba(236,232,255,0.08)", "stroke-width": 26 }, svg);
+        const g = sv("g", {}, svg);
+        const arco = luz(g, `M${R} 0 A${R} ${R} 0 1 1 ${R * Math.cos(-0.5)} ${R * Math.sin(-0.5)}`, 9);
+        const ang = -0.5, hx = R * Math.cos(ang), hy = R * Math.sin(ang);
+        sv("path", { d: `M${hx - 34} ${hy - 6} L${hx + 6} ${hy - 44} L${hx + 22} ${hy + 22} Z`, fill: ACENTO }, g);
+        desenha(arco.ps, t + 0.15, 0.7, "power2.out");
+        tl.fromTo(g, { rotation: 0, svgOrigin: "0 0" }, { rotation: 360 * (d / 1.6), duration: d, ease: "none", svgOrigin: "0 0" }, t + 0.1);
+        const centro = mk("div", "", P, `<div style="width:100%;height:100%">${icone(c.icone || "relogio", ACENTO, 1.6)}</div>`);
+        Object.assign(centro.style, { position: "absolute", width: px(170), height: px(170) });
+        pos(centro, X0 + 540 - 85, cy - 85 - 40);
+        tl.fromTo(centro, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.6, ease: MOLA }, t + 0.2);
+        const cont = mk("div", "bloco centro", P, `<span class="ln acento" style="font-size:${px(56)}">×1</span>`);
+        cont.style.left = px(X0); cont.style.width = px(1080); cont.style.top = px(cy + 70);
+        const num = cont.querySelector(".ln"), o = { v: 1 };
+        tl.fromTo(o, { v: 1 }, { v: c.repeticoes || 999, duration: d - 0.3, ease: "power2.in", onUpdate: () => { num.textContent = "×" + Math.round(o.v); } }, t + 0.3);
+        const tarefas = c.tarefas || ["Copiar", "Colar", "Repetir"];
+        tarefas.forEach((tx, i) => {
+          const ch = mk("div", "tarefa-chip", P, esc(tx));
+          const a0 = (i / tarefas.length) * Math.PI * 2 - Math.PI / 2;
+          const pr = { a: a0 };
+          const mover = () => { ch.style.transform = `translate(${(X0 + 540 + Math.cos(pr.a) * (R + 40)) * U}px, ${(cy + Math.sin(pr.a) * (R + 40)) * U}px) translate(-50%, -50%)`; };
+          ch.style.left = "0px"; ch.style.top = "0px";
+          mover();
+          tl.fromTo(pr, { a: a0 }, { a: a0 + Math.PI * 2 * (d / 2.2), duration: d, ease: "none", onUpdate: mover }, t);
+          tl.fromTo(ch, { opacity: 0 }, { opacity: 1, duration: 0.4 }, t + 0.25 + i * 0.12);
+        });
+        camera(P, t, d, { s1: 1.06 });
+      };
+
+      CENAS.comparacao = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.10;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.05, false);
+        const tb = bloco(P, c.titulo || "Em *1 hora.*", { x: 70, y: topo + 50, tam: c.tamanho || 96, centro: false });
+        revela(tb, t + 0.1, { dur: 0.8 });
+        const y0 = c.y || AY * 0.40, larg = 940;
+        const linhasC = [
+          { rot: c.antes || "Antes", val: c.antes_valor || "o dia todo", frac: 1, cor: "rgba(236,232,255,0.22)", dur: Math.min(1.8, d * 0.55) },
+          { rot: c.depois || "Com IA", val: c.depois_valor || "1 h", frac: c.fracao || 0.14, cor: `linear-gradient(90deg, ${MARCA}, ${ACENTO})`, dur: 0.5 },
+        ];
+        linhasC.forEach((l, i) => {
+          const y = y0 + i * 380;
+          const r = mk("div", "cmp-rot", P, esc(l.rot)); pos(r, X0 + 70, y);
+          const b = mk("div", "cmp-barra", P); pos(b, X0 + 70, y + 60);
+          b.style.width = px(larg * l.frac); b.style.background = l.cor;
+          if (i === 1) b.style.boxShadow = `0 0 ${40 * U}px rgba(var(--acento-rgb),0.6)`;
+          const v = mk("div", "cmp-val", P, esc(l.val)); pos(v, X0 + 70 + (i === 1 ? larg * l.frac + 30 : 0), y + (i === 1 ? 64 : 190));
+          const tt = t + 0.35 + i * 0.45;
+          tl.fromTo(r, { opacity: 0, x: -30 * U }, { opacity: 1, x: 0, duration: 0.5, ease: EXPO }, tt - 0.1);
+          tl.fromTo(b, { scaleX: 0 }, { scaleX: 1, duration: l.dur, ease: i ? "expo.out" : "power1.inOut" }, tt);
+          tl.fromTo(v, { opacity: 0, y: 20 * U }, { opacity: 1, y: 0, duration: 0.5, ease: EXPO }, tt + l.dur * 0.6);
+        });
+        // relógio girando rápido ao lado do título
+        const rel = sv("svg", { width: px(180), height: px(180), viewBox: "-100 -100 200 200" }, P);
+        Object.assign(rel.style, { position: "absolute", left: px(X0 + 830), top: px(topo + 40) });
+        sv("circle", { r: 86, fill: "none", stroke: ACENTO, "stroke-width": 8, opacity: 0.9 }, rel);
+        const pt = sv("line", { x1: 0, y1: 0, x2: 0, y2: -62, stroke: "#fff", "stroke-width": 9, "stroke-linecap": "round" }, rel);
+        const pt2 = sv("line", { x1: 0, y1: 0, x2: 0, y2: -40, stroke: ACENTO, "stroke-width": 9, "stroke-linecap": "round" }, rel);
+        tl.fromTo(rel, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: MOLA }, t + 0.2);
+        tl.fromTo(pt, { rotation: 0, svgOrigin: "0 0" }, { rotation: 360 * 6, duration: d - 0.3, ease: "power2.inOut", svgOrigin: "0 0" }, t + 0.3);
+        tl.fromTo(pt2, { rotation: 0, svgOrigin: "0 0" }, { rotation: 360 * 0.5, duration: d - 0.3, ease: "power2.inOut", svgOrigin: "0 0" }, t + 0.3);
+        camera(P, t, d, { s1: 1.05 });
+      };
+
+      CENAS.soma = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.10;
+        if (c.rotulo) rotulo(P, c.rotulo, 0, topo, t + 0.05, true);
+        const tb = bloco(P, c.titulo || "A IA veio|para *somar.*", { y: topo + 50, tam: c.tamanho || 92 });
+        revela(tb, t + 0.1, { dur: 0.8 });
+        const cy = c.y || AY * 0.58, r = 170;
+        const mkO = (txt, cor, borda) => {
+          const o = mk("div", "orbe-g", P, esc(txt));
+          Object.assign(o.style, { width: px(r * 2), height: px(r * 2), fontSize: px(58), background: cor, border: `${3 * U}px solid ${borda}`,
+            boxShadow: `0 0 ${60 * U}px ${borda}` });
+          pos(o, X0 + 540 - r, cy - r);
+          return o;
+        };
+        const a = mkO(c.a || "Você", "radial-gradient(circle at 35% 30%, #4a2a78, #1d1033)", "rgba(236,232,255,0.5)");
+        const b = mkO(c.b || "IA", "radial-gradient(circle at 35% 30%, #1d6f78, #0b2a30)", ACENTO);
+        const mais = mk("div", "", P, `<svg viewBox="-50 -50 100 100" width="100%" height="100%"><path d="M0 -34V34M-34 0H34" stroke="#fff" stroke-width="12" stroke-linecap="round"/></svg>`);
+        Object.assign(mais.style, { position: "absolute", width: px(110), height: px(110) }); pos(mais, X0 + 485, cy - 55);
+        const fus = mkO(c.resultado || "+ resultado", "radial-gradient(circle at 40% 35%, #d9fbff 0%, var(--acento) 45%, var(--marca) 100%)", "#ffffff");
+        fus.style.color = "#061318"; fus.style.fontSize = px(54); fus.style.fontWeight = 900;
+        const tJ = t + Math.max(0.9, d * 0.42);
+        tl.fromTo(a, { x: -520 * U, opacity: 0 }, { x: -210 * U, opacity: 1, duration: 0.8, ease: EXPO }, t + 0.15);
+        tl.fromTo(b, { x: 520 * U, opacity: 0 }, { x: 210 * U, opacity: 1, duration: 0.8, ease: EXPO }, t + 0.22);
+        tl.fromTo(mais, { scale: 0, rotation: -180 }, { scale: 1, rotation: 0, duration: 0.6, ease: MOLA }, t + 0.45);
+        tl.to([a, b], { x: 0, scale: 0.7, duration: 0.55, ease: "power3.in" }, tJ);
+        tl.to(mais, { scale: 0, opacity: 0, duration: 0.3 }, tJ);
+        tl.to([a, b], { opacity: 0, duration: 0.15 }, tJ + 0.5);
+        tl.fromTo(fus, { scale: 0.4, opacity: 0 }, { scale: 1.12, opacity: 1, duration: 0.7, ease: "back.out(2)" }, tJ + 0.5);
+        [0, 0.1, 0.2].forEach((o, i) => {
+          const an = mk("div", "anel", P); Object.assign(an.style, { width: px(r * 2), height: px(r * 2) }); pos(an, X0 + 540 - r, cy - r);
+          onda(an, tJ + 0.5 + o, 0.9, 2.2 + i * 0.4, 1.0);
+        });
+        camera(P, t, d, { s1: 1.05 });
+      };
+
+      CENAS.timeline = (c, P, t, d) => {
+        const topo = c.titulo_y || AY * 0.09;
+        if (c.rotulo) rotulo(P, c.rotulo, 70, topo, t + 0.05, false);
+        const tb = bloco(P, c.titulo || "Editado|*100% por IA.*", { x: 70, y: topo + 50, tam: c.tamanho || 92, centro: false });
+        revela(tb, t + 0.1, { dur: 0.8 });
+        const jw = 940, jh = 640, jx = X0 + 70, jy = c.y || AY * 0.40;
+        const j = mk("div", "janela", P, `<div class="barra-j"><i></i><i></i><i></i></div>`);
+        Object.assign(j.style, { width: px(jw), height: px(jh) }); pos(j, jx, jy);
+        tl.fromTo(j, { y: 120 * U, opacity: 0, rotationX: 18 }, { y: 0, opacity: 1, rotationX: 0, duration: 0.8, ease: EXPO }, t + 0.1);
+        const cores = [MARCA, ACENTO, "#7c5cc4", "#3f8f86"];
+        const trilhas = 4, ph = 100;
+        for (let i = 0; i < trilhas; i++) {
+          let x = 30, n = 0;
+          while (x < jw - 80) {
+            const w = Math.min(jw - 40 - x, 90 + Math.floor(rnd() * 170));
+            const cl = mk("div", "clipe-j", j);
+            Object.assign(cl.style, { left: px(x), top: px(90 + i * ph), width: px(w - 10), background: cores[(i + n) % 4], opacity: 0.85 });
+            tl.fromTo(cl, { x: (300 + rnd() * 400) * U, opacity: 0 }, { x: 0, opacity: 0.85, duration: 0.55, ease: EXPO }, t + 0.35 + (i * 0.08) + n * 0.07);
+            x += w; n++;
+          }
+        }
+        const ag = mk("div", "", j); Object.assign(ag.style, { position: "absolute", top: px(70), width: px(4), height: px(jh - 100), background: "#fff", left: px(30),
+          boxShadow: `0 0 ${16 * U}px #fff` });
+        tl.fromTo(ag, { x: 0 }, { x: (jw - 70) * U, duration: d - 0.5, ease: "none" }, t + 0.4);
+        const chip = mk("div", "selo", P, `<span class="okp"><span style="width:${px(18)};height:${px(18)}">${icone("ia", "#061318", 2.6)}</span></span>${esc(c.chip || "Edição automática")}`);
+        pos(chip, jx + jw - 420, jy + jh + 40);
+        tl.fromTo(chip, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: MOLA }, t + 0.9);
+        camera(P, t, d, { s1: 1.05 });
+      };
+
+      // ------------------------------------------------------------------ transições (no intervalo [t - ov, t])
+      const TRANS = {
+        iris(sec, ant, t, ov) {
+          const inn = sec.querySelector(".inner");
+          tl.fromTo(inn, { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: ov, ease: "expo.inOut" }, t - ov);
+          tl.set(inn, { clipPath: "none" }, t + 0.01);
+          const R = Math.hypot(W, H) * 0.75;
+          [[ACENTO, 0], ["#ffffff", 0.04], [MARCA, 0.08]].forEach(([cor, o]) => {
+            const a = mk("div", "anel", sec);
+            Object.assign(a.style, { width: R * 2 + "px", height: R * 2 + "px", left: W / 2 - R + "px", top: H / 2 - R + "px", borderColor: cor,
+              borderWidth: px(cor === "#ffffff" ? 10 : 46), zIndex: 30 });
+            tl.fromTo(a, { scale: 0, opacity: 0 }, { opacity: 1, duration: 0.01 }, t - ov + o);
+            tl.fromTo(a, { scale: 0 }, { scale: 1, duration: ov, ease: "expo.inOut", immediateRender: false }, t - ov + o);
+            tl.to(a, { opacity: 0, duration: 0.2 }, t - 0.1 + o);
+          });
+          if (ant) tl.to(ant.querySelector(".inner"), { scale: 1.18, duration: ov, ease: "power2.in" }, t - ov);
+        },
+        listras(sec, ant, t, ov) {
+          const box = mk("div", "listras", sec);
+          box.style.transform = "rotate(-28deg)";
+          const cores = [ACENTO, MARCA, "#ffffff", ACENTO, "#2a1446", MARCA, ACENTO, "#ffffff"];
+          const inn = sec.querySelector(".inner");
+          tl.set(inn, { opacity: 0 }, t - ov);
+          tl.set(inn, { opacity: 1 }, t - ov / 2);
+          cores.forEach((cor, i) => {
+            const l = mk("div", "listra", box);
+            l.style.background = cor; l.style.top = px(-1320 + i * 330);
+            tl.fromTo(l, { x: -3600 * U }, { x: 0, duration: ov / 2, ease: "power3.in" }, t - ov + i * 0.015);
+            tl.to(l, { x: 3600 * U, duration: ov / 2, ease: "power3.out" }, t - ov / 2 + i * 0.015);
+          });
+        },
+        chicote(sec, ant, t, ov) {
+          // chicote: a cena nova entra rasgando da direita, a antiga sai pela esquerda, com riscos de luz
+          // (sem filter de desfoque: no render por software ele cria artefatos e fica lento)
+          const inn = sec.querySelector(".inner");
+          tl.fromTo(inn, { x: W * 1.02 }, { x: 0, duration: ov, ease: "expo.inOut" }, t - ov);
+          if (ant) tl.fromTo(ant.querySelector(".inner"), { x: 0 }, { x: -W * 0.7, duration: ov, ease: "expo.inOut" }, t - ov);
+          const box = mk("div", "", sec);
+          Object.assign(box.style, { position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" });
+          for (let i = 0; i < 14; i++) {
+            const r = mk("div", "", box), h = (2 + rnd() * 7) * U, w = (300 + rnd() * 700) * U;
+            Object.assign(r.style, { position: "absolute", height: h + "px", width: w + "px", top: rnd() * H + "px", left: 0,
+              borderRadius: h + "px", background: `linear-gradient(90deg, transparent, ${i % 3 ? ACENTO : "#ffffff"}, transparent)` });
+            tl.fromTo(r, { x: W + rnd() * W * 0.5, opacity: 0 }, { x: -w - rnd() * W * 0.3, opacity: 0.9, duration: ov * 0.9, ease: "power2.inOut" }, t - ov + rnd() * ov * 0.15);
+            tl.to(r, { opacity: 0, duration: 0.08 }, t - 0.08);
+          }
+        },
+        esfera(sec, ant, t, ov) {
+          const R = Math.hypot(W, H) * 0.62;
+          const e = mk("div", "esfera", sec);
+          Object.assign(e.style, { width: R * 2 + "px", height: R * 2 + "px", marginLeft: -R + "px", marginTop: -R + "px" });
+          const inn = sec.querySelector(".inner");
+          tl.set(inn, { opacity: 0 }, t - ov);
+          tl.fromTo(e, { scale: 0.02, x: 160 * U, y: 260 * U }, { scale: 1.05, x: 0, y: 0, duration: ov * 0.7, ease: "expo.in" }, t - ov);
+          tl.set(inn, { opacity: 1 }, t - ov * 0.32);
+          tl.to(e, { scale: 2.2, opacity: 0, duration: ov * 0.5, ease: "power2.out" }, t - ov * 0.32);
+        },
+        dissolver(sec, ant, t, ov) {
+          tl.fromTo(sec.querySelector(".inner"), { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: ov, ease: FLUI }, t - ov);
+        },
+      };
+
+      // ------------------------------------------------------------------ poeira de luz (global, sempre se movendo)
+      const po = document.getElementById("poeira");
+      for (let i = 0; i < (D.poeira ?? 46); i++) {
+        const g = mk("div", "grao", po), s = (1.5 + rnd() * 3.5) * U;
+        Object.assign(g.style, { width: s + "px", height: s + "px", left: rnd() * W + "px", top: rnd() * H + "px", opacity: 0.12 + rnd() * 0.35 });
+        tl.fromTo(g, { x: 0, y: 0 }, { x: (rnd() - 0.5) * 120 * U, y: -(40 + rnd() * 160) * U, duration: D.dur, ease: "none" }, 0);
+      }
+
+      function montar() {
+        let ant = null;
+        D.cenas.forEach((c, k) => {
+          const sec = document.getElementById("c" + k);
+          const P = sec.querySelector(".palco");
+          // o conteúdo já entra DURANTE a transição (como na referência: nada de tela vazia depois do corte)
+          // 1ª cena (motion inserido com corte seco no vídeo): começa já em movimento, sem quadro vazio
+          const adianta = k === 0 ? (D.pre_roll ?? 0.3) : c.ov * 0.6;
+          CENAS[c.tipo](c, P, c.t - adianta, c.dur + adianta);
+          if (c.ov > 0 && TRANS[c.transicao]) TRANS[c.transicao](sec, ant, c.t, c.ov);
+          ant = sec;
+        });
+        window.__timelines["motion"] = tl;
+      }
+      document.fonts.ready.then(montar);
+    </script>
+  </body>
+</html>

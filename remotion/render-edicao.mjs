@@ -18,6 +18,7 @@ await renderMedia({
   composition, serveUrl, inputProps: props, outputLocation: saida, browserExecutable,
   codec: "h264", crf: Number(crf ?? 18), imageFormat: "jpeg", jpegQuality: 92, pixelFormat: "yuv420p",
   audioCodec: "aac", audioBitrate: "192k", x264Preset: "fast", logLevel: "error",
+  muted: Boolean(props.sem_audio),   // áudio mixado à parte pelo editor (faixas do estúdio)
   concurrency: (await import("os")).cpus().length,
   onProgress: ({ progress }) => {
     const p = Math.floor(progress * 10);

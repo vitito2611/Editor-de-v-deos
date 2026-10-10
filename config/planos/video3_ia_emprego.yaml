@@ -26,27 +26,38 @@ dinamismo:
   fotos_entidades: false
   cards_max: 1
   plano:
-    # motions no modelo "cinema" (pedido do cliente: escuro, fluido, com ilustrações e exemplos — não só letras)
+    # motions no modelo "premium" (pedido do cliente: nível profissional como o exemplo da Awake — movimento,
+    # não paleta; identidade da Zeal: roxo/ciano; ilustrações e interface, não só letras)
     - contem: "Alguns empregos"
       tipo: motion
-      roteiro: {titulo: empregos, cenas: [{tipo: cards_somem, titulo: "Alguns empregos *vão sumir*", ficam: [1, 4, 8], dur: 2.6}]}
+      roteiro: {titulo: empregos, cenas: [{tipo: cards, rotulo: "O que muda", titulo: "Alguns empregos|vão *sumir.*", ficam: [1, 4, 8], dur: 2.6}]}
     - contem: "repetição"
       tipo: motion
-      roteiro: {titulo: repeticao, cenas: [{tipo: engrenagens, titulo: "Repetição. Tarefa *mecânica.*", tarefas: [Copiar, Colar, Repetir], dur: 2.8}]}
+      roteiro: {titulo: repeticao, cenas: [{tipo: ciclo, rotulo: "Vai ser automatizado", titulo: "Repetição.|Tarefa *mecânica.*", tarefas: [Copiar, Colar, Repetir], dur: 2.8}]}
     - contem: "ele multiplica"
       tipo: motion
-      roteiro: {titulo: multiplica, cenas: [{tipo: multiplica, titulo: "Ele *multiplica*", fator: 10, dur: 2.4}]}
+      roteiro: {titulo: multiplica, cenas: [{tipo: numero, rotulo: "Quem usa IA", valor: 10, prefixo: "×", legenda: "Ele *multiplica.*", dur: 2.4}]}
     - contem: "em uma hora"
       tipo: motion
-      roteiro: {titulo: hora, cenas: [{tipo: relogio, titulo: "Em *1 hora*", antes: "Antes", antes_valor: "o dia todo", depois: "Com IA", depois_valor: "1 h", dur: 2.8}]}
+      roteiro: {titulo: hora, cenas: [{tipo: comparacao, rotulo: "Produtividade", titulo: "Em *1 hora.*", antes: "Antes", antes_valor: "o dia todo", depois: "Com IA", depois_valor: "1 h", dur: 2.8}]}
     - contem: "veio para somar"
       tipo: motion
-      roteiro: {titulo: somar, cenas: [{tipo: soma, titulo: "A IA veio para *somar*", a: "Você", b: "IA", resultado: "+ resultado", dur: 2.6}]}
+      roteiro: {titulo: somar, cenas: [{tipo: soma, titulo: "A IA veio|para *somar.*", a: "Você", b: "IA", resultado: "+ resultado", dur: 2.6}]}
     - contem: "um assistente"
       tipo: motion
-      roteiro: {titulo: assistente, cenas: [{tipo: celular, rotulo: "Assistente de IA *por voz*", dur: 4.6,
-                plano: [Diagnóstico explicado, Plano em etapas, Proposta de fechamento]}]}
+      roteiro:
+        titulo: assistente
+        cenas:
+          - tipo: celular
+            sem_chamada: true
+            rotulo: "Zeal"
+            titulo: "Assistente de IA|*por voz.*"
+            app: "Zeal IA"
+            falas: [[pac, "Como explico o implante pro paciente?"], [ia, "Mostre o antes e depois e divida em 3 etapas."]]
+            cartao: {titulo: "Plano de tratamento", linhas: [[Diagnóstico, "explicado"], [Proposta, "3 etapas"]]}
+            selos: ["Paciente entendeu", "Tratamento fechado"]
+            dur: 4.6
     - contem: "totalmente editado"
       tipo: motion
-      roteiro: {titulo: editado, cenas: [{tipo: timeline, titulo: "Editado *100% por IA*", chip: "IA", dur: 2.4}]}
+      roteiro: {titulo: editado, cenas: [{tipo: timeline, titulo: "Editado|*100% por IA.*", chip: "Edição automática", dur: 2.4}]}
 cor: {look: azul_cinema}               # cliente: azul cinematográfico, não o tom quente

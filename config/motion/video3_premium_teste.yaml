@@ -1,0 +1,20 @@
+# Teste: os 7 motions do vídeo 3 no modelo premium (cada um entra sozinho na edição, com corte seco)
+titulo: video3 premium
+modelo: premium
+cenas:
+  - {tipo: cards, rotulo: "O que muda", titulo: "Alguns empregos|vão *sumir.*", ficam: [1, 4, 8], dur: 2.6}
+  - {tipo: ciclo, rotulo: "Vai ser automatizado", titulo: "Repetição.|Tarefa *mecânica.*", tarefas: [Copiar, Colar, Repetir], dur: 2.8, transicao: corte}
+  - {tipo: numero, rotulo: "Quem usa IA", valor: 10, prefixo: "×", legenda: "Ele *multiplica.*", dur: 2.4, transicao: corte}
+  - {tipo: comparacao, rotulo: "Produtividade", titulo: "Em *1 hora.*", antes: Antes, antes_valor: "o dia todo", depois: "Com IA", depois_valor: "1 h", dur: 2.8, transicao: corte}
+  - {tipo: soma, titulo: "A IA veio|para *somar.*", a: Você, b: IA, resultado: "+ resultado", dur: 2.6, transicao: corte}
+  - tipo: celular
+    transicao: corte
+    sem_chamada: true
+    rotulo: "Zeal"
+    titulo: "Assistente de IA|*por voz.*"
+    app: "Zeal IA"
+    falas: [[pac, "Como explico o implante pro paciente?"], [ia, "Mostre o antes e depois e divida em 3 etapas."]]
+    cartao: {titulo: "Plano de tratamento", linhas: [[Diagnóstico, "explicado"], [Proposta, "3 etapas"]]}
+    selos: ["Paciente entendeu", "Tratamento fechado"]
+    dur: 4.6
+  - {tipo: timeline, titulo: "Editado|*100% por IA.*", chip: "Edição automática", dur: 2.4, transicao: corte}

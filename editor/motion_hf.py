@@ -186,15 +186,17 @@ def renderizar(roteiro: dict | Path, saida: Path, W: int = 1080, H: int = 1920, 
     if isinstance(roteiro, (str, Path)):
         roteiro = yaml.safe_load(Path(roteiro).read_text(encoding="utf-8"))
     from .utils import arquivo_black_jack
-    cinema = roteiro.get("modelo", "cinema") == "cinema"   # padrão desde o vídeo 3 (escuro, fluido, ilustrado)
-    modelo = MODELO_CINEMA if cinema else MODELO
+    from .motion_premium import MODELO_PREMIUM, montar_premium
+    nome_modelo = roteiro.get("modelo", "premium")        # padrão: premium (nível agência, identidade Zeal)
+    modelo, montador = {"premium": (MODELO_PREMIUM, montar_premium), "cinema": (MODELO_CINEMA, montar_cinema),
+                        "claro": (MODELO, montar)}.get(nome_modelo, (MODELO_PREMIUM, montar_premium))
     chave = hashlib.sha1(json.dumps([roteiro, W, H, rapido, modelo.stat().st_mtime, str(arquivo_black_jack()),
-                                     Path(__file__).stat().st_mtime],
+                                     Path(__file__).stat().st_mtime, (HF.parent / "editor" / "motion_premium.py").stat().st_mtime],
                                     sort_keys=True, default=str).encode()).hexdigest()[:12]
     pasta = HF / "projetos" / f"motion_{chave}"
     cache = pasta / "renders" / "video.mp4"
     if not cache.exists():
-        (montar_cinema if cinema else montar)(roteiro, pasta, W, H)
+        montador(roteiro, pasta, W, H)
         r = subprocess.run(["npx", "hyperframes", "lint", str(pasta)], cwd=HF, capture_output=True, text=True)
         if "error" in (r.stdout + r.stderr).lower() and r.returncode != 0:
             log.warning("  HyperFrames lint: %s", (r.stdout + r.stderr)[-1200:])
@@ -226,9 +228,6 @@ def main():
     out = renderizar(a.roteiro, a.saida, W, H, a.rapido)
     print(out or "falhou")
 
-
-if __name__ == "__main__":
-    main()
 
 
 # ============================================================================= modelo "cinema"
@@ -395,3 +394,7 @@ def montar_cinema(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
     (pasta / "index.html").write_text(doc, encoding="utf-8")
     (pasta / "hyperframes.json").write_text(json.dumps({"name": pasta.name}), encoding="utf-8")
     return pasta
+
+
+if __name__ == "__main__":
+    main()

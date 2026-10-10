@@ -135,13 +135,34 @@ def mix_and_master(voice: np.ndarray, music: np.ndarray | None, sfx_events: list
         mix[s:e] += clip[: e - s]
     pre = work / f"{nome}_pre.wav"
     save_wav(pre, mix, sr)
+    return masterizar(pre, work / f"{nome}.wav", sr, cfg, plat)
+
+
+def salvar_faixas(voice: np.ndarray, music: np.ndarray | None, sfx_events: list[dict], sr: int, pasta: Path) -> dict:
+    """Faixas separadas para o estúdio (volume de voz/trilha/cada SFX editáveis e mixados no final)."""
+    pasta.mkdir(parents=True, exist_ok=True)
+    save_wav(pasta / "voz.wav", voice.astype(np.float32), sr)
+    if music is not None:
+        save_wav(pasta / "trilha.wav", music[:len(voice)].astype(np.float32), sr)
+    sfx = []
+    for k, ev in enumerate(sfx_events):
+        arq = pasta / f"sfx_{k:02d}.wav"
+        save_wav(arq, np.asarray(ev["audio"], dtype=np.float32), sr)
+        sfx.append({"id": f"S{k:02d}", "t": round(float(ev["t"]), 3), "arquivo": arq.name,
+                    "ganho_db": round(float(ev["ganho_db"]), 2),
+                    "nome": " · ".join(x for x in (ev.get("categoria"), ev.get("motivo")) if x) or f"efeito {k + 1}",
+                    "categoria": ev.get("categoria", "")})
+    return {"voz": "voz.wav", "trilha": "trilha.wav" if music is not None else None, "sfx": sfx}
+
+
+def masterizar(pre: Path, out: Path, sr: int, cfg: dict, plat: dict) -> tuple[Path, dict]:
+    """loudnorm em 2 passes (medição → aplicação linear) + limiter de segurança."""
     mc = cfg["audio"]["master"]
     target = plat.get("lufs", mc["lufs"])
     # loudnorm em 2 passes (medição → aplicação linear) + limiter de segurança
     p = run(["ffmpeg", "-hide_banner", "-nostdin", "-i", str(pre), "-af",
              f"loudnorm=I={target}:TP={mc['true_peak_db']}:LRA={mc['lra']}:print_format=json", "-f", "null", "-"])
     meas = json.loads(re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", p.stderr, re.S).group(0))
-    out = work / f"{nome}.wav"
     ffmpeg("-i", str(pre), "-af",
            f"loudnorm=I={target}:TP={mc['true_peak_db']}:LRA={mc['lra']}:measured_I={meas['input_i']}:"
            f"measured_TP={meas['input_tp']}:measured_LRA={meas['input_lra']}:measured_thresh={meas['input_thresh']}:"

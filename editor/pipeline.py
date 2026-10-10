@@ -336,7 +336,11 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         from . import remotion_fx as _rfx
         cor_nos_segmentos = (not preview and bool(_rfx.elementos(cfg)) and _rfx.cfg_of(cfg).get("edicao", True)
                              and g.mode not in ("letterbox", "blur_fill"))
-        if cor_nos_segmentos:
+        # cor ao vivo (padrão): o look, o grão e a vinheta saem do FFmpeg e são aplicados no estúdio/Remotion,
+        # onde o cliente ajusta a intensidade e cada parâmetro (mesma conta, WYSIWYG no render final)
+        cor_ao_vivo = (cor_nos_segmentos and _rfx.cfg_of(cfg).get("cor_ao_vivo", True)
+                       and not cfg["motion"].get("borda_filme"))
+        if cor_nos_segmentos and not cor_ao_vivo:
             post = [x for x in (lut, f"noise=alls={int(cfg['motion']['grao'])}:allf=t" if cfg["motion"].get("grao") else "",
                                 "vignette=PI/5" if cfg["motion"].get("vinheta") else "") if x]
             if post:
@@ -398,6 +402,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         rep["sfx"] = [{k: v for k, v in e.items() if k != "audio"} for e in events]
         amaster, minfo = audio.mix_and_master(vtrack, mtrack, events, sr, cfg, plat, work)
         rep["audio_master"] = minfo
+        # faixas separadas para o estúdio (voz, trilha e cada SFX com volume próprio)
+        faixas = dict(audio.salvar_faixas(vtrack, mtrack, events, sr, work / "faixas"), pasta=str(work / "faixas"))
     # ------------------------------------------------------------------ legendas + motion
     with timer.etapa("Legendas dinâmicas e motion graphics"):
         for c in nres["callouts"]:
@@ -452,7 +458,10 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         if modo_projeto:
             from . import projeto
             base = work / "base.mp4"   # cortes + zoom + cor + áudio, sem camadas (intermediário de alta qualidade)
-            if cor_nos_segmentos and not overlays:
+            if cor_ao_vivo and not overlays:
+                # base sem look e sem áudio: cor e áudio (faixas) entram no estúdio/Remotion
+                ffmpeg("-i", str(montado), "-map", "0:v", "-c:v", "copy", "-an", "-t", f"{total:.3f}", str(base))
+            elif cor_nos_segmentos and not overlays:
                 # a cor já está nos segmentos: só junta vídeo + áudio, sem recodificar o vídeo
                 ffmpeg("-i", str(montado), "-i", str(amaster), "-map", "0:v", "-map", "1:a", "-c:v", "copy",
                        "-c:a", "aac", "-b:a", "256k", "-t", f"{total:.3f}", str(base))
@@ -461,18 +470,24 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
                                "" if cor_nos_segmentos else lut, [], overlays, preview, total)
             pj = projeto.exportar(Path(out).stem.replace("_com_trilha", ""), g, total, base, lut, cfg, words_out,
                                   faces, dyn_events, rjobs, card_spans, lut_fundo_card=not cor_nos_segmentos,
-                                  estilos_log=rep.get("legendas"))
+                                  estilos_log=rep.get("legendas"), cor_ao_vivo=cor_ao_vivo and not overlays,
+                                  faixas=faixas if (cor_ao_vivo and not overlays) else None,
+                                  master={"ganho_db": minfo["alvo_lufs"] - minfo["entrada_lufs"], "alvo_lufs": minfo["alvo_lufs"]})
             rep["projeto_remotion"] = str(pj)
-            feito = projeto.renderizar(pj, out, plat["crf"])
+            sem_trilha_out = (out.with_name(out.stem.replace("_com_trilha", "") + "_sem_trilha.mp4")
+                              if cfg["geral"].get("versao_sem_trilha", True) and mtrack is not None else None)
+            feito = projeto.renderizar(pj, out, plat["crf"], sem_trilha=sem_trilha_out if cor_ao_vivo else None, cfg=cfg)
+            if feito and cor_ao_vivo and sem_trilha_out:
+                rep["saida_sem_trilha_pronta"] = str(sem_trilha_out)
             if not feito:   # sem Remotion funcional: mesmos elementos em ASS pelo FFmpeg
                 doc, rjobs, card_spans = montar_ass(set())
                 doc.write(ass)
         if not feito:
             cfg_c = cfg
-            if modo_projeto and cor_nos_segmentos:   # cor/grão já aplicados nos segmentos
+            if modo_projeto and cor_nos_segmentos and not cor_ao_vivo:   # cor/grão já aplicados nos segmentos
                 cfg_c = dict(cfg, motion=dict(cfg["motion"], grao=0, vinheta=False))
             render.compose(montado, amaster, ass if cfg["legendas"]["ativo"] or rep["motion"] else None, g, cfg_c, plat,
-                           out, "" if (modo_projeto and cor_nos_segmentos) else lut, broll_out, overlays, preview, total,
+                           out, "" if (modo_projeto and cor_nos_segmentos and not cor_ao_vivo) else lut, broll_out, overlays, preview, total,
                            motion_clips)
         fin = probe(out)
         loud = analysis.loudness_stats(out)
@@ -481,7 +496,10 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         log.info("  ✅ %s  (%.1fs, %s, %.1f LUFS, TP %.1f)", out, fin["duracao"], rep["saida"]["resolucao"],
                  loud["lufs"] or 0, loud["true_peak"] or 0)
         # versão sem trilha (cliente põe a música em alta no app): mesmo vídeo, só troca o áudio
-        if cfg["geral"].get("versao_sem_trilha", True) and mtrack is not None and not preview:
+        if rep.get("saida_sem_trilha_pronta"):
+            rep["saida"]["sem_trilha"] = rep.pop("saida_sem_trilha_pronta")
+            log.info("  ✅ %s  (mesmo vídeo, sem música — mixado das faixas)", rep["saida"]["sem_trilha"])
+        elif cfg["geral"].get("versao_sem_trilha", True) and mtrack is not None and not preview:
             asem, _ = audio.mix_and_master(vtrack, None, events, sr, cfg, plat, work, nome="audio_master_sem_trilha")
             out_sem = out.with_name(out.stem.replace("_com_trilha", "") + "_sem_trilha.mp4")
             ffmpeg("-i", str(out), "-i", str(asem), "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac",

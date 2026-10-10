@@ -516,6 +516,7 @@ remotion:                       # motion graphics em React (remotion/src/Element
     caixa_alta_destaque: true   # palavra-chave do card em CAIXA ALTA
   concorrencia: null            # null = automático
   edicao: true                  # a edição inteira vira projeto Remotion (Studio/Player) e o final sai dele
+  cor_ao_vivo: true             # look/grão/vinheta aplicados no Remotion (editáveis no estúdio, mesma conta do LUT)
 
 plataformas:
   reels:   {largura: 1080, altura: 1920, duracao_max_s: 90,  lufs: -14, crf: 18, preset: fast, audio_kbps: 192, maxrate_kbps: 12000}

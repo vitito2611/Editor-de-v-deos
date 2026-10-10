@@ -21,18 +21,25 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
 
-## Edição em conjunto (pedido do cliente: ver e editar junto, como no Remotion Studio)
+## Edição em conjunto — estúdio completo (pedido do cliente: editar junto, em tempo real, sem precisar digitar)
 
-- Com Node/Remotion, a edição vira um projeto Remotion (`editor/projeto.py` → `remotion/public/projetos/<slug>/`,
-  composição `Edicao` em `remotion/src/Edicao.tsx`): base (cortes/zoom/cor/áudio, FFmpeg) + camadas React
-  (legendas, cards, contadores, B-roll, fotos). O render final sai do Remotion (`render-edicao.mjs`) = WYSIWYG.
-- Na nuvem: publicar o **estúdio** (`editor.pagina.estudio(projeto.json, pasta, titulo, sub)` → Artifact com
-  `capabilities: {db: {}}` + mídia 720p em `files`). O cliente edita texto/tempo/ocultar na timeline e salva no
-  doc `edicao/atual`; ler com ArtifactData (`get edicao/atual`), salvar em JSON e rodar
-  `python -m editor.projeto aplicar <projeto.json> <alteracoes.json>` e
-  `python -m editor.projeto renderizar <projeto.json> <saida_com_trilha.mp4> --audio-sem-trilha work/<job>/audio_master_sem_trilha.wav`
-  (só re-renderiza camadas, ~3 min). O campo `pedido` traz pedidos livres (trocar foto/B-roll).
-  Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p ·
+- Toda edição vira um projeto Remotion (`editor/projeto.py` → `remotion/public/projetos/<slug>/`, composição `Edicao`
+  em `remotion/src/Edicao.tsx` + núcleo `remotion/src/ajustes.ts`). A base do FFmpeg sai SEM o look de cor e SEM áudio
+  (`remotion.cor_ao_vivo: true`): o look (mesma conta do LUT — conferido: diferença média 0,4/255), grão e vinheta
+  são aplicados ao vivo por filtro SVG; voz, trilha e cada SFX são faixas separadas (`work/<job>/faixas/`).
+  O render final sai do Remotion (mudo) + mixagem/master em Python com os mesmos volumes = WYSIWYG.
+- **Estúdio** (sempre publicar um por vídeo): `editor.pagina.estudio(projeto.json, pasta, titulo, sub, cfg)` →
+  Artifact com `capabilities: {db: {}, comments: {}}` + mídia leve em `files`. O cliente mexe em TUDO sozinho:
+  Cor (look, intensidade, exposição, contraste, saturação, temperatura, tint, pretos, vinheta, grão), Legendas
+  (tamanho, altura, contorno, sombra, animação, caixa alta; cada legenda: texto, palavra de destaque, tempo, esconder),
+  Áudio (voz/trilha/efeitos, liga/desliga e volume de cada SFX), Camadas (arrastar/redimensionar na linha do tempo,
+  esconder, novos títulos/ganchos), Cortes (I/O). Salva sozinho no doc `edicao/atual` e sincroniza entre aparelhos.
+- Botão **"Renderizar vídeo final"** = `comments.sendToClaude` → chega aqui como comentário. Fluxo: ler
+  `edicao/atual` (ArtifactData get), salvar JSON, `python -m editor.projeto aplicar <projeto.json> <alt.json>` e
+  `python -m editor.projeto renderizar <projeto.json> output/<nome>_com_trilha.mp4` (gera com e sem trilha).
+  Escrever o andamento em `edicao/status` ({estado: renderizando|pronto|erro, mensagem}) — aparece no estúdio.
+  O campo `pedido` traz pedidos livres (trocar motion, música, foto).
+- Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p (formato antigo) ·
   vídeo 3 (IA e emprego) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
   em localhost:3000 com cada vídeo como composição `Edicao-<nome>`.
@@ -60,12 +67,14 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 ## Habilidades extras
 
-- **Motion padrão = modelo "cinema"** (`hyperframes/modelos/motion_cinema.html`, `modelo: cinema` no roteiro): paleta
-  ESCURA azul/ciano, movimento fluido (easings longos, sobreposição, câmera sempre em leve movimento) e
-  **ilustrações animadas por cena, não só texto** — tipos `cards_somem`, `engrenagens`, `multiplica`, `relogio`,
-  `soma`, `celular` (assistente de voz montando um plano), `timeline`, `texto`. Feedback do cliente (vídeo 3): o
-  exemplo é referência de MOVIMENTO, não de paleta (nada de rosa/lilás claro); motions "robotizados" e só com
-  letras foram reprovados. O modelo claro antigo continua como `modelo: claro`.
+- **Motion padrão = modelo "premium"** (`hyperframes/modelos/motion_premium.html` + `editor/motion_premium.py`).
+  Feedback do cliente: os motions anteriores estavam "de amador"; referência de MOVIMENTO = `referencias/motion2/ref.mp4`
+  (Awake Investors: linha de luz que revela o texto, máscaras, celular 3D com interface real, gráfico que se desenha,
+  caminho de etapas, botão com cursor, transições iris/listras/chicote/esfera). Identidade da **Zeal** (logo do GitHub
+  app-zeal): roxo #5D2E8C, ciano #24D0DC, branco, fundo quase preto. Cenas: `linha, texto, logo, celular, grafico,
+  passos, cta, numero, cards, ciclo, comparacao, soma, timeline`. Showreel: `config/motion/zeal_showreel.yaml`.
+  Inserção na edição começa já em movimento (`pre_roll` 0,3 s, sem quadro vazio). Modelos antigos: `modelo: cinema`
+  (escuro azul) e `modelo: claro`. Paletas rosa/lilás claro e motions só com letras foram reprovados.
 - **Vídeo em motion (HyperFrames, HTML+GSAP → MP4)** no estilo do exemplo do cliente
   (`referencias/motion_exemplo.mp4`: fundo branco com brilho lilás/rosa embaixo, texto cinético com desfoque,
   ícones flutuando, palavra soletrada, colagem em anel, celular, logo, abas de capítulo). Roteiro YAML →
