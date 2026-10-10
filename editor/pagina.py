@@ -325,7 +325,7 @@ def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str, cfg: dict | None =
     def som(src: Path, rel: str, kbps: int = 128):
         dst = saida_dir / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        ffmpeg("-i", str(src), "-c:a", "aac", "-b:a", f"{kbps}k", "-ar", "48000", str(dst))
+        ffmpeg("-i", str(src), "-c:a", "libmp3lame", "-b:a", f"{kbps}k", "-ar", "48000", str(dst))
         arquivos[rel] = str(dst)
         return rel
 
@@ -335,11 +335,11 @@ def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str, cfg: dict | None =
             leve(pj.parent / c["arquivo"], c["arquivo"], False)
     a = proj.get("audio")
     if a:
-        a["voz"] = som(pj.parent / a["voz"], a["voz"].rsplit(".", 1)[0] + ".m4a")
+        a["voz"] = som(pj.parent / a["voz"], a["voz"].rsplit(".", 1)[0] + ".mp3")
         if a.get("trilha"):
-            a["trilha"] = som(pj.parent / a["trilha"], a["trilha"].rsplit(".", 1)[0] + ".m4a")
+            a["trilha"] = som(pj.parent / a["trilha"], a["trilha"].rsplit(".", 1)[0] + ".mp3")
         for s in a["sfx"]:
-            s["arquivo"] = som(pj.parent / s["arquivo"], s["arquivo"].rsplit(".", 1)[0] + ".m4a", 96)
+            s["arquivo"] = som(pj.parent / s["arquivo"], s["arquivo"].rsplit(".", 1)[0] + ".mp3", 96)
     if cfg:
         proj["looks"] = {k: dict(v) for k, v in (cfg.get("cor") or {}).get("looks", {}).items()}
     proj["raiz"] = ""

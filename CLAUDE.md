@@ -40,7 +40,7 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   Escrever o andamento em `edicao/status` ({estado: renderizando|pronto|erro, mensagem}) — aparece no estúdio.
   O campo `pedido` traz pedidos livres (trocar motion, música, foto).
 - Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p (formato antigo) ·
-  vídeo 3 (IA e emprego) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
+  vídeo 3 (IA e emprego, estúdio completo v3) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
   em localhost:3000 com cada vídeo como composição `Edicao-<nome>`.
 
