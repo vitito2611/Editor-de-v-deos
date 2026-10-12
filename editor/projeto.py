@@ -151,6 +151,14 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         "zona_segura": (cfg["legendas"].get("zona_segura") if g.canvas_h > g.canvas_w else None),
         "audio": audio_proj,
     }
+    # ajustes feitos no estúdio e guardados no plano do vídeo (ex.: render em 4K no Mac sai igual ao aprovado)
+    alt_arq = (cfg.get("estudio") or {}).get("alteracoes")
+    if alt_arq:
+        from .utils import ROOT
+        f = Path(alt_arq) if Path(alt_arq).is_absolute() else ROOT / alt_arq
+        if f.exists():
+            proj["alteracoes"] = json.loads(f.read_text(encoding="utf-8"))
+            log.info("  ajustes do estúdio aplicados: %s", f.name)
     pj = d / "projeto.json"
     pj.write_text(json.dumps(proj, ensure_ascii=False, indent=1), encoding="utf-8")
     gerar_lista()

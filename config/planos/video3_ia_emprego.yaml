@@ -81,3 +81,6 @@ dinamismo:
       texto: "100% IA"
       dur: 2.4
 cor: {look: azul_cinema}               # cliente: azul cinematográfico, não o tom quente
+estudio:
+  # ajustes aprovados no estúdio (doc edicao/atual em 12/10): look 63%, contraste 0,20, exposição −0,39
+  alteracoes: config/planos/video3_ia_emprego_estudio.json

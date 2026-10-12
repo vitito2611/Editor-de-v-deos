@@ -41,7 +41,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   `edicao/atual` (ArtifactData get), salvar JSON, `python -m editor.projeto aplicar <projeto.json> <alt.json>` e
   `python -m editor.projeto renderizar <projeto.json> output/<nome>_com_trilha.mp4` (gera com e sem trilha).
   Escrever o andamento em `edicao/status` ({estado: renderizando|pronto|erro, mensagem}) — aparece no estúdio.
-  O campo `pedido` traz pedidos livres (trocar motion, música, foto).
+  O campo `pedido` traz pedidos livres (trocar motion, música, foto). Depois de renderizar, salvar os ajustes em
+  `config/planos/<video>_estudio.json` e apontar `estudio.alteracoes` no plano do vídeo (commit + push): assim o
+  render em 4K no Mac (`--plataforma reels_4k --drive`) sai idêntico ao aprovado no estúdio.
 - Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p (formato antigo) ·
   vídeo 3 (IA e emprego, estúdio completo v3) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
