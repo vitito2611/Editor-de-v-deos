@@ -18,6 +18,7 @@ Roteiro (YAML), `modelo: premium`:
     - {tipo: numero,  valor: 24, sufixo: "h", legenda: "por dia"}
     - {tipo: cards,   titulo: "Alguns empregos|vão *sumir.*", itens: [[Digitação, chat], ...], ficam: [4]}
     - {tipo: ciclo,   titulo: "Repetição.|Tarefa *mecânica.*", tarefas: [Copiar, Colar, Repetir], repeticoes: 999}
+    - {tipo: repeticao, titulo: "Repetição.", cartoes: 8, repeticoes: 999}   # esteira de cartões iguais com ✓
     - {tipo: comparacao, titulo: "Em *1 hora.*", antes: Antes, antes_valor: "o dia todo", depois: "Com IA", depois_valor: "1 h"}
     - {tipo: soma,    titulo: "A IA veio|para *somar.*", a: Você, b: IA, resultado: "+ resultado"}
     - {tipo: timeline, titulo: "Editado|*100% por IA.*", chip: "Edição automática"}
@@ -38,11 +39,11 @@ MODELO_PREMIUM = HF / "modelos" / "motion_premium.html"
 FONTES = ["Rubik-Medium.ttf", "Rubik-Bold.ttf", "Rubik-Black.ttf", "NotoSerif-BoldItalic.ttf"]
 PALETA_ZEAL = {"fundo": "#07050d", "fundo2": "#12081f", "texto": "#ffffff", "acento": "#24d0dc", "marca": "#5d2e8c"}
 DUR_PADRAO = {"linha": 3.4, "texto": 2.6, "logo": 2.8, "celular": 5.6, "grafico": 4.2, "passos": 4.6, "cta": 3.6, "numero": 2.8,
-              "cards": 2.8, "ciclo": 2.8, "comparacao": 2.8, "soma": 2.8, "timeline": 2.6}
+              "cards": 2.8, "ciclo": 2.8, "comparacao": 2.8, "soma": 2.8, "timeline": 2.6, "repeticao": 2.8}
 OV = {"iris": 0.7, "listras": 0.6, "chicote": 0.45, "esfera": 0.8, "dissolver": 0.4, "corte": 0.0}
 FUNDO_PADRAO = {"linha": "escuro", "texto": "escuro", "logo": "profundo", "celular": "roxo", "grafico": "escuro",
                 "passos": "roxo", "cta": "profundo", "numero": "escuro", "cards": "escuro", "ciclo": "roxo",
-                "comparacao": "escuro", "soma": "profundo", "timeline": "roxo"}
+                "comparacao": "escuro", "soma": "profundo", "timeline": "roxo", "repeticao": "escuro"}
 
 
 def _rgb(h: str) -> str:

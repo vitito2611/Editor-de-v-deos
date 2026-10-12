@@ -35,7 +35,9 @@ dinamismo:
       roteiro: {titulo: empregos, modelo: cinema3d, cenas: [{tipo: vidros, texto: "Alguns vão|*sumir.*", ficam: [1, 3, 7], dur: 2.6}]}
     - contem: "repetição"
       tipo: motion
-      roteiro: {titulo: repeticao, modelo: cinema3d, cenas: [{tipo: esteira, texto: "Repetição.", dur: 2.8}]}
+      # v5: o cliente achou a esteira 3D "muito feia" → simples e bonito no movimento da referência (linha de luz
+      # revela a palavra, cartões iguais passam e ganham o mesmo ✓, contador dispara)
+      roteiro: {titulo: repeticao, modelo: premium, cenas: [{tipo: repeticao, titulo: "Repetição.", dur: 2.8}]}
     - contem: "ele multiplica"
       tipo: efeito
       efeito: multiplica          # o cliente vira uma grade de clones (×10)

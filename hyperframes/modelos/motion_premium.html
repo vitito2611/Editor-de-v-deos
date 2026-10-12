@@ -147,6 +147,19 @@
       .no-rot { position: absolute; font-size: calc(34 * var(--u)); color: #fff; white-space: nowrap; }
       .anel { position: absolute; border-radius: 50%; border: calc(3 * var(--u)) solid var(--acento); }
 
+
+      /* repetição: cartões idênticos numa esteira (simples, no movimento da referência) */
+      .rep-card { position: absolute; width: calc(370 * var(--u)); height: calc(450 * var(--u)); border-radius: calc(34 * var(--u));
+        background: linear-gradient(165deg, #ffffff 0%, #eee9f8 100%); padding: calc(34 * var(--u));
+        box-shadow: 0 calc(40 * var(--u)) calc(80 * var(--u)) rgba(0, 0, 0, 0.55); }
+      .rep-card .ic { width: calc(90 * var(--u)); height: calc(90 * var(--u)); border-radius: calc(22 * var(--u)); padding: calc(18 * var(--u));
+        background: rgba(var(--marca-rgb), 0.14); }
+      .rep-card .bar { height: calc(18 * var(--u)); border-radius: calc(9 * var(--u)); background: #ddd5ec; margin-top: calc(28 * var(--u)); }
+      .rep-card .rep-ok { position: absolute; right: calc(30 * var(--u)); bottom: calc(30 * var(--u)); width: calc(86 * var(--u)); height: calc(86 * var(--u));
+        padding: calc(16 * var(--u)); }
+      .rep-card .aro { position: absolute; inset: calc(-6 * var(--u)); border-radius: calc(40 * var(--u)); border: calc(4 * var(--u)) solid var(--acento);
+        box-shadow: 0 0 calc(40 * var(--u)) rgba(var(--acento-rgb), 0.7); opacity: 0; }
+
       /* cta */
       .botao { position: absolute; display: flex; align-items: center; gap: calc(18 * var(--u)); padding: calc(34 * var(--u)) calc(58 * var(--u));
         border-radius: calc(80 * var(--u)); font-size: calc(40 * var(--u)); color: #061318; white-space: nowrap; overflow: hidden;
@@ -695,6 +708,65 @@
           tl.fromTo(ch, { opacity: 0 }, { opacity: 1, duration: 0.4 }, t + 0.25 + i * 0.12);
         });
         camera(P, t, d, { s1: 1.06 });
+      };
+
+
+      // "Repetição": ponto → linha de luz que revela a palavra (abertura da referência) e, embaixo, cartões
+      // IDÊNTICOS passando numa esteira cada vez mais rápida, cada um recebe o mesmo ✓ — simples e legível.
+      CENAS.repeticao = (c, P, t, d) => {
+        const cy = c.y || AY * 0.385, tam = c.tamanho || 132;
+        const gs = sv("svg", { width: px(900), height: px(900), viewBox: "-450 -450 900 900" }, P);
+        Object.assign(gs.style, { position: "absolute", left: px(X0 + 90), top: px(cy - 450) });
+        [210, 300, 390].forEach((r, j) => { const n = 30 + j * 14; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2;
+          sv("circle", { cx: Math.cos(a) * r, cy: Math.sin(a) * r, r: 3, fill: ACENTO, opacity: 0.6 - j * 0.14 }, gs); } });
+        tl.fromTo(gs, { opacity: 0, scale: 0.7, rotation: -15 }, { opacity: 0.6, scale: 1, rotation: 0, duration: 1.2, ease: EXPO }, t);
+        tl.to(gs, { opacity: 0.15, rotation: 20, duration: Math.max(0.5, d - 1.2), ease: "none" }, t + 1.2);
+        const ponto = mk("div", "ponto", P); pos(ponto, X0 + 532, cy - 8);
+        tl.fromTo(ponto, { scale: 0 }, { scale: 1, duration: 0.25, ease: MOLA }, t);
+        tl.to(ponto, { scale: 0, duration: 0.25, ease: "power2.in" }, t + 0.3);
+        const meia = 400;
+        const svg = sv("svg", { width: px(1080), height: px(60), viewBox: "0 -30 1080 60" }, P);
+        Object.assign(svg.style, { position: "absolute", left: px(X0), top: px(cy - 30) });
+        const L = luz(svg, `M${540 - meia} 0 H${540 + meia}`, 4);
+        tl.fromTo(L.g, { scaleX: 0, transformOrigin: "540px 0px" }, { scaleX: 1, duration: 0.6, ease: "expo.inOut" }, t + 0.15);
+        const tit = bloco(P, c.titulo || "Repetição.", { y: cy - tam * 1.08 - 16, tam });
+        revela(tit, t + 0.35, { de: 1, dur: 0.85 });
+        // esteira de cartões iguais: cada um chega ao centro, ganha o ✓ e sai; o ritmo acelera
+        const yc = cy + 95, n = c.cartoes || 8;
+        const gaps = []; let g = 0.5; for (let i = 0; i < n; i++) { gaps.push(g); g = Math.max(0.17, g * 0.8); }
+        let s0 = t + 0.5;
+        const cont = mk("div", "bloco centro", P, `<span class="ln acento" style="font-size:${px(84)}">×1</span>`);
+        cont.style.left = px(X0); cont.style.width = px(1080); cont.style.top = px(yc + 500);
+        const num = cont.querySelector(".ln");
+        tl.fromTo(cont, { opacity: 0, y: 20 * U }, { opacity: 1, y: 0, duration: 0.4, ease: EXPO }, s0 + gaps[0] * 0.75);
+        for (let i = 0; i < n; i++) {
+          const k = mk("div", "rep-card", P,
+            `<div class="ic">${icone("agenda", MARCA, 2.2)}</div><div class="bar" style="width:90%"></div>` +
+            `<div class="bar" style="width:70%"></div><div class="bar" style="width:80%"></div>` +
+            `<div class="rep-ok"></div><div class="aro"></div>`);
+          pos(k, X0 + 540 - 185, yc);
+          const ok = k.querySelector(".rep-ok");
+          ok.innerHTML = `<div style="width:100%;height:100%;border-radius:50%;background:${ACENTO};padding:${px(9)};box-shadow:0 0 ${px(24)} ${ACENTO}">${icone("check", "#061318", 3.4)}</div>`;
+          const gi = gaps[i], chega = s0 + gi;
+          tl.fromTo(k, { x: 900 * U, scale: 0.84, opacity: 0 }, { x: 0, scale: 1, opacity: 1, duration: gi, ease: "expo.out" }, s0 + (i ? gaps[i] * 0.15 : 0));
+          tl.fromTo(ok, { scale: 0 }, { scale: 1, duration: Math.min(0.3, gi * 0.8), ease: "back.out(2.4)" }, chega - gi * 0.25);
+          onda(k.querySelector(".aro"), chega - gi * 0.25, 1, 1.08, Math.min(0.45, gi * 1.3), 1);
+          tl.call(() => { num.textContent = "×" + (i + 1); }, null, chega - gi * 0.25);
+          if (i < n - 1) {
+            const gn = gaps[i + 1];
+            tl.to(k, { x: -420 * U, scale: 0.78, opacity: 0, duration: gn * 0.75, ease: "power2.out" }, chega);   // recua para trás do próximo
+          }
+          s0 = chega;
+        }
+        // depois da esteira o contador dispara (a repetição não acaba)
+        const o = { v: n };
+        tl.to(o, { v: c.repeticoes || 999, duration: Math.max(0.4, t + d - s0), ease: "power3.in",
+          onUpdate: () => { num.textContent = "×" + Math.round(o.v); } }, s0);
+        // pulso de luz correndo na linha a cada cartão
+        const pulso = sv("rect", { x: 540 - meia - 60, y: -5, width: 120, height: 10, rx: 5, fill: "#ffffff", opacity: 0 }, svg);
+        tl.set(pulso, { opacity: 0.9 }, t + 0.75);
+        tl.fromTo(pulso, { attr: { x: 540 - meia - 60 } }, { attr: { x: 540 + meia - 60 }, opacity: 0, duration: 0.9, ease: "power2.inOut", immediateRender: false }, t + 0.75);
+        camera(P, t, d, { s1: 1.06, y1: -10 });
       };
 
       CENAS.comparacao = (c, P, t, d) => {
