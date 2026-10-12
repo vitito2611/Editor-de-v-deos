@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 import shutil
 import subprocess
@@ -162,3 +163,9 @@ def check_binaries() -> dict[str, bool]:
 def snap(t: float, fps: Fraction) -> float:
     """Arredonda um tempo para o frame mais próximo (evita drift áudio/vídeo)."""
     return float(round(Fraction(t).limit_denominator(100000) * fps) / fps)
+
+
+def crf_intermedio() -> str:
+    """CRF dos arquivos intermediários (mezanino/segmentos). 12 ≈ sem perda; no 4K o pipeline usa 17
+    (visualmente igual depois do encode final e ~3x menos disco — MacBook com pouco espaço)."""
+    return os.environ.get("EDITOR_CRF_INTERMEDIO", "12")

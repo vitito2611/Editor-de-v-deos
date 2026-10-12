@@ -16,6 +16,7 @@ o resultado final é o mesmo da ordem descrita no briefing.
 from __future__ import annotations
 
 import hashlib
+import os
 from fractions import Fraction
 import shutil
 from pathlib import Path
@@ -26,7 +27,7 @@ import yaml
 from . import analysis, audio, cinematic, color, motion, music, nlp, render, sfx, silence, subtitles, transcribe
 from .config import load_config
 from .timeline import layout_times, map_words, snap_clips
-from .utils import ROOT, Timer, ffmpeg, load_audio, log, probe, read_json, setup_logging, write_json
+from .utils import ROOT, Timer, crf_intermedio, ffmpeg, load_audio, log, probe, read_json, setup_logging, write_json
 
 
 class Parada(Exception):
@@ -97,7 +98,7 @@ def _normalize_source(src: Path, g: dict) -> Path:
     # Mac: o chip decodifica o HEVC 10-bit do iPhone por hardware (VideoToolbox) — a etapa mais lenta na nuvem
     import sys as _sys
     hw = ["-hwaccel", "videotoolbox"] if _sys.platform == "darwin" else []
-    ffmpeg(*hw, "-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
+    ffmpeg(*hw, "-i", str(src), "-vf", ",".join(vf), "-c:v", "libx264", "-crf", crf_intermedio(), "-preset", "superfast", "-g", "15",
            "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
            "-c:a", "aac", "-b:a", "256k", "-map_metadata", "-1", str(tmp))
     tmp.replace(dst)
@@ -128,7 +129,7 @@ def _remove_bars(src: Path, enabled: bool) -> Path:
     dst = src.with_name(src.stem + "_ativa.mp4")
     if not dst.exists():
         log.info("  tarjas pretas detectadas → área ativa %dx%d+%d+%d", w, h, x, y)
-        ffmpeg("-i", str(src), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-crf", "12", "-preset", "superfast", "-g", "15",
+        ffmpeg("-i", str(src), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-crf", crf_intermedio(), "-preset", "superfast", "-g", "15",
                "-c:a", "copy", str(dst))
     return dst
 
@@ -179,6 +180,8 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
     if plataforma not in cfg["plataformas"]:
         raise ValueError(f"Plataforma '{plataforma}' inválida. Opções: {list(k for k in cfg['plataformas'] if isinstance(cfg['plataformas'][k], dict))}")
     plat = cfg["plataformas"][plataforma]
+    if plat["largura"] * plat["altura"] > 4e6:          # 4K: intermediários menores (disco)
+        os.environ.setdefault("EDITOR_CRF_INTERMEDIO", "17")
     nome = inputs[0].stem
     tag = f"{nome}_{cfg.get('_estilo', 'padrao')}_{plataforma}"
     work = ROOT / cfg["geral"]["pasta_trabalho"] / tag

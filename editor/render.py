@@ -22,7 +22,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .utils import ROOT, ffmpeg, log
+from .utils import ROOT, crf_intermedio, ffmpeg, log
 
 
 def _even(x: float) -> int:
@@ -153,7 +153,7 @@ def _render_job(j: dict, fps: Fraction, q: dict):
 
 def render_segments(jobs: list[dict], fps: Fraction, threads: int, preview: bool) -> None:
     # intermediários: veryfast + CRF 12 (visualmente idêntico ao final; o encode final é que define a qualidade)
-    q = {"preset": "ultrafast", "crf": 26} if preview else {"preset": "veryfast", "crf": 12}
+    q = {"preset": "ultrafast", "crf": 26} if preview else {"preset": "veryfast", "crf": int(crf_intermedio())}
 
     def one(j):
         # reaproveita o segmento se nada mudou (rodadas de ajuste só re-renderizam o que mudou)
