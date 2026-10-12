@@ -20,7 +20,8 @@ PAI = "Edição de vídeo - Claude"
 def pasta_drive() -> Path | None:
     if os.environ.get("EDITOR_PASTA_DRIVE"):
         p = Path(os.environ["EDITOR_PASTA_DRIVE"]).expanduser()
-        return p if p.is_dir() else None
+        p.mkdir(parents=True, exist_ok=True)          # pasta local do Finder: cria se não existir
+        return p
     raizes = []
     cs = Path.home() / "Library" / "CloudStorage"
     if cs.is_dir():

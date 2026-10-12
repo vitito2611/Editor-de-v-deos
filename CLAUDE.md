@@ -17,6 +17,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   resolução cheia) + `--drive "Nome"` (copia com/sem trilha para a pasta "Vídeos editados" do Google Drive para
   Desktop — `editor/entrega.py`, `EDITOR_PASTA_DRIVE` força o caminho). Passo a passo: `docs/MAC.md`. Na nuvem o
   4K funciona mas não sobe (10 s de 4K levaram 6 min aqui; ~45 MB por 10 s).
+- **Preferência atual (out/2026): entregar o 4K numa pasta do Finder, sem Drive** — no Mac:
+  `EDITOR_PASTA_DRIVE=~/Desktop/"Vídeos editados" ... --plataforma reels_4k --drive "Nome"` (com e sem trilha
+  vão para essa pasta; ela é criada se não existir).
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
