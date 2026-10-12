@@ -18,6 +18,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   força outro caminho; `--pasta "Nome"` dá o nome). Um comando por vídeo: `mac/video3_4k.command` (baixa o bruto,
   confere ~12 GB livres, renderiza, apaga os temporários). Intermediários do 4K em CRF 17 (`crf_intermedio`).
   Ao terminar, responder SÓ o nome da pasta e dos arquivos. Na nuvem o 4K funciona mas não sobe.
+- **Edição aprovada congelada** (`congelado:` no plano → `config/planos/<video>_congelado.json` com palavras + trechos
+  mantidos): o render em outra máquina/resolução NÃO retranscreve (o Mac transcreveu diferente e mudou legendas/cortes).
+- Última entrega do vídeo 3 (v5, motion "Repetição" novo = cena premium `repeticao`): pelo chat, 1080x1920 2-pass
+  ~28 MB cada (pedido do cliente: "mandar na conversa com o máximo de qualidade").
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
