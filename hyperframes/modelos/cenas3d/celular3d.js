@@ -1,5 +1,6 @@
 // Cena "celular3d": celular 3D de verdade (corpo de metal com reflexo, tela viva desenhada a cada quadro:
-// orbe falando, ondas de voz, conversa) e o cartão do plano saltando para fora da tela. Pensada para o
+// orbe ouvindo a consulta, ondas de voz, dica em tempo real) e o briefing saltando para fora da tela.
+// Zeal = copiloto de vendas do dentista (NÃO dá diagnóstico nem plano de tratamento). Pensada para o
 // formato "janela": o vídeo do cliente fica numa janela no alto à direita e o celular ocupa o lado esquerdo.
 function montarCena(ctx) {
   const { THREE, scene, camera, rnd, fase, E, brilho, poeira, bokeh, RoundedBoxGeometry, ACENTO, D, H } = ctx;
@@ -22,8 +23,8 @@ function montarCena(ctx) {
   const cv = document.createElement("canvas"); cv.width = TW; cv.height = TH;
   const g = cv.getContext("2d");
   const telaTex = new THREE.CanvasTexture(cv); telaTex.colorSpace = THREE.SRGBColorSpace; telaTex.anisotropy = 8;
-  const falas = c.falas || [["pac", "Como explico o implante pro paciente?"], ["ia", "Mostre o antes e depois e divida em 3 etapas."]];
-  const app = c.app || "Zeal IA";
+  const falas = c.falas || [["pac", "Achei caro…"], ["ia", "Objeção: preço. Mostre o parcelamento."]];
+  const app = c.app || "Zeal · Copiloto";
   const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
   const quebra = (txt, maxW) => { const ws = txt.split(" "), ls = []; let l = ""; ws.forEach((w) => { const t2 = l ? l + " " + w : w; if (g.measureText(t2).width > maxW) { ls.push(l); l = w; } else l = t2; }); if (l) ls.push(l); return ls; };
   function desenhaTela(t) {
@@ -76,13 +77,13 @@ function montarCena(ctx) {
     roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 2 })); reflexo.position.z = 0.061; cel.add(reflexo);
   const sombra = brilho(new THREE.Color(0x8a4dff), 4.2, 0.35); sombra.position.z = -0.4; cel.add(sombra);
 
-  // ---- cartão do plano (sai da tela para a frente)
+  // ---- cartão do briefing (sai da tela para a frente)
   const cc = document.createElement("canvas"); cc.width = 640; cc.height = 400;
   const g2 = cc.getContext("2d");
-  const cartao = c.cartao || { titulo: "Plano de tratamento", linhas: [["Diagnóstico", "explicado"], ["Proposta", "3 etapas"]] };
+  const cartao = c.cartao || { titulo: "Briefing da consulta", linhas: [["Perfil", "Analítico"], ["Objeção", "Preço"], ["Rapport", "Alto"]] };
   const texC = new THREE.CanvasTexture(cc); texC.colorSpace = THREE.SRGBColorSpace;
   function desenhaCartao(p) {
-    g2.clearRect(0, 0, 640, 400);
+    g2.fillStyle = "#f3effb"; g2.fillRect(0, 0, 640, 400);   // cantos na cor da borda (sem quadrado preto)
     const rr2 = (x, y, w, h, r) => { g2.beginPath(); g2.moveTo(x + r, y); g2.arcTo(x + w, y, x + w, y + h, r); g2.arcTo(x + w, y + h, x, y + h, r); g2.arcTo(x, y + h, x, y, r); g2.arcTo(x, y, x + w, y, r); g2.closePath(); };
     const bg = g2.createLinearGradient(0, 0, 0, 400); bg.addColorStop(0, "#ffffff"); bg.addColorStop(1, "#efeaf9");
     g2.fillStyle = bg; rr2(0, 0, 640, 400, 44); g2.fill();
@@ -90,7 +91,7 @@ function montarCena(ctx) {
     g2.strokeStyle = "#061318"; g2.lineWidth = 8; g2.lineCap = "round"; g2.beginPath(); g2.moveTo(60, 79); g2.lineTo(73, 92); g2.lineTo(97, 66); g2.stroke();
     g2.fillStyle = "#1b1230"; g2.font = "700 40px Rubik"; g2.fillText(cartao.titulo, 136, 92);
     (cartao.linhas || []).forEach(([a, b], i) => {
-      const y = 180 + i * 78;
+      const nl = (cartao.linhas || []).length, y = 172 + i * (nl > 2 ? 58 : 78);
       g2.fillStyle = "#e3dcf0"; g2.fillRect(40, y - 40, 560, 2);
       g2.fillStyle = "#5b4f75"; g2.font = "500 30px Rubik"; g2.fillText(a, 40, y + 4);
       g2.fillStyle = "#1b1230"; g2.font = "700 30px Rubik"; const w = g2.measureText(b).width; g2.fillText(b, 600 - w, y + 4);

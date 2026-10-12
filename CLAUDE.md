@@ -70,8 +70,14 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   `sfx.proibidos`). Cliente não gostou de cenas genéricas sem relação (pizza, carteira).
 - Trilhas: Mixkit (royalty-free); músicas em alta são adicionadas pelo cliente no app.
 - Glossário do ASR por vídeo em `transcricao.correcoes` (ex.: Zuckenberg → Zuckerberg).
-- Cor: cliente prefere **azul cinematográfico** (`cor.look: azul_cinema`) ao tom quente; empresa dele: **Zeal**
-  (assistente de IA por voz para odontologia).
+- Cor: cliente prefere **azul cinematográfico** (`cor.look: azul_cinema`) ao tom quente; empresa dele: **Zeal**.
+- **O que a Zeal É (usar em TODO motion/texto/card que fale dela):** assistente de IA por voz que é o **copiloto de
+  vendas do dentista** — a partir do **áudio da consulta**, ajuda a **fechar mais tratamentos**: perfil comportamental do
+  paciente, quais objeções ele teve e **como contorná-las (dica em tempo real)**, nível de rapport do dentista, resumo
+  da conversa, observações e **briefing pós-consulta**. **NUNCA** mostrar/dizer: diagnóstico, plano de tratamento,
+  como fazer implante/procedimento, agendamento/recepção/atendimento de ligações. Exemplo aprovado de tela:
+  paciente "Achei caro…" → Zeal "Objeção: preço. Mostre o parcelamento." + cartão "Briefing da consulta"
+  (Perfil · Objeção · Rapport).
 - **Pausas e erros de gravação têm que sair**: pausas ≥ 0,22 s cortadas (`silencio`), recomeços/gaguejadas/
   muletas/frase abandonada cortados por `editor/erros.py` (revisão em `revisao/erros_gravacao.yaml`).
 

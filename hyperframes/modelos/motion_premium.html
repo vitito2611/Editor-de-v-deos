@@ -423,7 +423,7 @@
         const falas = c.falas || [["pac", "Oi, queria marcar uma avaliação."], ["ia", "Claro! Tenho quinta às 14h30. Pode ser?"], ["pac", "Perfeito!"]];
         const bol = falas.map(([q, txt]) => mk("div", "bolha " + (q === "ia" ? "ia" : "pac"), e2, esc(txt)));
         // cartão que SAI da tela (profundidade)
-        const card = c.cartao || { titulo: "Consulta agendada", linhas: [["Quando", "Qui · 14:30"], ["Com", "Dra. Ana"]] };
+        const card = c.cartao || { titulo: "Briefing da consulta", linhas: [["Perfil", "Analítico"], ["Objeção", "Preço"]] };
         const ct = mk("div", "cartao", c3);
         ct.style.top = px(-120);
         ct.innerHTML = `<div class="cab"><div class="ok"><div style="width:${px(38)};height:${px(38)}">${icone("check", "#061318", 3)}</div></div><span>${esc(card.titulo)}</span></div>` +

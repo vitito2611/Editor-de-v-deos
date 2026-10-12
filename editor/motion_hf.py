@@ -140,7 +140,7 @@ def montar(roteiro: dict, pasta: Path, W: int, H: int) -> Path:
             dentro = ""
             if not c.get("imagem"):
                 # tela de app de assistente de voz (onda + mensagens), sem precisar de print
-                msgs = c.get("mensagens") or [["eu", "Como fecho mais tratamentos?"], ["ia", "Vamos montar o plano juntos."]]
+                msgs = c.get("mensagens") or [["eu", "Achei caro…"], ["ia", "Objeção: preço. Mostre o parcelamento."]]
                 barras = "".join('<div class="barra"></div>' for _ in range(12))
                 bolhas = "".join(f'<div class="bolha {html.escape(q)}">{html.escape(t)}</div>' for q, t in msgs)
                 dentro = (f'<div class="app"><div class="app-topo">{html.escape(c.get("app", "Assistente IA"))}</div>'
@@ -333,8 +333,8 @@ def _cena_cinema(c: dict, k: int, pasta: Path, W: int, H: int, pal: dict, rng: r
                f'<stop offset="1" stop-color="#1b3f9e"/></radialGradient></defs></svg>')
         return tit + f'<div class="ilu" style="--iy:{iy}%;--iw:860;--ih:600">{svg}</div>' + sub
     if tipo == "celular":
-        msgs = c.get("mensagens") or [["eu", "Como fecho mais tratamentos?"], ["ia", "Vamos montar o plano juntos:"]]
-        itens = c.get("plano") or ["Diagnóstico explicado", "Plano em etapas", "Proposta de pagamento"]
+        msgs = c.get("mensagens") or [["eu", "Achei caro…"], ["ia", "Dica em tempo real:"]]
+        itens = c.get("plano") or ["Objeção: preço", "Perfil: analítico", "Rapport: alto"]
         bolhas = "".join(f'<div class="bolha passo {html.escape(q)}">{html.escape(t)}</div>' for q, t in msgs)
         plano = ('<div class="plano passo">' + "".join(f'<div class="item"><span class="ok"></span>{html.escape(t)}</div>' for t in itens) + "</div>")
         app = (f'<div class="app"><div class="app-topo"><span class="orb"></span>{html.escape(c.get("app", "Assistente IA"))}</div>'

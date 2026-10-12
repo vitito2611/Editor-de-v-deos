@@ -7,12 +7,12 @@ Paleta da marca (logo da Zeal): roxo #5D2E8C, ciano #24D0DC, branco; fundo quase
 
 Roteiro (YAML), `modelo: premium`:
   cenas:
-    - {tipo: linha,   rotulo: "ZEAL · IA POR VOZ", titulo: "Sua clínica|atendendo *24h*", destaque: "sem perder|nenhum paciente.", dur: 3.4}
-    - {tipo: logo,    nome: zeal, slogan: "assistente de IA por voz", transicao: iris}
+    - {tipo: linha,   rotulo: "ZEAL · COPILOTO DE VENDAS", titulo: "Feche mais|*tratamentos.*", destaque: "a partir do áudio|da consulta.", dur: 3.4}
+    - {tipo: logo,    nome: zeal, slogan: "copiloto de vendas do dentista", transicao: iris}
     - {tipo: celular, rotulo: ..., titulo: ..., chamada_nome: "Maria", falas: [[pac, "..."], [ia, "..."]],
-                      cartao: {titulo: "Consulta agendada", linhas: [[Quando, "Qui · 14:30"]]}, selos: [...], transicao: listras}
+                      cartao: {titulo: "Briefing da consulta", linhas: [[Objeção, "Preço"]]}, selos: [...], transicao: listras}
     - {tipo: grafico, titulo: ..., pontos: [1, 2, 3], projecao: 2, marcos: [{i: 2, texto: "Hoje"}], contadores: [{valor: 24, sufixo: h, legenda: "atendendo"}]}
-    - {tipo: passos,  titulo: ..., passos: [{icone: tel, texto: "Paciente liga"}, ...]}
+    - {tipo: passos,  titulo: ..., passos: [{icone: chat, texto: "Consulta gravada"}, ...]}
     - {tipo: cta,     titulo: "...", destaque: "...", botao: "Conheça a Zeal", url: zealtecnologia.com, transicao: esfera}
     - {tipo: texto,   titulo: "Frase *forte*", sub: "apoio"}
     - {tipo: numero,  valor: 24, sufixo: "h", legenda: "por dia"}

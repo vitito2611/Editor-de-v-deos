@@ -11,10 +11,10 @@ cenas:
     transicao: corte
     sem_chamada: true
     rotulo: "Zeal"
-    titulo: "Assistente de IA|*por voz.*"
-    app: "Zeal IA"
-    falas: [[pac, "Como explico o implante pro paciente?"], [ia, "Mostre o antes e depois e divida em 3 etapas."]]
-    cartao: {titulo: "Plano de tratamento", linhas: [[Diagnóstico, "explicado"], [Proposta, "3 etapas"]]}
-    selos: ["Paciente entendeu", "Tratamento fechado"]
+    titulo: "Copiloto de|*vendas.*"
+    app: "Zeal · Copiloto"
+    falas: [[pac, "Achei caro…"], [ia, "Objeção: preço. Mostre o parcelamento."]]
+    cartao: {titulo: "Briefing da consulta", linhas: [[Perfil, "Analítico"], [Objeção, "Preço"], [Rapport, "Alto"]]}
+    selos: ["Objeção contornada", "Tratamento fechado"]
     dur: 4.6
   - {tipo: timeline, titulo: "Editado|*100% por IA.*", chip: "Edição automática", dur: 2.4, transicao: corte}

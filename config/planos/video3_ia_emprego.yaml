@@ -74,10 +74,12 @@ dinamismo:
             cel_x: 0.3
             cel_y: 0.57
             cel_escala: 0.85
-            app: "Zeal IA"
-            falas: [[pac, "Como explico o implante pro paciente?"], [ia, "Mostre o antes e depois e divida em 3 etapas."]]
-            cartao: {titulo: "Plano de tratamento", linhas: [[Diagnóstico, "explicado"], [Proposta, "3 etapas"]]}
-            cartao_t: 2.3
+            # Zeal = copiloto de vendas: ouve a consulta, dá a dica contra a objeção em tempo real e o briefing
+            # (cliente: NUNCA diagnóstico/plano de tratamento/implante)
+            app: "Zeal · Copiloto"
+            falas: [[pac, "Achei caro…"], [ia, "Objeção: preço. Mostre o parcelamento."]]
+            cartao: {titulo: "Briefing da consulta", linhas: [[Perfil, "Analítico"], [Objeção, "Preço"], [Rapport, "Alto"]]}
+            cartao_t: 2.8               # a dica contra a objeção fica legível antes do briefing saltar
             dur: 4.6
     - contem: "totalmente editado"
       tipo: efeito

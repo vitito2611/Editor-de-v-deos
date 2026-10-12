@@ -1,35 +1,38 @@
 # Showreel do modelo "premium" com a identidade da Zeal (referência de movimento: referencias/motion2/ref.mp4)
 # python -m editor.motion_hf config/motion/zeal_showreel.yaml output/zeal_showreel.mp4
+# Zeal = copiloto de vendas do dentista: ouve o áudio da consulta e ajuda a FECHAR mais tratamentos
+# (perfil comportamental, objeções e como contorná-las em tempo real, rapport, resumo, briefing pós-consulta).
+# NUNCA: diagnóstico, plano de tratamento, como fazer implante, agendamento/recepção.
 titulo: Zeal showreel
 modelo: premium
 pre_roll: 0
 cenas:
-  - {tipo: linha, rotulo: "Clínicas odontológicas", titulo: "Sua clínica|atendendo *24h.*", destaque: "Sem perder|nenhum paciente.", dur: 3.4}
-  - {tipo: logo, nome: zeal, slogan: "assistente de IA por voz", transicao: iris, dur: 2.8}
+  - {tipo: linha, rotulo: "Para dentistas", titulo: "Feche mais|*tratamentos.*", destaque: "a partir do áudio|da consulta.", dur: 3.4}
+  - {tipo: logo, nome: zeal, slogan: "copiloto de vendas do dentista", transicao: iris, dur: 2.8}
   - tipo: celular
     transicao: listras
-    rotulo: "Como funciona"
-    titulo: "A IA atende.|Você *cuida.*"
-    chamada_nome: "Maria Souza"
-    chamada: "ligando…"
-    falas: [[pac, "Oi! Queria marcar uma avaliação."], [ia, "Claro! Tenho quinta às 14h30. Pode ser?"], [pac, "Perfeito, obrigada!"]]
-    cartao: {titulo: "Consulta agendada", linhas: [[Quando, "Qui · 14:30"], [Procedimento, "Avaliação"]]}
-    selos: ["Confirmado no WhatsApp", "Lembrete enviado"]
+    sem_chamada: true
+    rotulo: "Em tempo real"
+    titulo: "A objeção veio.|A Zeal *responde.*"
+    app: "Zeal · Copiloto"
+    falas: [[pac, "Achei caro…"], [ia, "Objeção: preço. Mostre o parcelamento."], [pac, "Assim dá pra fazer!"]]
+    cartao: {titulo: "Briefing da consulta", linhas: [[Perfil, "Analítico"], [Objeção, "Preço"], [Rapport, "Alto"]]}
+    selos: ["Objeção contornada", "Tratamento fechado"]
     dur: 5.8
   - tipo: grafico
     transicao: chicote
-    rotulo: "Sua agenda"
-    titulo: "Cada ligação|vira *consulta.*"
-    tags: [Agendamentos, Confirmações, Retornos, Lembretes, Reagendamentos]
+    rotulo: "Seus resultados"
+    titulo: "Mais tratamentos|*fechados.*"
+    tags: [Perfil do paciente, Objeções, Rapport, Resumo, Briefing]
     pontos: [1.2, 1.6, 2.1, 2.0, 3.0, 3.9, 4.6, 5.6, 6.6]
     projecao: 2
-    marcos: [{i: 2, texto: "Seg"}, {i: 4, texto: "Qua"}, {i: 6, texto: "Sex"}, {i: 8, texto: "Próx."}]
-    contadores: [{valor: 24, sufixo: "h", legenda: "atendendo|todo dia"}, {valor: 0, legenda: "ligações|perdidas"}]
+    marcos: [{i: 2, texto: "Antes"}, {i: 6, texto: "Com Zeal"}]
+    contadores: [{valor: 3, sufixo: "x", legenda: "objeções|contornadas"}, {valor: 100, sufixo: "%", legenda: "consultas|com briefing"}]
     dur: 4.4
   - tipo: passos
     transicao: chicote
     rotulo: "Zeal"
     titulo: "Em *4 passos.*"
-    passos: [{icone: tel, texto: "Paciente liga"}, {icone: ia, texto: "A IA atende"}, {icone: agenda, texto: "Agenda sozinha"}, {icone: whats, texto: "Confirma no WhatsApp"}]
+    passos: [{icone: chat, texto: "Ouve a consulta"}, {icone: user, texto: "Lê o perfil"}, {icone: zap, texto: "Dica na objeção"}, {icone: check, texto: "Briefing pronto"}]
     dur: 4.8
-  - {tipo: cta, transicao: esfera, titulo: "Sua recepção|no piloto automático.", destaque: "Conheça a Zeal.", botao: "Agendar demonstração", url: "zealtecnologia.com", dur: 3.8}
+  - {tipo: cta, transicao: esfera, titulo: "Seu copiloto|de vendas.", destaque: "Conheça a Zeal.", botao: "Agendar demonstração", url: "zealtecnologia.com", dur: 3.8}
