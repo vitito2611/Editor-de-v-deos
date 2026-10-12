@@ -110,12 +110,10 @@ def _extras() -> bool:
           "cd hyperframes && npx hyperframes browser ensure")
     linha((ROOT / ".claude/skills/hyperframes/SKILL.md").exists(), "skills do HyperFrames",
           "npx skills experimental_install", obrigatorio=False)
-    print("Entrega no Google Drive:")
-    from .entrega import pasta_drive
-    pd = pasta_drive()
-    linha(bool(pd), f"pasta 'Vídeos editados' sincronizada{': ' + str(pd) if pd else ''}",
-          "instale o Google Drive para Desktop, entre na sua conta e confira no Finder: Meu Drive > "
-          "Edição de vídeo - Claude > Vídeos editados (no app do Drive, a pasta deve estar 'disponível'/espelhada)")
+    print("Entrega (pasta do Finder):")
+    from .entrega import pasta_destino
+    pd = pasta_destino()
+    linha(pd.is_dir(), f"vídeos prontos vão para {pd}", "defina EDITOR_PASTA com uma pasta válida")
     if sys.platform == "darwin":
         hw = "videotoolbox" in _cmd(["ffmpeg", "-hide_banner", "-hwaccels"])
         linha(hw, "decodificação por hardware do Mac (vídeo do iPhone mais rápido)", "brew reinstall ffmpeg", obrigatorio=False)

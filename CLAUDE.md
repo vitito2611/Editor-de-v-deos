@@ -8,18 +8,15 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 - Vídeos brutos chegam na pasta do Google Drive "Edição de vídeo - Claude/Vídeos não editados"
   (pasta pai: https://drive.google.com/drive/folders/1IqX-X-ubjMnxhYctEF2tCocOgdyurgsv). Baixar com
-  `.venv/bin/gdown --folder <link>` para `entrada/`. **Entrega: o cliente quer o vídeo na pasta
-  "Vídeos editados"** (id `1Ye5BDFvAa2lNBIqbCj6BBe5AmyKi1JxP`), não no chat. O conector Google Drive
-  (`create_file`) só aceita conteúdo base64 dentro da chamada — inviável para vídeo; até haver outra
-  via, entregar por link (Artifact) ou chat (SendUserFile ≤ 30 MB) e avisar o cliente.
+  `.venv/bin/gdown --folder <link>` para `entrada/`. **Entrega: pasta do Finder no Mac
+  (ver abaixo), não mais no Drive.** Na nuvem não há como chegar ao Finder: entregar por link (Artifact) ou chat
+  (SendUserFile ≤ 30 MB) e lembrar que o 4K sai no Mac.
 - Vídeos de iPhone vêm em HDR (HLG/Dolby Vision) 4K60: o pipeline já converte para SDR e 1440p30.
-- **4K no Drive (escolha do cliente: rodar no Mac dele)**: `--plataforma reels_4k` (2160x3840, lê o bruto em
-  resolução cheia) + `--drive "Nome"` (copia com/sem trilha para a pasta "Vídeos editados" do Google Drive para
-  Desktop — `editor/entrega.py`, `EDITOR_PASTA_DRIVE` força o caminho). Passo a passo: `docs/MAC.md`. Na nuvem o
-  4K funciona mas não sobe (10 s de 4K levaram 6 min aqui; ~45 MB por 10 s).
-- **Preferência atual (out/2026): entregar o 4K numa pasta do Finder, sem Drive** — no Mac:
-  `EDITOR_PASTA_DRIVE=~/Desktop/"Vídeos editados" ... --plataforma reels_4k --drive "Nome"` (com e sem trilha
-  vão para essa pasta; ela é criada se não existir).
+- **Entrega = pasta do Finder em 4K, NUNCA mais no Drive** (pedido do cliente, out/2026). No Mac, `editar.py` já
+  usa `--plataforma reels_4k` por padrão (2160x3840, lê o bruto em resolução cheia) e copia com/sem trilha para
+  **Mesa > Vídeos editados** (`~/Desktop/Vídeos editados`, criada se faltar; `EDITOR_PASTA` força outro caminho;
+  `--pasta "Nome"` dá o nome do arquivo). Ao terminar, responder ao cliente SÓ o nome da pasta e dos arquivos.
+  Passo a passo: `docs/MAC.md`. Na nuvem o 4K funciona mas não chega ao Finder (10 s de 4K = 6 min; ~45 MB/10 s).
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
@@ -46,7 +43,7 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   Escrever o andamento em `edicao/status` ({estado: renderizando|pronto|erro, mensagem}) — aparece no estúdio.
   O campo `pedido` traz pedidos livres (trocar motion, música, foto). Depois de renderizar, salvar os ajustes em
   `config/planos/<video>_estudio.json` e apontar `estudio.alteracoes` no plano do vídeo (commit + push): assim o
-  render em 4K no Mac (`--plataforma reels_4k --drive`) sai idêntico ao aprovado no estúdio.
+  render em 4K no Mac (`--pasta`) sai idêntico ao aprovado no estúdio.
 - Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p (formato antigo) ·
   vídeo 3 (IA e emprego, estúdio completo v3) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
