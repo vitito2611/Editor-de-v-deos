@@ -33,7 +33,7 @@ def main(argv=None):
     ap.add_argument("--usar-revisao", action="store_true", help="usa os arquivos editados em work/.../revisao/")
     ap.add_argument("--saida", type=Path, help="arquivo de saída (padrão: output/<nome>_<estilo>_<plataforma>.mp4)")
     ap.add_argument("--pasta", "--drive", dest="pasta", nargs="?", const="", metavar="NOME",
-                    help="salva com e sem trilha na pasta do Finder 'Vídeos editados' (Mesa); NOME opcional do "
+                    help="salva com e sem trilha na pasta 'Vídeos editados' do Google Drive; NOME opcional do "
                          "arquivo. No Mac é automático (e em 4K).")
     a = ap.parse_args(argv)
     for p in a.entradas:

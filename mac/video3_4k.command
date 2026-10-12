@@ -1,5 +1,5 @@
 #!/bin/bash
-# Vídeo 3 (IA e emprego) em 4K → Mesa > Vídeos editados. Rodar no Terminal do Mac:
+# Vídeo 3 (IA e emprego) em 4K → Google Drive > Edição de vídeo - Claude > Vídeos editados. Rodar no Terminal do Mac:
 #   bash ~/Editor-de-v-deos/mac/video3_4k.command
 set -e
 cd "$(dirname "$0")/.."
@@ -25,4 +25,4 @@ fi
 .venv/bin/python editar.py "$BRUTO" --estilo referencia1 --plataforma reels_4k \
   --config config/planos/video3_ia_emprego.yaml --pasta "IA e emprego"
 rm -rf work/video3_*_reels_4k work/_fontes   # libera o espaço usado no render (o vídeo pronto já está na pasta)
-open ~/Desktop/"Vídeos editados"
+echo "☁  Subindo para o Google Drive (pasta Edição de vídeo - Claude > Vídeos editados)."

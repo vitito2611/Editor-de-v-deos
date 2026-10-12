@@ -1,6 +1,7 @@
-# Rodar o editor no seu Mac (4K direto numa pasta do Finder)
+# Rodar o editor no seu Mac (4K direto no Google Drive)
 
-No Mac, o editor salva o vídeo pronto em 4K na pasta **Mesa > Vídeos editados** (sem Google Drive).
+No Mac, o editor salva o vídeo pronto em 4K na pasta "Vídeos editados" do Google Drive para Desktop — o upload
+acontece sozinho e, no modo streaming, o vídeo não fica ocupando o disco.
 Bônus: o chip do Mac decodifica o vídeo do iPhone por hardware, então fica bem mais rápido.
 
 ## 1. Uma vez só (instalação, ~20 min)
@@ -31,5 +32,5 @@ python editar.py entrada/video.mov --estilo referencia1 --config config/planos/<
 ```
 
 - No Mac o padrão já é 4K (2160x3840, a partir do bruto em resolução cheia).
-- `--pasta "Nome"` → salva "Nome (com trilha).mp4" e "Nome (sem trilha).mp4" em Mesa > Vídeos editados.
+- `--pasta "Nome"` → salva "Nome (com trilha).mp4" e "Nome (sem trilha).mp4" em Drive > Edição de vídeo - Claude > Vídeos editados.
 - Para ver e editar junto: `cd remotion && npx remotion studio` abre o Remotion Studio no navegador.

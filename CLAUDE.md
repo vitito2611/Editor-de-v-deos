@@ -8,15 +8,16 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 - Vídeos brutos chegam na pasta do Google Drive "Edição de vídeo - Claude/Vídeos não editados"
   (pasta pai: https://drive.google.com/drive/folders/1IqX-X-ubjMnxhYctEF2tCocOgdyurgsv). Baixar com
-  `.venv/bin/gdown --folder <link>` para `entrada/`. **Entrega: pasta do Finder no Mac
-  (ver abaixo), não mais no Drive.** Na nuvem não há como chegar ao Finder: entregar por link (Artifact) ou chat
-  (SendUserFile ≤ 30 MB) e lembrar que o 4K sai no Mac.
+  `.venv/bin/gdown --folder <link>` para `entrada/`. **Entrega: pasta "Vídeos editados" do Drive**
+  (id `1Ye5BDFvAa2lNBIqbCj6BBe5AmyKi1JxP`), feita pelo Mac (ver abaixo). Da nuvem não dá: o conector só aceita
+  base64 na chamada → entregar por link (Artifact) ou chat (SendUserFile ≤ 30 MB) e lembrar que o 4K sai no Mac.
 - Vídeos de iPhone vêm em HDR (HLG/Dolby Vision) 4K60: o pipeline já converte para SDR e 1440p30.
-- **Entrega = pasta do Finder em 4K, NUNCA mais no Drive** (pedido do cliente, out/2026). No Mac, `editar.py` já
-  usa `--plataforma reels_4k` por padrão (2160x3840, lê o bruto em resolução cheia) e copia com/sem trilha para
-  **Mesa > Vídeos editados** (`~/Desktop/Vídeos editados`, criada se faltar; `EDITOR_PASTA` força outro caminho;
-  `--pasta "Nome"` dá o nome do arquivo). Ao terminar, responder ao cliente SÓ o nome da pasta e dos arquivos.
-  Passo a passo: `docs/MAC.md`. Na nuvem o 4K funciona mas não chega ao Finder (10 s de 4K = 6 min; ~45 MB/10 s).
+- **Entrega = 4K no Google Drive** (o cliente testou a pasta do Finder e voltou ao Drive: ocupava espaço no
+  MacBook). No Mac, `editar.py` usa `--plataforma reels_4k` por padrão e copia com/sem trilha para a pasta do
+  Drive para Desktop "Edição de vídeo - Claude/Vídeos editados" (`editor/entrega.py`; sem Drive → Mesa; `EDITOR_PASTA`
+  força outro caminho; `--pasta "Nome"` dá o nome). Um comando por vídeo: `mac/video3_4k.command` (baixa o bruto,
+  confere ~12 GB livres, renderiza, apaga os temporários). Intermediários do 4K em CRF 17 (`crf_intermedio`).
+  Ao terminar, responder SÓ o nome da pasta e dos arquivos. Na nuvem o 4K funciona mas não sobe.
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
