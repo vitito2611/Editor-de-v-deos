@@ -215,10 +215,16 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
         fps = meta["fps"]
         rep["analise"] = an
     # ------------------------------------------------------------------ transcrição
+    # edição aprovada congelada (plano: `congelado: <json>`): mesma transcrição e mesmos cortes da versão
+    # aprovada — o render em outra máquina/resolução (Mac 4K) sai idêntico em vez de ser reeditado do zero
+    congelado = read_json(ROOT / cfg["congelado"]) if cfg.get("congelado") else None
     with timer.etapa("Transcrição"):
         key = _cache_key(src, cfg["transcricao"]["motor"])
         tfile = work / "transcricao.json"
-        if tfile.exists() and read_json(tfile).get("chave") == key:
+        if congelado:
+            words = congelado["palavras"]
+            log.info("  (congelado) %d palavras da edição aprovada", len(words))
+        elif tfile.exists() and read_json(tfile).get("chave") == key:
             words = read_json(tfile)["palavras"]
             log.info("  (cache) %d palavras", len(words))
         else:
@@ -266,6 +272,9 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             sres["manter"] = erros.aplicar(sres["manter"], ecortes, db, sres.get("hop", 0.02))
             log.info("  erros de gravação removidos: %.1fs", antes - sum(b - a for a, b in sres["manter"]))
         sres["erros"] = ecortes
+        if congelado and congelado.get("manter"):
+            sres["manter"] = [list(m) for m in congelado["manter"]]
+            log.info("  (congelado) cortes da edição aprovada: %.1fs mantidos", sum(b - a for a, b in sres["manter"]))
         if sres["rms_db"]:
             silence.plot(sres, words, work / "silencio.png", dur)
         rep["silencio"] = {k: v for k, v in sres.items() if k not in ("rms_db",)}

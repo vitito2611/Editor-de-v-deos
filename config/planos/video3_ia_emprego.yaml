@@ -2,6 +2,8 @@
 # Uso: python editar.py entrada/video3.mov --estilo referencia1 --plataforma reels --config config/planos/video3_ia_emprego.yaml
 # Cliente: tudo que foi combinado (legenda branca Rubik Bold + destaque Black Jack, troca de plano <= 2,6 s,
 # SFX nível v2 sem "plin", duas versões) e, NO LUGAR DE FOTOS, vídeos em motion (HyperFrames, estilo do exemplo).
+# edição aprovada congelada: o Mac (4K) usa a mesma transcrição e os mesmos cortes da versão aprovada
+congelado: config/planos/video3_ia_emprego_congelado.json
 transcricao:
   # "Zeal" = empresa do cliente (corrigido por ele no estúdio: "A Zeal não veio pra substituir o dentista")
   correcoes: {"Iá": "IA", "Ayá": "IA", "I": "Zeal", "Iar": "IA", "ar": "IA", "As": "A", "Nasil": "Na Zeal", "concordo100%": "concordo 100%"}
