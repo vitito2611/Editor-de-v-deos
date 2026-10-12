@@ -4,9 +4,10 @@ import {
   useCurrentFrame, useVideoConfig, random,
 } from "remotion";
 import { Elemento, Tema, useFontes, estiloDestaque, SCRIPT } from "./Elemento";
+import { FormatoJanela, FormatoMonitor, FormatoMultiplica, Janela } from "./Formatos";
 import {
   Alteracoes, AudioProj, COR_NEUTRA, Cor, dbLin, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, filtroCor, mapaCortes,
-  normalizar, Palavra, remapear, Seg,
+  normalizar, Palavra, remapear, Seg, caixaSegura, Zona, ZONA_REELS,
 } from "./ajustes";
 
 // A edição inteira como composição Remotion — o que se vê no Studio, no Player do estúdio da página
@@ -37,6 +38,9 @@ export type Camada = {
   texto?: string;                                    // callout
   motivo?: string;                                   // por que o editor pôs a camada (mostrado no estúdio)
   volume_db?: number;
+  formato?: "tela" | "janela" | "multiplica" | "monitor";   // como o motion se mistura com a filmagem
+  janela?: Janela | null;
+  t_base?: number;                                   // instante da base onde a camada começa (após cortes)
 };
 export type Projeto = {
   nome: string; W: number; H: number; fps: number; dur: number;
@@ -50,6 +54,7 @@ export type Projeto = {
   estilo_legendas?: Partial<EstiloLegendas>;
   alteracoes?: Partial<Alteracoes> | null;   // o que foi mudado no estúdio (aplicado aqui)
   sem_audio?: boolean;                       // render final: o áudio é mixado à parte (Python) e entra depois
+  zona_segura?: Zona | null;                 // zona segura da plataforma (Reels); null = sem restrição
 };
 
 type Efetivo = Omit<Projeto, "cor" | "estilo_legendas"> & {
@@ -75,7 +80,7 @@ export function efetivo(p: Projeto): Efetivo {
     if (c.id.startsWith("N")) { cam2.push(c); continue; }   // camadas novas já estão no tempo de saída
     const r = remapear(m, c.t, c.dur);
     if (!r) continue;
-    cam2.push({ ...c, t: r.t, dur: r.dur, desloc: Math.max(0, m.o2b(r.t) - c.t) });
+    cam2.push({ ...c, t: r.t, dur: r.dur, desloc: Math.max(0, m.o2b(r.t) - c.t), t_base: m.o2b(r.t) });
   }
   const leg2: Legenda[] = [];
   for (const l of legendas) {
@@ -93,6 +98,9 @@ export function efetivo(p: Projeto): Efetivo {
 const midia = (p: { raiz: string }, f: string) =>
   /^(https?:|blob:|data:|\.\/|\/)/.test(f) || p.raiz === "" ? f : staticFile(p.raiz + f);
 
+// zona segura: a do projeto (Reels) ou, sem informação, a do Reels em vídeos verticais
+const zonaDe = (p: { zona_segura?: Zona | null; W: number; H: number }) => (p.zona_segura === undefined ? (p.H > p.W ? ZONA_REELS : null) : p.zona_segura);
+
 const sombraTexto = (e: EstiloLegendas) =>
   e.sombra > 0 ? `0 ${3 * e.sombra / 0.55}px ${14 * e.sombra / 0.55}px rgba(0,0,0,${Math.min(0.9, e.sombra)}), 0 1px 3px rgba(0,0,0,${Math.min(0.9, e.sombra + 0.15)})` : "none";
 
@@ -105,10 +113,13 @@ const LegendaSimples: React.FC<{ b: Legenda; p: Efetivo }> = ({ b, p }) => {
   const ent = interpolate(frame, [0, 0.18 * fps], [0, 1], { extrapolateRight: "clamp" });
   const sai = interpolate(frame, [durationInFrames - 0.12 * fps, durationInFrames], [1, 0], { extrapolateLeft: "clamp" });
   const txt = b.palavras.map((w) => w.w).join(" ");
+  const fs = (b.tamanho ?? 46) * k * e.escala;
+  const linhasEst = Math.max(1, Math.ceil((txt.length * fs * 0.56) / (p.W * 0.6)));
+  const cx = caixaSegura(p.W, p.H, b.y + e.deslocY + (b.dy ?? 0), linhasEst * fs * 1.15, zonaDe(p), 0.84);
   return (
     <AbsoluteFill>
       <div style={{
-        position: "absolute", left: "8%", width: "84%", top: `${(b.y + e.deslocY + (b.dy ?? 0)) * 100}%`, textAlign: "center",
+        position: "absolute", left: `${cx.left * 100}%`, width: `${cx.width * 100}%`, top: `${cx.y * 100}%`, textAlign: "center",
         transform: `translateY(calc(-50% + ${(1 - ent) * 10 * k}px))`, opacity: Math.min(ent, sai),
         fontFamily: p.tema.fonte_legenda, fontWeight: 700, color: "#FFFFFF", fontSize: (b.tamanho ?? 46) * k * e.escala,
         lineHeight: 1.15, textShadow: sombraTexto(e),
@@ -133,10 +144,12 @@ const BlocoLegenda: React.FC<{ b: Legenda; p: Efetivo; estilo: string }> = ({ b,
   const linhas: number[][] = destaque
     ? [ws.map((_, i) => i).filter((i) => i < kwi), [kwi], ws.map((_, i) => i).filter((i) => i > kwi)].filter((l) => l.length)
     : [ws.map((_, i) => i)];
+  const altura = linhas.reduce((h, ln) => h + (destaque && ln.length === 1 && ln[0] === kwi ? base * 1.7 * 1.3 : base) * 1.12, 0);
+  const cx = caixaSegura(p.W, p.H, b.y + e.deslocY + (b.dy ?? 0), altura, zonaDe(p), 0.86);
   return (
     <AbsoluteFill>
       <div style={{
-        position: "absolute", left: "7%", width: "86%", top: `${(b.y + e.deslocY + (b.dy ?? 0)) * 100}%`, transform: "translateY(-50%)",
+        position: "absolute", left: `${cx.left * 100}%`, width: `${cx.width * 100}%`, top: `${cx.y * 100}%`, transform: "translateY(-50%)",
         display: "flex", flexDirection: "column", alignItems: "center", gap: 2 * k, textAlign: "center",
       }}>
         {linhas.map((ln, li) => (
@@ -258,7 +271,9 @@ const Faixas: React.FC<{ p: Efetivo }> = ({ p }) => {
       {trechos(a.voz, a.vol.voz, "Voz")}
       {a.trilha && a.trilha_ativa && trechos(a.trilha, a.vol.trilha, "Trilha")}
       {p.sfxs.filter((s) => !s.oculto).map((s) => (
-        <Sequence key={s.id} name={`SFX: ${s.nome}`} from={Math.max(0, Math.round(s.t * fps))} layout="none">
+        // cada SFX só fica montado enquanto toca (o Player tem um limite de tags de áudio simultâneas)
+        <Sequence key={s.id} name={`SFX: ${s.nome}`} from={Math.max(0, Math.round(s.t * fps))}
+          durationInFrames={Math.max(1, Math.ceil(((s.dur ?? 3) + Math.min(0, s.t)) * fps) + 1)} layout="none">
           <Audio src={midia(p, s.arquivo)} trimBefore={Math.max(0, Math.round(-s.t * fps))} volume={dbLin(s.ganho_db + a.vol.sfx + mg)} />
         </Sequence>
       ))}
@@ -305,7 +320,13 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
       {p.cor.vinheta > 0 && <AbsoluteFill style={{ pointerEvents: "none",
         background: `radial-gradient(ellipse 78% 70% at 50% 48%, transparent 50%, rgba(0,0,0,${0.75 * p.cor.vinheta}) 100%)` }} />}
       <Grao forca={p.cor.grao} />
-      {semCor.map((c) => seq(c, <>
+      {semCor.filter((c) => c.formato && c.formato !== "tela").map((c) => {
+        const b = { src: midia(p, p.base), inicio: c.t_base ?? c.t, filtro: idFiltro, fps };
+        return seq(c, c.formato === "multiplica" ? <FormatoMultiplica b={b} W={p.W} H={p.H} texto={c.texto} fonteTitulo={p.tema.fonte_titulo} />
+          : c.formato === "monitor" ? <FormatoMonitor b={b} W={p.W} H={p.H} texto={c.texto} dur={c.dur} />
+          : c.janela && c.arquivo ? <FormatoJanela motion={midia(p, c.arquivo)} janela={c.janela} b={b} W={p.W} H={p.H} /> : <Insercao c={c} p={p} />);
+      })}
+      {semCor.filter((c) => !c.formato || c.formato === "tela").map((c) => seq(c, <>
         {(c.tipo === "broll" || c.tipo === "foto" || (c.tipo === "card" && c.arquivo)) && <Insercao c={c} p={p} />}
         {c.tipo !== "broll" && c.tipo !== "foto" && <AbsoluteFill><Elemento tipo={c.tipo} {...el(c)} /></AbsoluteFill>}
       </>))}

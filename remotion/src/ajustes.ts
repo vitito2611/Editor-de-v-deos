@@ -27,7 +27,7 @@ export const COR_NEUTRA: Cor = {
   sombras: [0, 0, 0], luzes: [0, 0, 0], vinheta: 0, grao: 0,
 };
 
-export type Sfx = { id: string; t: number; arquivo: string; ganho_db: number; nome: string; oculto?: boolean; categoria?: string };
+export type Sfx = { id: string; t: number; arquivo: string; ganho_db: number; nome: string; oculto?: boolean; categoria?: string; dur?: number };
 export type AudioProj = {
   voz: string;                     // faixa de voz (montada, limpa)
   trilha?: string | null;          // trilha com ducking
@@ -149,4 +149,27 @@ export function filtroCor(c: Cor) {
     sat: sat.toFixed(4),
     mix: Math.min(1, Math.max(0, c.intensidade)),
   };
+}
+
+// ------------------------------------------------------------------------------------- zona segura (Reels 9:16)
+// A interface do Instagram cobre 420 px em cima e embaixo (de 1920) e a coluna de botões à direita
+// (~220 px, da altura ~1100 px para baixo). Frações da altura/largura; igual a legendas.zona_segura no YAML.
+export type Zona = { topo: number; base: number; direita: number; direita_desde: number; folga?: number };
+export const ZONA_REELS: Zona = { topo: 0.219, base: 0.219, direita: 0.204, direita_desde: 0.573, folga: 0.012 };
+
+/** Caixa de texto centrada em yFrac que respeita a zona segura: devolve o centro (fração) e a faixa horizontal. */
+export function caixaSegura(W: number, H: number, yFrac: number, alturaPx: number, zona: Zona | null | undefined,
+  largura = 0.86): { y: number; left: number; width: number } {
+  const padrao = { y: yFrac, left: (1 - largura) / 2, width: largura };
+  if (!zona || H <= W) return padrao;
+  const f = zona.folga ?? 0, meia = alturaPx / 2;
+  const yc = Math.min(Math.max(yFrac * H, (zona.topo + f) * H + meia), (1 - zona.base - f) * H - meia);
+  let left = padrao.left, width = padrao.width;
+  if (yc + meia > zona.direita_desde * H) {
+    // faixa dos botões: o texto encolhe (centralizado) para terminar antes da coluna da direita
+    const dir = 1 - zona.direita - f;
+    left = Math.max(left, 1 - dir);
+    width = Math.min(width, dir - left);
+  }
+  return { y: yc / H, left, width };
 }

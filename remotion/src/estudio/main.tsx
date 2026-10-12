@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client";
 import { Player, PlayerRef } from "@remotion/player";
 import { Edicao, efetivo, Projeto, Camada, Legenda } from "../Edicao";
-import { Alteracoes, COR_NEUTRA, Cor, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, mapaCortes, normalizar, SEM_ALTERACOES } from "../ajustes";
+import { Alteracoes, COR_NEUTRA, Cor, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, mapaCortes, normalizar, SEM_ALTERACOES, Zona, ZONA_REELS } from "../ajustes";
 
 type Look = Partial<Cor>;
 declare global {
@@ -52,6 +52,7 @@ const App: React.FC = () => {
   const [t, setT] = useState(0);
   const [tocando, setTocando] = useState(false);
   const [antesDepois, setAntesDepois] = useState(false);
+  const [zonas, setZonas] = useState(true);
   const [db, setDb] = useState<any>(null);
   const [salvo, setSalvo] = useState<string>(JSON.stringify(SEM_ALTERACOES));
   const [estado, setEstado] = useState("Conectando ao banco da página…");
@@ -128,7 +129,14 @@ const App: React.FC = () => {
   useEffect(() => {
     const p = player.current;
     if (!p) return;
-    const f = (e: { detail: { frame: number } }) => setT(e.detail.frame / fps);
+    // a agulha/tempo atualizam ~12x por segundo (re-render a cada quadro deixava a prévia pesada)
+    let ultimo = 0;
+    const f = (e: { detail: { frame: number } }) => {
+      const agora = performance.now();
+      if (agora - ultimo < 80) return;
+      ultimo = agora;
+      setT(e.detail.frame / fps);
+    };
     const play = () => setTocando(true), pause = () => setTocando(false);
     p.addEventListener("frameupdate", f); p.addEventListener("play", play); p.addEventListener("pause", pause);
     return () => { p.removeEventListener("frameupdate", f); p.removeEventListener("play", play); p.removeEventListener("pause", pause); };
@@ -241,9 +249,12 @@ const App: React.FC = () => {
 
       <div className="topo">
         <div className="monitor">
+          <div className="quadro">
           <Player ref={player} component={Edicao} inputProps={projPlayer} durationInFrames={Math.max(1, Math.round(ef.dur * fps))}
-            fps={fps} compositionWidth={base.W} compositionHeight={base.H} controls
+            fps={fps} compositionWidth={base.W} compositionHeight={base.H} controls numberOfSharedAudioTags={12}
             style={{ width: "100%", aspectRatio: `${base.W} / ${base.H}`, borderRadius: 10, overflow: "hidden" }} acknowledgeRemotionLicense />
+          {zonas && base.H > base.W && <ZonasReels z={{ ...ZONA_REELS, ...(base.zona_segura ?? {}) }} />}
+          </div>
           <div className="sob-monitor">
             <span className="tc">{fmt(t)} / {fmt(ef.dur)}</span>
             <button type="button" className={"fantasma pequeno" + (antesDepois ? " ativo" : "")}
@@ -251,6 +262,8 @@ const App: React.FC = () => {
               onKeyDown={(e) => { if (e.key === "Enter") setAntesDepois((v) => !v); }}>
               Segure: sem cor
             </button>
+            <button type="button" className={"fantasma pequeno" + (zonas ? " ativo" : "")} onClick={() => setZonas((v) => !v)}
+              title="Mostra onde a interface do Instagram cobre o vídeo">Zonas do Reels</button>
           </div>
         </div>
 
@@ -287,6 +300,15 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// zonas que a interface do Instagram cobre (só na prévia; não vai para o vídeo)
+const ZonasReels: React.FC<{ z: Zona }> = ({ z }) => (
+  <div className="zonas" aria-hidden>
+    <div className="z-topo" style={{ height: `${z.topo * 100}%` }}><span>Interface do Instagram</span></div>
+    <div className="z-base" style={{ height: `${z.base * 100}%` }}><span>Legenda do post e botões</span></div>
+    <div className="z-dir" style={{ top: `${z.direita_desde * 100}%`, bottom: `${z.base * 100}%`, width: `${z.direita * 100}%` }} />
+  </div>
+);
 
 // ===================================================================================== controles
 const Deslizante: React.FC<{ id: string; rotulo: string; v: number; min: number; max: number; passo: number; fmt: (v: number) => string;
@@ -538,7 +560,7 @@ const FichaCamada: React.FC<{ c: Camada; alt: Alteracoes; mudar: PProps["mudar"]
           <textarea id={"ctx-" + c.id} rows={2} value={rasc} onChange={(e) => setRasc(e.target.value)} onBlur={aplicarTexto} />
         </>)}
         {(c.tipo === "gancho" || c.tipo === "card") && (
-          <Deslizante id={"cy-" + c.id} rotulo="Altura" v={c.y ?? 0.47} min={0.1} max={0.9} passo={0.005} fmt={pct} padrao={0.47} aoMudar={(v) => mudarCamada(c.id, { y: v }, "cy" + c.id)} />
+          <Deslizante id={"cy-" + c.id} rotulo="Altura" v={c.y ?? 0.47} min={0.26} max={0.7} passo={0.005} fmt={pct} padrao={0.47} aoMudar={(v) => mudarCamada(c.id, { y: v }, "cy" + c.id)} />
         )}
         <div className="linha">
           <label className="num"><span>Início (s)</span>

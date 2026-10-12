@@ -106,6 +106,12 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
     camadas = []
     cards_rem = {round(j["t"], 2): j for j in rjobs if j["tipo"] == "card"}
     for k, e in enumerate(dyn_events):
+        if e["tipo"] == "efeito":   # efeito feito no Remotion com o próprio vídeo (formato multiplica/monitor)
+            camadas.append({"id": f"C{k:02d}", "tipo": "broll", "formato": e.get("efeito") or "multiplica",
+                            "t": round(e["t"], 3), "dur": round(e["dur"], 3), "corte_seco": True, "cor": False,
+                            "texto": e.get("texto"), "motivo": e.get("motivo", ""),
+                            "nome": f"Efeito: {e.get('efeito')} ({e.get('busca') or ''})"})
+            continue
         arq = Path(e["arquivo"])
         dst = d / "midia" / f"{k:02d}_{e['tipo']}.mp4"
         # B-roll/fotos/fundos de card recebem a mesma cor (LUT) que o vídeo base
@@ -124,6 +130,9 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
             c["nome"] = f"B-roll: {e.get('busca', '')}"
         elif e["tipo"] == "motion":
             c["nome"] = f"Motion: {e.get('busca') or 'HyperFrames'}"
+            if e.get("formato"):
+                c["formato"] = e["formato"]
+                c["janela"] = e.get("janela")
         elif e["tipo"] == "card":
             j = cards_rem.get(round(e["t"], 2))
             c["palavras"] = j["palavras"] if j else [{"w": t, "s": 0.12 * i} for i, t in enumerate((e.get("texto") or "").split())]
@@ -139,6 +148,7 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         "legendas": _legendas(words_out, g, faces, cfg, card_spans, estilos_log),
         "camadas": sorted(camadas, key=lambda c: c["t"]),
         "cor": cor_do_cfg(cfg) if cor_ao_vivo else {"intensidade": 0.0},
+        "zona_segura": (cfg["legendas"].get("zona_segura") if g.canvas_h > g.canvas_w else None),
         "audio": audio_proj,
     }
     pj = d / "projeto.json"

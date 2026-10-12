@@ -34,6 +34,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   (tamanho, altura, contorno, sombra, animação, caixa alta; cada legenda: texto, palavra de destaque, tempo, esconder),
   Áudio (voz/trilha/efeitos, liga/desliga e volume de cada SFX), Camadas (arrastar/redimensionar na linha do tempo,
   esconder, novos títulos/ganchos), Cortes (I/O). Salva sozinho no doc `edicao/atual` e sincroniza entre aparelhos.
+- Player do estúdio: cada SFX tem `durationInFrames` (antes ficavam montados até o fim → >5 tags de áudio e o
+  player PARAVA aos 14 s) e `numberOfSharedAudioTags={12}`; teste de reprodução com puppeteer em
+  `scratchpad/tocar*.cjs` (mídia VP9 porque o Chromium de teste não toca H.264).
 - Botão **"Renderizar vídeo final"** = `comments.sendToClaude` → chega aqui como comentário. Fluxo: ler
   `edicao/atual` (ArtifactData get), salvar JSON, `python -m editor.projeto aplicar <projeto.json> <alt.json>` e
   `python -m editor.projeto renderizar <projeto.json> output/<nome>_com_trilha.mp4` (gera com e sem trilha).
@@ -67,7 +70,21 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 ## Habilidades extras
 
-- **Motion padrão = modelo "premium"** (`hyperframes/modelos/motion_premium.html` + `editor/motion_premium.py`).
+- **Motion nível cinema = modelo "cinema3d"** (pedido do cliente no vídeo 3 v4: "nível cinema", MENOS TEXTO nos
+  motions — no máximo 1–3 palavras —, mais animação, "formatos bons"). HyperFrames + Three.js local
+  (`hyperframes/modelos/cinema3d.html` + cenas em `hyperframes/modelos/cenas3d/*.js`, montador
+  `editor/motion_cinema3d.py`): luz de recorte, reflexos de ambiente, névoa, bokeh, partículas, câmera sempre em
+  movimento, grão e vinheta. Cenas: `vidros` (cartões que se desintegram), `esteira` (documentos idênticos engolidos
+  pelo vórtice da IA), `relogio` (24 h → 1 h), `orbe` (IA como orbe de plasma), `celular3d` (celular 3D com tela viva
+  e cartão saltando). Uma cena por motion; `modelo: cinema3d` no roteiro.
+- **Formatos com a filmagem** (Remotion, `remotion/src/Formatos.tsx`): `formato: janela` (o cliente numa janela/
+  círculo animado por `janela.quadros` sobre o motion — usado no "somar" e no "assistente"), `tipo: efeito` com
+  `efeito: multiplica` (grade de clones ×N) ou `efeito: monitor` (o cliente dentro de um editor de vídeo). Usam a base
+  no mesmo instante da fala (sincronizado, editável no estúdio).
+- **Zona segura do Reels SEMPRE**: 420 px em cima e embaixo (de 1920) e a coluna de botões à direita (~220 px, da
+  altura ~1100 para baixo) — `legendas.zona_segura` (Python/ASS) e `caixaSegura` em `remotion/src/ajustes.ts`
+  (legendas encolhem/sobem; motions e formatos posicionados dentro). O estúdio mostra as zonas ("Zonas do Reels").
+- **Motion "premium"** (`hyperframes/modelos/motion_premium.html` + `editor/motion_premium.py`).
   Feedback do cliente: os motions anteriores estavam "de amador"; referência de MOVIMENTO = `referencias/motion2/ref.mp4`
   (Awake Investors: linha de luz que revela o texto, máscaras, celular 3D com interface real, gráfico que se desenha,
   caminho de etapas, botão com cursor, transições iris/listras/chicote/esfera). Identidade da **Zeal** (logo do GitHub

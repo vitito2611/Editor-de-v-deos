@@ -287,6 +287,14 @@ button.item { grid-template-columns: 56px minmax(0, 1fr); }
 .faixa-corte { position: absolute; top: 22px; bottom: 0; background: rgba(255, 122, 122, 0.18); border-left: 1px solid var(--perigo); border-right: 1px solid var(--perigo); pointer-events: none; }
 .agulha { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--acento); pointer-events: none; box-shadow: 0 0 6px var(--acento); }
 .dicas { font-size: 12px; color: var(--suave); margin: 0; }
+.quadro { position: relative; }
+.zonas { position: absolute; inset: 0; pointer-events: none; border-radius: 10px; overflow: hidden; }
+.zonas > div { position: absolute; left: 0; right: 0; background: rgba(255, 90, 90, 0.16); }
+.zonas .z-topo { top: 0; border-bottom: 1px dashed rgba(255, 120, 120, 0.8); }
+.zonas .z-base { bottom: 0; border-top: 1px dashed rgba(255, 120, 120, 0.8); }
+.zonas .z-dir { left: auto; right: 0; border-left: 1px dashed rgba(255, 120, 120, 0.8); }
+.zonas span { position: absolute; left: 8px; font-size: 10px; color: #ffd6d6; letter-spacing: 0.04em; }
+.zonas .z-topo span { bottom: 4px; } .zonas .z-base span { top: 4px; }
 @media (max-width: 820px) {
   .topo { grid-template-columns: minmax(0, 1fr); }
   .monitor { max-width: 320px; margin: 0 auto; width: 100%; }

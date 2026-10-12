@@ -149,7 +149,7 @@ def salvar_faixas(voice: np.ndarray, music: np.ndarray | None, sfx_events: list[
         arq = pasta / f"sfx_{k:02d}.wav"
         save_wav(arq, np.asarray(ev["audio"], dtype=np.float32), sr)
         sfx.append({"id": f"S{k:02d}", "t": round(float(ev["t"]), 3), "arquivo": arq.name,
-                    "ganho_db": round(float(ev["ganho_db"]), 2),
+                    "ganho_db": round(float(ev["ganho_db"]), 2), "dur": round(len(ev["audio"]) / sr, 3),
                     "nome": " · ".join(x for x in (ev.get("categoria"), ev.get("motivo")) if x) or f"efeito {k + 1}",
                     "categoria": ev.get("categoria", "")})
     return {"voz": "voz.wav", "trilha": "trilha.wav" if music is not None else None, "sfx": sfx}

@@ -100,7 +100,8 @@ def plan(words_out, frases_out, cfg, total) -> list[dict]:
                       "busca_en": item.get("busca_en"), "escolha": item.get("escolha", 0),
                       "texto": item.get("texto"), "prio": 5, "dur": item.get("dur"), "motivo": "plano manual",
                       "arquivo_local": item.get("arquivo"), "credito": item.get("credito"),
-                      "roteiro": item.get("roteiro")})
+                      "roteiro": item.get("roteiro"), "formato": item.get("formato"), "janela": item.get("janela"),
+                      "efeito": item.get("efeito")})
     # 2) cards de frases de impacto
     pmin, pmax = dc["card_palavras"]
     for f in frases_out:
@@ -217,6 +218,10 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
                 ok = True
                 if cred:
                     creditos.append(dict(cred, t=ev["t"], busca=ev["busca"]))
+        elif ev["tipo"] == "efeito":
+            # efeito com o próprio vídeo (multiplica, monitor…): desenhado no Remotion, sem mídia
+            final.append(dict(ev, arquivo=None, corte_seco=True))
+            continue
         elif ev["tipo"] == "motion" and ev.get("roteiro"):
             # motion em HyperFrames (modelo do exemplo do cliente) no tamanho do conteúdo
             from . import motion_hf
@@ -243,7 +248,7 @@ def fetch_and_render(events, cfg, g, montado: Path, work: Path) -> tuple[list[di
         # motion entra em corte seco: a animação de entrada/saída já está no próprio motion
         final.append(dict(ev, arquivo=dst, corte_seco=True) if ev["tipo"] == "motion" else dict(ev, arquivo=dst))
     log.info("  dinamismo: %d sobreposições renderizadas (%s)", len(final),
-             {k: sum(e["tipo"] == k for e in final) for k in ("video", "foto", "card", "motion")})
+             {k: sum(e["tipo"] == k for e in final) for k in ("video", "foto", "card", "motion", "efeito")})
     return final, creditos
 
 

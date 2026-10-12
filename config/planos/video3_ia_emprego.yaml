@@ -26,38 +26,58 @@ dinamismo:
   fotos_entidades: false
   cards_max: 1
   plano:
-    # motions no modelo "premium" (pedido do cliente: nível profissional como o exemplo da Awake — movimento,
-    # não paleta; identidade da Zeal: roxo/ciano; ilustrações e interface, não só letras)
+    # v4 (pedido do cliente: "nível cinema", menos texto, mais animação, formatos bons, zona segura do Reels):
+    # cenas 3D (Three.js, modelo cinema3d) + formatos que misturam a filmagem com a animação (Remotion).
     - contem: "Alguns empregos"
       tipo: motion
-      roteiro: {titulo: empregos, cenas: [{tipo: cards, rotulo: "O que muda", titulo: "Alguns empregos|vão *sumir.*", ficam: [1, 4, 8], dur: 2.6}]}
+      roteiro: {titulo: empregos, modelo: cinema3d, cenas: [{tipo: vidros, texto: "Alguns vão|*sumir.*", ficam: [1, 3, 7], dur: 2.6}]}
     - contem: "repetição"
       tipo: motion
-      roteiro: {titulo: repeticao, cenas: [{tipo: ciclo, rotulo: "Vai ser automatizado", titulo: "Repetição.|Tarefa *mecânica.*", tarefas: [Copiar, Colar, Repetir], dur: 2.8}]}
+      roteiro: {titulo: repeticao, modelo: cinema3d, cenas: [{tipo: esteira, texto: "Repetição.", dur: 2.8}]}
     - contem: "ele multiplica"
-      tipo: motion
-      roteiro: {titulo: multiplica, cenas: [{tipo: numero, rotulo: "Quem usa IA", valor: 10, prefixo: "×", legenda: "Ele *multiplica.*", dur: 2.4}]}
+      tipo: efeito
+      efeito: multiplica          # o cliente vira uma grade de clones (×10)
+      texto: "×10"
+      dur: 2.4
     - contem: "em uma hora"
       tipo: motion
-      roteiro: {titulo: hora, cenas: [{tipo: comparacao, rotulo: "Produtividade", titulo: "Em *1 hora.*", antes: "Antes", antes_valor: "o dia todo", depois: "Com IA", depois_valor: "1 h", dur: 2.8}]}
+      roteiro: {titulo: hora, modelo: cinema3d, cenas: [{tipo: relogio, texto: "*1 hora.*", dur: 2.8}]}
     - contem: "veio para somar"
       tipo: motion
-      roteiro: {titulo: somar, cenas: [{tipo: soma, titulo: "A IA veio|para *somar.*", a: "Você", b: "IA", resultado: "+ resultado", dur: 2.6}]}
+      formato: janela             # o rosto do cliente num círculo encontra o orbe da IA e os dois se fundem
+      janela:
+        foco: [0.5, 0.33]
+        quadros:
+          - {t: 0.0, x: 0.5, y: 0.5, w: 1.0, h: 1.0, r: 0.0}
+          - {t: 0.45, x: 0.27, y: 0.48, w: 0.36, h: 0.2025, r: 0.5}
+          - {t: 0.85, x: 0.29, y: 0.48, w: 0.36, h: 0.2025, r: 0.5}
+          - {t: 1.2, x: 0.5, y: 0.48, w: 0.2, h: 0.1125, r: 0.5, o: 0.9}
+          - {t: 1.3, x: 0.5, y: 0.48, w: 0.14, h: 0.079, r: 0.5, o: 0.0}
+      roteiro: {titulo: somar, modelo: cinema3d, cenas: [{tipo: orbe, texto: "*somar.*", junta: 1.2, orbe_x: 0.62, dur: 2.6}]}
     - contem: "um assistente"
       tipo: motion
+      formato: janela             # o cliente fica numa janela no alto à direita; o celular 3D trabalha à esquerda
+      janela:
+        foco: [0.5, 0.32]
+        quadros:
+          - {t: 0.0, x: 0.5, y: 0.5, w: 1.0, h: 1.0, r: 0.0}
+          - {t: 0.5, x: 0.64, y: 0.37, w: 0.42, h: 0.27, r: 0.12}
       roteiro:
         titulo: assistente
+        modelo: cinema3d
         cenas:
-          - tipo: celular
-            sem_chamada: true
-            rotulo: "Zeal"
-            titulo: "Assistente de IA|*por voz.*"
+          - tipo: celular3d
+            cel_x: 0.3
+            cel_y: 0.57
+            cel_escala: 0.85
             app: "Zeal IA"
             falas: [[pac, "Como explico o implante pro paciente?"], [ia, "Mostre o antes e depois e divida em 3 etapas."]]
             cartao: {titulo: "Plano de tratamento", linhas: [[Diagnóstico, "explicado"], [Proposta, "3 etapas"]]}
-            selos: ["Paciente entendeu", "Tratamento fechado"]
+            cartao_t: 2.3
             dur: 4.6
     - contem: "totalmente editado"
-      tipo: motion
-      roteiro: {titulo: editado, cenas: [{tipo: timeline, titulo: "Editado|*100% por IA.*", chip: "Edição automática", dur: 2.4}]}
+      tipo: efeito
+      efeito: monitor             # o cliente encolhe para dentro de um editor de vídeo que se monta sozinho
+      texto: "100% IA"
+      dur: 2.4
 cor: {look: azul_cinema}               # cliente: azul cinematográfico, não o tom quente

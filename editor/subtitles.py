@@ -143,6 +143,21 @@ class Placer:
         return None
 
     def anchor(self, pos: str, t: float, size: float, nchars: int, nlines: int = 1) -> tuple[float, float]:
+        """Posição da legenda, sempre dentro da zona segura do Reels (nada sob a interface do Instagram)."""
+        x, y = self._anchor(pos, t, size, nchars, nlines)
+        return x, self.y_seguro(y, size, nlines)
+
+    def y_seguro(self, y: float, size: float, nlines: int = 1) -> float:
+        z = self.lc.get("zona_segura")
+        if not z or not self.vertical:
+            return y
+        H = self.g.canvas_h
+        meia = size * max(1, nlines) * 0.62
+        topo = H * (z["topo"] + z.get("folga", 0)) + meia
+        base = H * (1 - z["base"] - z.get("folga", 0)) - meia
+        return min(max(y, topo), base)
+
+    def _anchor(self, pos: str, t: float, size: float, nchars: int, nlines: int = 1) -> tuple[float, float]:
         g = self.g
         W, H = g.canvas_w, g.canvas_h
         cx0, cy0, cw, ch = g.content_x, g.content_y, g.content_w, g.content_h
@@ -186,7 +201,7 @@ class Placer:
             if self._overlap(p, size, nchars, nlines, f):
                 for alt in ("inferior", "superior", "centro"):
                     if alt != pos:
-                        q = self.anchor(alt, -1, size, nchars, nlines)
+                        q = self._anchor(alt, -1, size, nchars, nlines)
                         if not self._overlap(q, size, nchars, nlines, f):
                             return q
         return p

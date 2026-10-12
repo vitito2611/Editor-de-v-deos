@@ -421,7 +421,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
                 card_spans = dinamismo.ass_cards(doc, dyn_events, words_out, g, cfg,
                                                  jobs=jobs if "card" in externos else None)
                 # durante o motion o texto já está na tela: a legenda falada não se repete por cima
-                card_spans = card_spans + [(e["t"], e["t"] + e["dur"]) for e in dyn_events if e["tipo"] == "motion"]
+                card_spans = card_spans + [(e["t"], e["t"] + e["dur"]) for e in dyn_events if e["tipo"] in ("motion", "efeito")]
             rep["legendas"] = subtitles.build(words_out, frases_out, g, faces, cfg, doc, pular=card_spans)
             rep["motion"] = motion.build(doc, g, nres, words_out, frases_out, faces, cfg, total, externos, jobs)
             return doc, jobs, card_spans
@@ -448,7 +448,7 @@ def run(inputs: list[Path], estilo: str | None, plataforma: str, config: Path | 
             if t is not None:
                 broll_out.append({"t": t, "dur": min(cfg["motion"]["broll"]["duracao_s"], total - t), "arquivo": b["arquivo"]})
         broll_out += [{"t": e["t"], "dur": e["dur"], "arquivo": e["arquivo"], "corte_seco": e.get("corte_seco", False)}
-                      for e in dyn_events]
+                      for e in dyn_events if e.get("arquivo")]
         rep["broll"] = [{"t": round(b["t"], 2), "arquivo": str(b["arquivo"])} for b in broll_out]
     # ------------------------------------------------------------------ composição final
     with timer.etapa("Composição final e exportação"):
