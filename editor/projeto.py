@@ -193,10 +193,16 @@ def renderizar(pj: Path, saida: Path, crf: int = 18, sem_trilha: Path | None = N
     com_faixas = bool(proj.get("audio"))
     alvo = Path(saida).resolve()
     video = alvo.with_name(alvo.stem + "_video.mp4") if com_faixas else alvo
+    # cor aplicada antes pelo FFmpeg (mesma conta do filtro ao vivo) → o Remotion pula o filtro SVG (~2× mais rápido)
+    extra = {}
+    base_cor = _base_com_cor(pj, proj)
+    if base_cor:
+        extra = {"base": base_cor.name, "cor_pronta": True}
+        log.info("  cor aplicada pelo FFmpeg (%s) — render sem o filtro ao vivo", base_cor.name)
     props = pj
-    if com_faixas:
+    if com_faixas or extra:
         props = pj.with_name("projeto_render.json")
-        props.write_text(json.dumps(dict(proj, sem_audio=True), ensure_ascii=False), encoding="utf-8")
+        props.write_text(json.dumps(dict(proj, sem_audio=com_faixas, **extra), ensure_ascii=False), encoding="utf-8")
     r = subprocess.run(["node", str(DIR / "render-edicao.mjs"), str(props), str(video), str(crf)],
                        cwd=DIR, capture_output=True, text=True)
     if r.returncode != 0 or not video.exists():
@@ -212,6 +218,75 @@ def renderizar(pj: Path, saida: Path, crf: int = 18, sem_trilha: Path | None = N
                    "-b:a", "256k", "-ar", "48000", "-movflags", "+faststart", "-shortest", str(Path(destino).resolve()))
         video.unlink(missing_ok=True)
     return True
+
+
+COR_NEUTRA = {"intensidade": 1, "exposicao": 0, "contraste": 0, "saturacao": 1, "vibrance": 0, "temperatura": 0, "tint": 0,
+              "pretos": 0, "sombras": [0, 0, 0], "luzes": [0, 0, 0], "vinheta": 0, "grao": 0}
+
+
+def cor_efetiva(proj: dict) -> dict:
+    """Mesma fusão de Edicao.tsx::efetivo: COR_NEUTRA ← cor do projeto ← cor mudada no estúdio."""
+    return {**COR_NEUTRA, **(proj.get("cor") or {}), **((proj.get("alteracoes") or {}).get("cor") or {})}
+
+
+def cube_da_cor(c: dict, destino: Path, n: int = 33) -> Path:
+    """LUT 3D (.cube) com a MESMA conta do filtro SVG ao vivo (remotion/src/ajustes.ts::filtroCor + FiltroCor):
+    balanço/exposição → curva S + pretos (tabela 33) → luminância → split-toning (tabela 33) → soma aritmética →
+    saturação (matriz SVG) → mistura pela intensidade. Assim o render final aplica a cor no FFmpeg (rápido) e o
+    Remotion pula o filtro (o filtro SVG em software deixava o render ~2× mais lento)."""
+    import numpy as np
+    ex = 2.0 ** c["exposicao"]
+    wb = np.array([ex * (1 + c["temperatura"]), ex * (1 + c["tint"]), ex * (1 - c["temperatura"])])
+    k = c["contraste"] * 2.2
+
+    def curva(x):
+        y = (1 - k) * x + k * (x * x * (3 - 2 * x)) if k >= 0 else x
+        return c["pretos"] + y * (1 - c["pretos"]) if c["pretos"] >= 0 else np.clip((y + c["pretos"]) / (1 + c["pretos"]), 0, 1)
+
+    N = 33
+    xs = np.linspace(0, 1, N)
+    tab = lambda f: np.round(np.clip(f(xs), 0, 1), 4)
+    t_curva = tab(curva)
+    t_split = [tab(lambda L, i=i: 0.5 + c["sombras"][i] * (1 - L) ** 2 + c["luzes"][i] * L * L) for i in range(3)]
+    tabela = lambda t, v: np.interp(v, xs, t)          # feFunc type=table = interpolação linear por trechos
+    sat = max(0.0, c["saturacao"] * (1 + c["vibrance"] * 0.5))
+    S = np.array([[0.213 + 0.787 * sat, 0.715 - 0.715 * sat, 0.072 - 0.072 * sat],
+                  [0.213 - 0.213 * sat, 0.715 + 0.285 * sat, 0.072 - 0.072 * sat],
+                  [0.213 - 0.213 * sat, 0.715 - 0.715 * sat, 0.072 + 0.928 * sat]])
+    mix = min(1.0, max(0.0, c["intensidade"]))
+    g = np.linspace(0, 1, n)
+    b_, g_, r_ = np.meshgrid(g, g, g, indexing="ij")            # ordem do .cube: R varia mais rápido
+    src = np.stack([r_.ravel(), g_.ravel(), b_.ravel()], axis=1)
+    w = np.clip(src * wb, 0, 1)
+    cv = np.stack([tabela(t_curva, w[:, i]) for i in range(3)], axis=1)
+    lum = np.clip(cv @ np.array([0.2126, 0.7152, 0.0722]), 0, 1)
+    sp = np.stack([tabela(t_split[i], lum) for i in range(3)], axis=1)
+    ton = np.clip(cv + sp - 0.5, 0, 1)
+    look = np.clip(ton @ S.T, 0, 1)
+    out = np.clip(mix * look + (1 - mix) * src, 0, 1)
+    destino.write_text(f"LUT_3D_SIZE {n}\n" + "\n".join(f"{r:.5f} {g2:.5f} {b:.5f}" for r, g2, b in out) + "\n", encoding="utf-8")
+    return destino
+
+
+def _base_com_cor(pj: Path, proj: dict) -> Path | None:
+    """Gera base_cor.mp4 (cor aplicada pelo FFmpeg) quando dá para pular o filtro ao vivo: só a base recebe a cor
+    (inserções com cor própria — B-roll/fotos — ainda precisam do filtro SVG). Reaproveita se nada mudou."""
+    camadas = proj.get("camadas") or []
+    if any(c.get("cor", True) and c.get("tipo") in ("broll", "foto") and c.get("arquivo") and not c.get("formato") for c in camadas):
+        return None
+    c = cor_efetiva(proj)
+    import hashlib
+    chave = hashlib.md5(json.dumps(c, sort_keys=True).encode()).hexdigest()[:10]
+    pasta = pj.parent
+    dst = pasta / f"base_cor_{chave}.mp4"
+    if not dst.exists():
+        for velho in pasta.glob("base_cor_*.mp4"):
+            velho.unlink()
+        cube = cube_da_cor(c, pasta / f"cor_{chave}.cube")
+        ffmpeg("-i", str(pasta / proj["base"]), "-vf", f"lut3d=file={cube}:interp=tetrahedral", "-an", "-c:v", "libx264",
+               "-crf", "12", "-preset", "veryfast", "-g", "15", "-pix_fmt", "yuv420p", str(dst))
+        cube.unlink(missing_ok=True)
+    return dst
 
 
 def _cfg_padrao() -> dict:

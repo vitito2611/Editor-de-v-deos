@@ -55,6 +55,7 @@ export type Projeto = {
   alteracoes?: Partial<Alteracoes> | null;   // o que foi mudado no estúdio (aplicado aqui)
   sem_audio?: boolean;                       // render final: o áudio é mixado à parte (Python) e entra depois
   zona_segura?: Zona | null;                 // zona segura da plataforma (Reels); null = sem restrição
+  cor_pronta?: boolean;                      // a base já vem com a cor aplicada (FFmpeg/LUT): pula o filtro SVG no render final
 };
 
 type Efetivo = Omit<Projeto, "cor" | "estilo_legendas"> & {
@@ -307,8 +308,8 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
   const e = p.estilo_legendas;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
-      <FiltroCor id={idFiltro} c={p.cor} />
-      <AbsoluteFill style={{ filter: `url(#${idFiltro})` }}>
+      {!p.cor_pronta && <FiltroCor id={idFiltro} c={p.cor} />}
+      <AbsoluteFill style={{ filter: p.cor_pronta ? undefined : `url(#${idFiltro})` }}>
         {p.segs.map((s, i) => (
           <Sequence key={"b" + i} name={`Vídeo ${i + 1}`} from={Math.round(s.o * fps)}
             durationInFrames={Math.max(1, Math.round((s.b - s.a) * fps))} layout="none">
