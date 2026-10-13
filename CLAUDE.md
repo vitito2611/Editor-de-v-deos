@@ -162,6 +162,13 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   segmentos veryfast CRF 12 e reaproveitados se nada mudou; final preset fast. Vídeo 2 (51 s, 4K60 HDR):
   ~37 min → ~17 min na 1ª vez; ajustes de camadas ~3 min. Num Mac (Apple Silicon) é bem mais rápido.
 
+- **Render final ~2× mais rápido (out/2026)**: a cor do estúdio vira uma LUT 3D gerada pela MESMA conta do filtro SVG
+  (`projeto.cube_da_cor`, diferença média 1,7/255) e é aplicada na base pelo FFmpeg (`base_cor_<hash>.mp4`, em cache);
+  o Remotion recebe `cor_pronta: true` e pula o filtro (que em software dobrava o tempo). Vídeo 4 (118 s): ~18 → ~10 min.
+  Só não vale quando há B-roll/foto com cor (aí o filtro ao vivo continua). `render-edicao.mjs` empacota só as fontes +
+  o projeto atual e apaga o bundle no fim (antes copiava todos os projetos para /tmp e nunca apagava → disco cheio).
+- Entrega: o vídeo é codificado UMA vez; a versão sem trilha só troca o áudio (`entrega_web.codificar`).
+
 ## Ambiente
 
 - `./setup.sh` reinstala tudo; o modelo de transcrição (Parakeet) baixa do GitHub; HuggingFace é bloqueado.

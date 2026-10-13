@@ -216,6 +216,8 @@ def renderizar(pj: Path, saida: Path, crf: int = 18, sem_trilha: Path | None = N
             wav = mixar(pj, alvo.with_name(alvo.stem + ("_mix.wav" if com_trilha else "_mix_sem.wav")), cfg, com_trilha)
             ffmpeg("-i", str(video), "-i", str(wav), "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac",
                    "-b:a", "256k", "-ar", "48000", "-movflags", "+faststart", "-shortest", str(Path(destino).resolve()))
+            for w in (wav, wav.with_name(wav.stem + "_pre.wav")):   # mixagens intermediárias (~80 MB cada par)
+                w.unlink(missing_ok=True)
         video.unlink(missing_ok=True)
     return True
 
