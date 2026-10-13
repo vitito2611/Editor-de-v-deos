@@ -8,7 +8,7 @@ function montarCena(ctx) {
     brilho, pontos, estrelas, noPlano, px, PONTO } = ctx;
   const c = D.cena || {};
   const T = (x) => x + PRE;
-  const dur = D.dur, SAI = T(c.sai ?? dur - 0.45);
+  const dur = D.dur, SAI = T(c.sai ?? dur + 1);   // sem fade no fim: corte seco de volta para o orador
   const de = c.de ?? 0, ate = c.numero ?? 100, desce = ate < de;
   const tC0 = T(c.conta_t ?? 0.25), tC1 = T(c.conta_ate ?? Math.min(dur - 0.8, 1.7));
   const objeto = c.objeto || "galaxia";

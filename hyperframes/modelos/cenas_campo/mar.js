@@ -5,7 +5,7 @@ function montarCena(ctx) {
     brilho, pontos, estrelas, noPlano, px } = ctx;
   const c = D.cena || {};
   const T = (x) => x + PRE;
-  const dur = D.dur, SAI = T(c.sai ?? dur - 0.45);
+  const dur = D.dur, SAI = T(c.sai ?? dur + 1);   // sem fade no fim: corte seco de volta para o orador
 
   const est = estrelas(900); scene.add(est);
   const NX = 190, NZ = 130, pos = new Float32Array(NX * NZ * 3), cor = new Float32Array(NX * NZ * 3);

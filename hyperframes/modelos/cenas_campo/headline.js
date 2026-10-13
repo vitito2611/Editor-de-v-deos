@@ -63,10 +63,10 @@ function montarCena(ctx) {
   const setNum = contador(num, String(c.numero ?? 10).length, c.unidade ?? "anos");
   const scr = el("script", "", 66, 838, { fontSize: px(c.tam_script ?? 86) });
   scr.textContent = c.script || "na odontologia.";
-  const ano0 = el("mono", String(c.ano_ini ?? 2026), 60, 958, { fontSize: px(16) });
-  const ano1 = el("mono", String(c.ano_fim ?? 2036), 900, 958, { fontSize: px(16), width: px(120), textAlign: "right" });
+  const ano0 = el("mono", String(c.ano_ini ?? 2026), 60, 940, { fontSize: px(16) });
+  const ano1 = el("mono", String(c.ano_fim ?? 2036), 900, 940, { fontSize: px(16), width: px(120), textAlign: "right" });
   const anoV = el("mono ac", "", 60, 958, { fontSize: px(16) });
-  const bar = barra(60, 990, 960);
+  const bar = barra(60, 972, 960);
   // cantos de enquadramento da janela do orador (mesmo retângulo dos quadros da janela no plano)
   const jw = c.janela_px || [108, 1010, 864, 640];
   const cnt = cantos(jw[0] - 14, jw[1] - 14, jw[2] + 28, jw[3] + 28, 30);
@@ -115,7 +115,7 @@ function montarCena(ctx) {
     const kb = fase(t, T(0.45), T(1.65), E.out5);
     bar(kb, fase(t, T(0.3), T(0.6)) * (1 - s));
     anoV.textContent = String(Math.round(lerp(ini, fim, kb)));
-    anoV.style.left = px(ctx.X0 + 60 + kb * 960 - 22); anoV.style.top = px(1004);
+    anoV.style.left = px(ctx.X0 + 60 + kb * 960 - 22); anoV.style.top = px(940);
     anoV.style.opacity = fase(t, T(0.45), T(0.7)) * (1 - s);
     ano0.style.opacity = 0.9 * fase(t, T(0.3), T(0.6)) * (1 - s) * (1 - fase(kb, 0, 0.08, E.lin));
     ano1.style.opacity = 0.9 * fase(t, T(0.3), T(0.6)) * (1 - s) * (1 - fase(kb, 0.86, 0.95, E.lin));

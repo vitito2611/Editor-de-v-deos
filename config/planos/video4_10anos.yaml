@@ -73,3 +73,6 @@ dinamismo:
       roteiro: {titulo: mar, modelo: campo, cenas: [{tipo: mar, titulo: "mar azul.", script: "para quem souber aproveitar.",
                 sub: "marketing · gestão · IA", dur: 3.2}]}
 cor: {look: azul_cinema}
+estudio:
+  # sala clara + moletom branco: look azul mais leve e legenda com contorno/sombra fortes (branco sobre branco)
+  alteracoes: config/planos/video4_10anos_estudio.json

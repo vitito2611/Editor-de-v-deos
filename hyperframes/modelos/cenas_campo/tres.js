@@ -6,7 +6,7 @@ function montarCena(ctx) {
     brilho, pontos, estrelas, noPlano, px } = ctx;
   const c = D.cena || {};
   const T = (x) => x + PRE;
-  const dur = D.dur, SAI = T(c.sai ?? dur - 0.45);
+  const dur = D.dur, SAI = T(c.sai ?? dur + 1);   // sem fade no fim: corte seco de volta para o orador
   const itens = c.itens || [{ nome: "Marketing", obj: "ondas", t: 1.0 }, { nome: "Gestão", obj: "estrutura", t: 1.8 }, { nome: "Inteligência artificial", obj: "rede", t: 2.5 }];
   const Y = c.linhas_y || [985, 1165, 1345];
 
