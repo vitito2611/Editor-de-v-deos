@@ -25,6 +25,11 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - Vídeo 4 ("1013", 10 anos na odontologia, 118 s): plano `config/planos/video4_10anos.yaml` (modelo campo + headline),
   entregue pelo chat em 1080x1920 2-pass ~29 MB (1,8 Mbps). Disco da nuvem enche fácil: limpar `remotion/public/projetos`
   e `hyperframes/projetos` antigos antes de renderizar (com o disco cheio o Remotion falha e cai na composição FFmpeg).
+- **Entrega SEM o limite de 30 MB (pedido do cliente: a compressão do chat estragava a qualidade)**: página privada
+  (Artifact, `capabilities: {downloads: true}`) com o vídeo 1080x1920 em ~6,3 Mbps 2-pass dividido em partes de 14 MB;
+  a página junta as partes e salva UM .mp4 idêntico (conferido por sha256). `python -m editor.entrega_web
+  entrega/<video>/web "Título" com.mp4 sem.mp4` → publicar `index.html` + `manifesto.json` + `partes/*` em lotes de
+  ≤ 64 MB (limite por publicação; 15 MB por arquivo; 256 MB por versão). Vídeo 4: https://claude.ai/artifact/DrgPFupa5guSmYi8mDntdJ
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).

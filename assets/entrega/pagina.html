@@ -1,0 +1,111 @@
+<title>__TITULO__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  /* Layout: uma coluna estreita; cada versão é um cartão com prévia vertical (9:16) e as ações embaixo. */
+  :root {
+    --bg: #f3f2f6; --fg: #17141f; --suave: #6b6578; --linha: #dedbe6; --cartao: #ffffff;
+    --marca: #5d2e8c; --acento: #1aa9b3; --acento-claro: #d8f6f8;
+    --f-tit: "Rubik", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #121019; --fg: #f1eef7; --suave: #a59fb3; --linha: #2c2838; --cartao: #1b1824;
+    --marca: #b48ae0; --acento: #3fd6df; --acento-claro: #123d40; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #121019; --fg: #f1eef7; --suave: #a59fb3; --linha: #2c2838; --cartao: #1b1824;
+    --marca: #b48ae0; --acento: #3fd6df; --acento-claro: #123d40; color-scheme: dark; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--f-tit); padding-inline: 16px; padding-block: 28px 40px; }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 22px; }
+  .rot { font-family: var(--f-mono); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--suave);
+    display: flex; align-items: center; gap: 10px; }
+  .rot i { width: 8px; height: 8px; border-radius: 50%; background: var(--acento); }
+  h1 { font-weight: 900; font-size: clamp(30px, 6vw, 46px); letter-spacing: -0.03em; line-height: 1.02; margin: 6px 0 4px; text-wrap: balance; }
+  .lead { color: var(--suave); font-size: 15px; max-width: 60ch; line-height: 1.5; margin: 0; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 18px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+  .tela { position: relative; aspect-ratio: 9 / 16; max-width: 100%; border-radius: 12px; overflow: hidden; background: #0d0b12;
+    display: grid; place-items: center; color: #b8b3c6; font-family: var(--f-mono); font-size: 12px; text-align: center; padding: 16px; }
+  .tela video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .cab b { font-size: 20px; font-weight: 700; }
+  .meta { font-family: var(--f-mono); font-size: 12px; color: var(--suave); font-variant-numeric: tabular-nums; }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+  button { font: 700 15px var(--f-tit); border-radius: 12px; padding: 12px 16px; cursor: pointer; border: 1px solid var(--linha);
+    background: transparent; color: var(--fg); flex: 1 1 auto; }
+  button.prim { background: var(--marca); color: #fff; border-color: transparent; }
+  button:disabled { opacity: .55; cursor: progress; }
+  button:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+  .barra { height: 6px; border-radius: 6px; background: var(--linha); overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; background: var(--acento); transition: width .2s linear; }
+  .estado { font-size: 13px; color: var(--suave); min-height: 1.3em; margin: 0; }
+  .nota { font-size: 13px; color: var(--suave); border-top: 1px solid var(--linha); padding-top: 14px; line-height: 1.5; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .barra i { transition: none; } }
+</style>
+<main>
+  <header>
+    <div class="rot"><i></i>Entrega em qualidade alta</div>
+    <h1 id="titulo">__TITULO__</h1>
+    <p class="lead">Vídeo final em 1080×1920, sem a compressão do chat. Toque em <b>Baixar</b>: a página junta as partes e salva um único arquivo .mp4 no seu aparelho.</p>
+  </header>
+  <section class="grade" id="grade"></section>
+  <p class="nota">O arquivo baixado é idêntico ao exportado pelo editor (H.264 ~6 Mbps, áudio AAC 192 kbps). Pronto para postar no Reels.</p>
+</main>
+<script>
+  const M = __MANIFESTO__;
+  const mb = (b) => (b / 1048576).toFixed(0) + " MB";
+  const blobs = {};
+  async function montar(k, barra, estado) {
+    if (blobs[k]) return blobs[k];
+    const v = M.videos[k], pedacos = [];
+    let feito = 0;
+    for (const p of v.partes) {
+      const r = await fetch(p);
+      if (!r.ok) throw new Error("parte " + p + " não carregou (" + r.status + ")");
+      const b = await r.blob();
+      pedacos.push(b); feito += b.size;
+      barra.style.width = Math.round((feito / v.bytes) * 100) + "%";
+      estado.textContent = "Carregando… " + mb(feito) + " de " + mb(v.bytes);
+    }
+    blobs[k] = new Blob(pedacos, { type: "video/mp4" });
+    return blobs[k];
+  }
+  M.videos.forEach((v, k) => {
+    const c = document.createElement("article"); c.className = "cartao";
+    c.innerHTML = `<div class="tela" id="tela${k}">Prévia aparece aqui depois de carregar</div>
+      <div class="cab"><b>${v.rotulo}</b><span class="meta">${mb(v.bytes)} · ${v.partes.length} partes</span></div>
+      <div class="barra"><i></i></div><p class="estado" aria-live="polite"></p>
+      <div class="acoes"><button class="prim" id="baixar${k}">Baixar .mp4</button><button id="ver${k}">Assistir aqui</button></div>`;
+    document.getElementById("grade").appendChild(c);
+    const barra = c.querySelector(".barra i"), estado = c.querySelector(".estado"), tela = c.querySelector(".tela");
+    const bb = c.querySelector("#baixar" + k), bv = c.querySelector("#ver" + k);
+    const mostrar = (blob) => {
+      if (tela.querySelector("video")) return;
+      const vid = document.createElement("video"); vid.controls = true; vid.playsInline = true; vid.src = URL.createObjectURL(blob);
+      tela.textContent = ""; tela.appendChild(vid);
+    };
+    bv.addEventListener("click", async () => {
+      bv.disabled = true;
+      try { mostrar(await montar(k, barra, estado)); estado.textContent = "Pronto para assistir."; }
+      catch (e) { estado.textContent = "Não consegui carregar: " + e.message + ". Recarregue a página e tente de novo."; }
+      bv.disabled = false;
+    });
+    bb.addEventListener("click", async () => {
+      bb.disabled = true;
+      try {
+        const blob = await montar(k, barra, estado);
+        mostrar(blob);
+        const d = await window.claude?.use?.("downloads");
+        if (!d) { estado.textContent = "Este visualizador não permite salvar arquivos. Abra a página no claude.ai pelo navegador ou pelo app."; bb.disabled = false; return; }
+        estado.textContent = "Confirme o download na janela que abriu…";
+        await d.save({ filename: `${M.titulo} (${v.rotulo.toLowerCase()}).mp4`, data: blob });
+        estado.textContent = "Salvo: " + M.titulo + " (" + v.rotulo.toLowerCase() + ").mp4";
+      } catch (e) {
+        const cod = e && e.code;
+        estado.textContent = cod === "declined" ? "Download cancelado. Toque em Baixar de novo quando quiser."
+          : cod === "too_large" ? "O app não aceitou um arquivo desse tamanho. Abra a página pelo navegador para baixar."
+          : "Não consegui baixar: " + (e && e.message || e) + ".";
+      }
+      bb.disabled = false;
+    });
+  });
+</script>
