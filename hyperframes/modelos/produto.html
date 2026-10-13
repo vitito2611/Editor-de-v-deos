@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=__W__, height=__H__" />
+    <title>__TITULO__</title>
+    <!-- Modelo "produto" do editor (vídeo 4, 2ª rodada). Referência: referencias/motion4/ref.mp4 (lançamento de produto
+         "Alan"): fundo claro com grade sutil, rótulo com ponto colorido em caixa alta espaçada, título cujas palavras
+         ESCURECEM uma a uma (cinza → preto), marca-texto que varre a palavra-chave, interface de verdade (cards em
+         sequência ligados por setas, estado ativo que caminha, hub com nós, lista de tarefas com barras), linha
+         tracejada que corre, explosão com anel e raios, barra de cor que varre a tela na transição, logo que se monta.
+         Cores da Zeal (ciano #24D0DC como marca-texto/acento, roxo #5D2E8C), fontes do cliente (Rubik; destaque Black
+         Jack → reserva Noto Serif itálico; rótulos JetBrains Mono). Gerado por editor/motion_produto.py.
+         Uma timeline GSAP pausada; tudo determinístico. Zona segura do Reels respeitada. -->
+    <script src="gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Medium.ttf"); font-weight: 500; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Black.ttf"); font-weight: 900; }
+      @font-face { font-family: "Mono"; src: url("fonts/JetBrainsMono-Regular.ttf"); font-weight: 400; }
+      @font-face { font-family: "Mono"; src: url("fonts/JetBrainsMono-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Italic.ttf"); font-style: italic; font-weight: 400; }
+      __FONTE_DEST_FACE__
+      :root { --fundo: #f4f4f1; --tinta: #111214; --cinza: #b9bab6; --suave: #8c8d89; --linha: #e3e3df;
+        --acento: #24d0dc; --marca: #5d2e8c; --mt: #a8eef3; --u: calc(min(__W__px, __H__px) / 1080); }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--fundo); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--fundo);
+        font-family: "Rubik", sans-serif; color: var(--tinta); }
+      #grade { position: absolute; inset: 0;
+        background-image: linear-gradient(rgba(17,18,20,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(17,18,20,0.045) 1px, transparent 1px);
+        background-size: calc(54 * var(--u)) calc(54 * var(--u)); }
+      #luz { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%); }
+      #palco { position: absolute; inset: 0; transform-origin: 50% 45%; }
+      .abs { position: absolute; will-change: transform, opacity; }
+      .rot { font-family: "Mono", monospace; font-size: calc(19 * var(--u)); letter-spacing: 0.32em; text-transform: uppercase;
+        color: var(--suave); white-space: nowrap; display: flex; align-items: center; gap: calc(14 * var(--u)); }
+      .rot i { display: inline-block; width: calc(9 * var(--u)); height: calc(9 * var(--u)); border-radius: 50%; background: var(--acento); }
+      .tit { font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; }
+      .tit .w { display: inline-block; position: relative; white-space: nowrap; }
+      .tit .w > b { font-weight: inherit; position: relative; z-index: 1; }
+      .tit .mt { position: absolute; left: -0.06em; right: -0.06em; top: 0.12em; bottom: 0.02em; background: var(--mt); transform-origin: 0 50%; z-index: 0; border-radius: 0.08em; }
+      .tit .mt.cont { right: -0.34em; }
+      .tit .dest { font-family: __FONTE_DEST_CSS__; font-weight: 400; letter-spacing: -0.01em; }
+      .card { position: absolute; background: #ffffff; border-radius: calc(26 * var(--u)); border: 1px solid #e6e6e2;
+        box-shadow: 0 calc(2 * var(--u)) calc(4 * var(--u)) rgba(0,0,0,0.03), 0 calc(18 * var(--u)) calc(44 * var(--u)) rgba(17,18,20,0.08); overflow: hidden; }
+      .card .num { font-family: "Mono"; font-size: calc(17 * var(--u)); color: var(--suave); letter-spacing: 0.1em; }
+      .card .nome { font-weight: 900; font-size: calc(40 * var(--u)); letter-spacing: -0.01em; text-transform: uppercase; margin-top: calc(8 * var(--u)); }
+      .card .sub { font-family: "Mono"; font-size: calc(15 * var(--u)); color: var(--suave); margin-top: calc(6 * var(--u)); letter-spacing: 0.04em; }
+      .card .ic { position: absolute; right: calc(22 * var(--u)); top: calc(20 * var(--u)); width: calc(32 * var(--u)); height: calc(32 * var(--u)); color: #5f605c; }
+      .card .ativo { position: absolute; inset: 0; background: linear-gradient(160deg, #e9fbfc, #c9f4f7); border-radius: inherit; opacity: 0; }
+      .card .aro { position: absolute; inset: 0; border-radius: inherit; border: calc(3 * var(--u)) solid var(--acento); opacity: 0; }
+      .card .barra { position: absolute; left: calc(26 * var(--u)); right: calc(26 * var(--u)); bottom: calc(18 * var(--u)); height: calc(4 * var(--u));
+        border-radius: 4px; background: #eceeea; overflow: hidden; }
+      .card .barra i { position: absolute; inset: 0; background: var(--acento); transform-origin: 0 50%; transform: scaleX(0); }
+      .chip { position: absolute; font-family: "Mono"; font-size: calc(17 * var(--u)); letter-spacing: 0.18em; text-transform: uppercase; white-space: nowrap;
+        color: #4d4e4a; background: #fff; border: 1px solid #e3e3df; border-radius: calc(40 * var(--u)); padding: calc(10 * var(--u)) calc(18 * var(--u));
+        box-shadow: 0 calc(8 * var(--u)) calc(20 * var(--u)) rgba(17,18,20,0.06); }
+      .chip.on { color: #06363a; background: #dff9fb; border-color: #9ee9ef; }
+      .linha-t { position: absolute; height: calc(5 * var(--u)); border-radius: 4px; }
+      .fila { position: absolute; display: flex; align-items: center; gap: calc(16 * var(--u)); font-size: calc(26 * var(--u)); color: #3d3e3a; font-weight: 500; white-space: nowrap; }
+      .fila .ponto { width: calc(10 * var(--u)); height: calc(10 * var(--u)); border-radius: 50%; background: #cfd0cc; }
+      .fila .trilho { position: relative; width: calc(260 * var(--u)); height: calc(6 * var(--u)); border-radius: 6px; background: #ebebe7; overflow: hidden; margin-left: auto; }
+      .fila .trilho i { position: absolute; inset: 0; background: var(--tinta); transform-origin: 0 50%; transform: scaleX(0); }
+      .ok { font-family: "Mono"; font-size: calc(15 * var(--u)); letter-spacing: 0.14em; text-transform: uppercase; color: #06363a; background: #c9f4f7;
+        border-radius: calc(20 * var(--u)); padding: calc(6 * var(--u)) calc(12 * var(--u)); }
+      .varre { position: absolute; top: -5%; bottom: -5%; z-index: 50; }
+      svg { overflow: visible; }
+      __CSS_CENA__
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="motion" data-start="0" data-width="__W__" data-height="__H__" data-duration="__DUR__">
+      <div id="grade"></div>
+      <div id="luz"></div>
+      <div id="palco"></div>
+    </div>
+    <script>
+      const D = __DADOS__;
+      const W = __W__, H = __H__, U = Math.min(W, H) / 1080, AY = H / U, X0 = (W / U - 1080) / 2;
+      const PRE = D.pre_roll || 0;
+      const C = D.cena || {};
+      const tl = gsap.timeline({ paused: true });
+      const EXPO = "expo.out", Q = "power3.out", QIO = "power3.inOut", MOLA = "back.out(1.6)";
+      const palco = document.getElementById("palco");
+      let semente = 5;
+      const rnd = () => { semente = (semente * 16807) % 2147483647; return (semente - 1) / 2147483646; };
+      const px = (v) => v * U + "px";
+      const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      const T = (x) => x + PRE;     // tempo da cena → tempo da timeline (pre_roll: a inserção já começa em movimento)
+      const mk = (tag, cls, pai, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (pai || palco).appendChild(e); return e; };
+      const pos = (e, x, y) => { e.style.left = px(X0 + x); e.style.top = px(y); return e; };
+      const ICONES = {
+        plano: '<path d="M5 6h14M5 12h10M5 18h7"/>', codigo: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>', check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16.5 9"/>',
+        seta: '<path d="M6 18L18 6M9 6h9v9"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+        mega: '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/>',
+        grafico: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>', chip: '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+        dente: '<path d="M7.5 3C5 3 3.5 5 3.5 7.6c0 3 1.4 4.3 1.9 7.3.4 2.6.9 6.1 2.6 6.1 1.6 0 1.6-3.6 2.3-5.4.4-1 .9-1.4 1.7-1.4s1.3.4 1.7 1.4c.7 1.8.7 5.4 2.3 5.4 1.7 0 2.2-3.5 2.6-6.1.5-3 1.9-4.3 1.9-7.3C20.5 5 19 3 16.5 3c-1.9 0-2.8 1-4.5 1S9.4 3 7.5 3z"/>',
+        tel: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+        engr: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+      };
+      const icone = (n, cor = "currentColor", lw = 1.8) => `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="${cor}" stroke-width="${lw}" stroke-linecap="round" stroke-linejoin="round">${ICONES[n] || ICONES.engr}</svg>`;
+
+      // ------------------------------------------------------------------ peças
+      // rótulo: ponto + texto em caixa alta espaçada que digita
+      function rotulo(txt, x, y, t, centro = false) {
+        const r = mk("div", "abs rot"); r.innerHTML = `<i></i><span></span>`; pos(r, x, y);
+        if (centro) { r.style.left = px(X0 + 540); r.style.transform = "translateX(-50%)"; }
+        const s = r.querySelector("span"), o = { n: 0 };
+        tl.fromTo(r.querySelector("i"), { scale: 0 }, { scale: 1, duration: 0.35, ease: MOLA }, t);
+        tl.fromTo(o, { n: 0 }, { n: txt.length, duration: Math.min(0.7, txt.length * 0.025), ease: "none", onUpdate: () => { s.textContent = txt.slice(0, Math.round(o.n)); } }, t + 0.05);
+        return r;
+      }
+      // título: palavras surgem em cinza e escurecem uma a uma; *x* = marca-texto; _x_ = fonte de destaque
+      function titulo(txt, { x = 60, y = 500, tam = 70, centro = false, larg = 960, t = 0, passo = 0.07, escurece = 0.1 } = {}) {
+        const b = mk("div", "abs tit"); pos(b, x, y); b.style.fontSize = px(tam); b.style.width = px(larg);
+        if (centro) { b.style.textAlign = "center"; b.style.left = px(X0 + 540 - larg / 2); }
+        const partes = []; let emMt = false, emDest = false;
+        String(txt).split("|").forEach((linha, li) => {
+          if (li) mk("br", "", b);
+          linha.trim().split(/\s+/).forEach((w) => {
+            // *várias palavras* = marca-texto; _várias palavras_ = fonte de destaque (o estado atravessa palavras)
+            if (w.startsWith("*")) { emMt = true; w = w.slice(1); }
+            if (w.startsWith("_")) { emDest = true; w = w.slice(1); }
+            const mt = emMt, dest = emDest;
+            if (/\*[.,!?…:;]*$/.test(w)) { emMt = false; w = w.replace(/\*(?=[.,!?…:;]*$)/, ""); }
+            if (/_[.,!?…:;]*$/.test(w)) { emDest = false; w = w.replace(/_(?=[.,!?…:;]*$)/, ""); }
+            const s = mk("span", "w" + (dest ? " dest" : ""), b, (mt ? '<span class="mt"></span>' : "") + `<b>${esc(w)}</b>`);
+            if (mt && emMt) s.querySelector(".mt").classList.add("cont");   // continua na próxima palavra: cobre o espaço
+            partes.push({ s, mt });
+            b.appendChild(document.createTextNode(" "));
+          });
+        });
+        partes.forEach(({ s, mt }, i) => {
+          const ti = t + i * passo;
+          tl.fromTo(s, { opacity: 0, y: tam * 0.25 * U }, { opacity: 1, y: 0, duration: 0.45, ease: Q }, ti);
+          tl.fromTo(s.querySelector("b"), { color: "#c2c3bf" }, { color: "#111214", duration: 0.35, ease: "power1.out" }, ti + escurece + partes.length * passo * 0.35);
+          if (mt) tl.fromTo(s.querySelector(".mt"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: QIO }, ti + 0.35 + partes.length * passo * 0.35);
+        });
+        return b;
+      }
+      // card de interface (índice, nome, sub, ícone, barra); ativa(t) acende o estado
+      function card(x, y, w, h, { num = "", nome = "", sub = "", ic = "", t = 0, de = "baixo" } = {}) {
+        const c = mk("div", "card"); pos(c, x, y); c.style.width = px(w); c.style.height = px(h);
+        c.innerHTML = `<div class="ativo"></div><div class="aro"></div><div style="position:relative;padding:${px(22)} ${px(26)}">` +
+          `<div class="num">${esc(num)}</div><div class="nome">${esc(nome)}</div><div class="sub">${esc(sub)}</div></div>` +
+          (ic ? `<div class="ic">${icone(ic)}</div>` : "") + `<div class="barra"><i></i></div>`;
+        const dx = de === "direita" ? 120 : 0, dy = de === "baixo" ? 60 : 0;
+        tl.fromTo(c, { opacity: 0, x: dx * U, y: dy * U, scale: 0.94 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.6, ease: EXPO }, t);
+        c.ativa = (ta, dur = 0.5) => {
+          tl.fromTo(c.querySelector(".ativo"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, ta);
+          tl.fromTo(c.querySelector(".aro"), { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.35, ease: Q }, ta);
+          tl.fromTo(c.querySelector(".barra i"), { scaleX: 0 }, { scaleX: 1, duration: dur, ease: QIO }, ta);
+          tl.fromTo(c, { scale: 1 }, { scale: 1.035, duration: 0.18, yoyo: true, repeat: 1, ease: "power1.inOut" }, ta);
+        };
+        c.desativa = (ta) => tl.to(c.querySelector(".aro"), { opacity: 0, duration: 0.25 }, ta);
+        return c;
+      }
+      // seta que se desenha entre dois pontos (SVG no palco)
+      function seta(x1, y1, x2, y2, t, cor = "#a9aaa6", tracejada = false) {
+        const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        s.setAttribute("width", px(1080)); s.setAttribute("height", px(AY)); s.setAttribute("viewBox", `0 0 1080 ${AY}`);
+        Object.assign(s.style, { position: "absolute", left: px(X0), top: 0 }); palco.appendChild(s);
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", `M${x1} ${y1} L${x2} ${y2}`); p.setAttribute("stroke", cor); p.setAttribute("stroke-width", 2.4); p.setAttribute("fill", "none");
+        s.appendChild(p);
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        p.setAttribute("stroke-dasharray", `${len} ${len}`);
+        tl.fromTo(p, { attr: { "stroke-dashoffset": len } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.35, ease: Q }, t);
+        const a = Math.atan2(y2 - y1, x2 - x1), ah = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        ah.setAttribute("d", `M${x2 - 12 * Math.cos(a - 0.5)} ${y2 - 12 * Math.sin(a - 0.5)} L${x2} ${y2} L${x2 - 12 * Math.cos(a + 0.5)} ${y2 - 12 * Math.sin(a + 0.5)}`);
+        ah.setAttribute("stroke", cor); ah.setAttribute("stroke-width", 2.4); ah.setAttribute("fill", "none"); ah.setAttribute("stroke-linecap", "round");
+        s.appendChild(ah); tl.fromTo(ah, { opacity: 0 }, { opacity: 1, duration: 0.15 }, t + 0.3);
+        if (tracejada) p.setAttribute("stroke-dasharray", "8 10");
+        return s;
+      }
+      // contador numérico (formato pt-BR)
+      function conta(el, de, ate, t, dur, { pre = "", suf = "", casas = 0 } = {}) {
+        const o = { v: de };
+        const f = (v) => pre + (casas ? v.toFixed(casas).replace(".", ",") : Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")) + suf;
+        el.textContent = f(de);
+        tl.fromTo(o, { v: de }, { v: ate, duration: dur, ease: "power3.out", onUpdate: () => { el.textContent = f(o.v); } }, t);
+      }
+      // barra de cor que varre a tela (transição de entrada da referência)
+      function varredura(t, cor = "#24d0dc") {
+        const v = mk("div", "varre"); v.style.background = cor; v.style.width = px(260); v.style.left = px(X0 - 300);
+        tl.fromTo(v, { x: 0 }, { x: (W / U + 340) * U, duration: 0.55, ease: "power2.inOut" }, t);
+        tl.fromTo(palco, { x: 40 * U, opacity: 0.0 }, { x: 0, opacity: 1, duration: 0.45, ease: Q }, t + 0.18);
+      }
+      // explosão: anel + raios + flash (momento de impacto)
+      function explosao(x, y, t, r = 170, cor = "#24d0dc") {
+        const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        s.setAttribute("width", px(1080)); s.setAttribute("height", px(AY)); s.setAttribute("viewBox", `0 0 1080 ${AY}`);
+        Object.assign(s.style, { position: "absolute", left: px(X0), top: 0 }); palco.appendChild(s);
+        const ns = "http://www.w3.org/2000/svg";
+        const g = document.createElementNS(ns, "g"); s.appendChild(g);
+        const flash = document.createElementNS(ns, "circle"); flash.setAttribute("cx", x); flash.setAttribute("cy", y); flash.setAttribute("r", r * 1.4);
+        flash.setAttribute("fill", "url(#gx)"); const def = document.createElementNS(ns, "defs");
+        def.innerHTML = `<radialGradient id="gx"><stop offset="0" stop-color="${cor}" stop-opacity="0.55"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></radialGradient>`;
+        s.appendChild(def); g.appendChild(flash);
+        const anel = document.createElementNS(ns, "circle"); anel.setAttribute("cx", x); anel.setAttribute("cy", y); anel.setAttribute("r", r);
+        anel.setAttribute("fill", "none"); anel.setAttribute("stroke", cor); anel.setAttribute("stroke-width", 3); g.appendChild(anel);
+        tl.fromTo(flash, { opacity: 0, scale: 0.4, svgOrigin: `${x} ${y}` }, { opacity: 1, scale: 1, duration: 0.25, ease: Q }, t);
+        tl.to(flash, { opacity: 0, duration: 0.5 }, t + 0.25);
+        tl.fromTo(anel, { scale: 0.3, opacity: 0, svgOrigin: `${x} ${y}` }, { scale: 1, opacity: 1, duration: 0.4, ease: EXPO }, t);
+        tl.to(anel, { opacity: 0, scale: 1.25, duration: 0.45, ease: "power2.in", svgOrigin: `${x} ${y}` }, t + 0.45);
+        for (let i = 0; i < 16; i++) {
+          const a = (i / 16) * Math.PI * 2, l = document.createElementNS(ns, "line");
+          l.setAttribute("x1", x + Math.cos(a) * r * 0.45); l.setAttribute("y1", y + Math.sin(a) * r * 0.45);
+          l.setAttribute("x2", x + Math.cos(a) * r * 0.8); l.setAttribute("y2", y + Math.sin(a) * r * 0.8);
+          l.setAttribute("stroke", cor); l.setAttribute("stroke-width", 3); l.setAttribute("stroke-linecap", "round"); g.appendChild(l);
+          tl.fromTo(l, { opacity: 0, scale: 0.5, svgOrigin: `${x} ${y}` }, { opacity: 1, scale: 1.15, duration: 0.35, ease: EXPO }, t + 0.03);
+          tl.to(l, { opacity: 0, duration: 0.3 }, t + 0.4);
+        }
+      }
+      // câmera: deriva lenta do palco inteiro (nada fica parado)
+      function camera(s1 = 1.04, y1 = -10) { tl.fromTo(palco, { scale: 1, y: 0 }, { scale: s1, y: y1 * U, duration: D.dur + PRE, ease: "none" }, 0); }
+      // marca da Zeal (Z) — faixas que se montam
+      const ZEAL = `<svg viewBox="0 0 384 384" width="100%" height="100%"><g class="zf"><path d="M243 64 H322 Q330 64 330 72 V148 L155 323 H76 Q68 323 68 315 V238 Z" fill="#111214"/></g>
+        <g class="z1"><path d="M118 64 H216 L134 146 H70 Q62 146 64 136 Q72 64 118 64 Z" fill="#24d0dc"/></g><g class="z2"><path d="M270 323 H172 L254 241 H318 Q326 241 324 251 Q316 323 270 323 Z" fill="#24d0dc"/></g></svg>`;
+
+      // ------------------------------------------------------------------ cena
+      __CENA_JS__
+
+      document.fonts.ready.then(() => {
+        cena();
+        tl.to({}, { duration: D.dur + PRE }, 0);
+        const raiz = gsap.timeline({ paused: true });
+        raiz.add(tl.tweenFromTo(PRE, PRE + D.dur, { ease: "none", duration: D.dur }), 0);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["motion"] = PRE > 0 ? raiz : tl;
+      });
+    </script>
+  </body>
+</html>

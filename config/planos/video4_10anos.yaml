@@ -1,7 +1,7 @@
 # Plano do vídeo "1013" — "Como vão ser os próximos 10 anos na odontologia" — estilo referencia1 (docs/MODELO_EDICAO.md).
 # Uso: python editar.py entrada/video4.mov --estilo referencia1 --plataforma reels --config config/planos/video4_10anos.yaml
-# Cliente: legendas/ênfases/SFX iguais ao vídeo 3 (aprovados); motions NOVOS no modelo "campo" (referência
-# referencias/motion3/ref.mp4 — "ONE SECOND"): HUD, número gigante contando, script, objetos de pontos.
+# Cliente: legendas/ênfases/SFX iguais ao vídeo 3 (aprovados). Motions: 1ª rodada no modelo "campo" (reprovada);
+# 2ª rodada no modelo "produto" (referencias/motion4/ref.mp4).
 # Gravação em selfie (rosto ocupa a zona segura) → a headline abre num fundo preto com o orador numa janela embaixo.
 transcricao:
   correcoes: {"a10": "a 10", "de90": "de 90", "que10%": "que 10%", "de100": "de 100", "de20,30": "de 20, 30",
@@ -28,7 +28,9 @@ dinamismo:
   fotos_entidades: false
   cards_max: 0
   plano:
-    # 0) headline: HUD + "Como vão ser os próximos | 10 anos | na odontologia." e o orador numa janela que abre
+    # 2ª rodada (cliente: "não gostei dos motions, se baseie nesse novo vídeo") → modelo "produto"
+    # (referencias/motion4/ref.mp4: fundo claro, palavras que escurecem, marca-texto, cards de interface, hub, listas).
+    # 0) headline com o orador numa janela (sem borda; o motion desenha a sombra/cartão atrás) que abre no fim
     - t: 0.0
       tipo: motion
       formato: janela
@@ -36,42 +38,37 @@ dinamismo:
         borda: false
         foco: [0.5, 0.36]
         quadros:
-          - {t: 0.0, x: 0.5, y: 0.6927, w: 0.8, h: 0.3333, r: 0.02}
-          - {t: 2.8, x: 0.5, y: 0.6927, w: 0.8, h: 0.3333, r: 0.02}
+          - {t: 0.0, x: 0.5, y: 0.6073, w: 0.8, h: 0.3125, r: 0.022}
+          - {t: 2.8, x: 0.5, y: 0.6073, w: 0.8, h: 0.3125, r: 0.022}
           - {t: 3.3, x: 0.5, y: 0.5, w: 1.0, h: 1.0, r: 0.0}
-      roteiro: {titulo: headline, modelo: campo, pre_roll: 0, cenas: [{tipo: headline, dur: 3.4,
-                janela_px: [108, 1010, 864, 640]}]}
-    # 1) "hoje existem mais de 90 mil clínicas" — galáxia de pontos que cresce com o número
+      roteiro: {titulo: headline, modelo: produto, pre_roll: 0, cenas: [{tipo: headline, dur: 3.4, janela_px: [108, 866, 864, 600]}]}
     - contem: "hoje existem mais"
       tipo: motion
-      roteiro: {titulo: clinicas, modelo: campo, cenas: [{tipo: contador, objeto: galaxia, rotulo: "02 — HOJE",
-                numero: 90000, casas: 5, script: "clínicas odontológicas", sub: "e o número só cresce", barra: "contando", dur: 2.9}]}
-    # 2) "menos do que 10% fatura acima de 100 mil" — matriz 10×10, só 10 acendem
+      roteiro: {titulo: clinicas, modelo: produto, cenas: [{tipo: clinicas, numero: 90000, dur: 2.9}]}
     - contem: "menos do que"
       tipo: motion
-      roteiro: {titulo: dezporcento, modelo: campo, cenas: [{tipo: contador, objeto: grade, acesos: 10, rotulo: "03 — QUEM FATURA",
-                prefixo: "<", numero: 10, casas: 2, unidade: "%", script: "acima de R$100 mil", sub: "segundo uma estimativa", dur: 3.3}]}
-    # 3) "dentistas com mais de 20, 30 anos de mercado" — anel de anos que enche
+      roteiro: {titulo: dez, modelo: produto, cenas: [{tipo: dez, dur: 3.3}]}
     - contem: "anos de mercado"
       tipo: motion
-      roteiro: {titulo: experiencia, modelo: campo, cenas: [{tipo: contador, objeto: anel, marcas: 30, rotulo: "04 — EXPERIÊNCIA",
-                numero: 30, casas: 2, unidade: "anos", script: "de mercado…", sub: "e resultados piores que recém-formados", dur: 2.9}]}
-    # 4) "dominar três coisas: marketing, gestão e inteligência artificial" — cada item no tempo da fala
+      roteiro: {titulo: experiencia, modelo: produto, cenas: [{tipo: experiencia, dur: 2.9}]}
+    # "Ele recompensa quem sabe se posicionar (34.16), quem constrói presença (35.76), quem gera percepção de valor (37.3)"
+    - contem: "Ele recompensa"
+      tipo: motion
+      roteiro: {titulo: fluxo, modelo: produto, cenas: [{tipo: fluxo, dur: 5.6,
+                itens: [{nome: Posicionar, sub: "quem você é", ic: user, t: 1.75}, {nome: Presença, sub: "ser lembrado", ic: mega, t: 3.35},
+                        {nome: Valor, sub: "percepção de valor", ic: grafico, t: 4.85}]}]}
+    # "dominar três coisas: marketing (57.14), gestão (57.94), inteligência artificial (58.66)"
     - contem: "dominar três coisas"
       tipo: motion
-      roteiro: {titulo: tres, modelo: campo, cenas: [{tipo: tres, rotulo: "05 — O DENTISTA DE 2036",
-                itens: [{nome: Marketing, obj: ondas, t: 2.1}, {nome: Gestão, obj: estrutura, t: 2.9},
-                        {nome: "Inteligência artificial", obj: rede, t: 3.6, tam: 54}], dur: 4.7}]}
-    # 5) "eu não dou 5 anos para alguns desses processos serem automatizados" — anel que esvazia
-    - contem: "não dou"
+      roteiro: {titulo: hub, modelo: produto, cenas: [{tipo: hub, dur: 4.7}]}
+    # "equipe grande, seja recepcionista (74.5), CRC (75.2), gerente (76.3)... não dou 5 anos (77.8)"
+    - contem: "dependem de uma equipe"
       tipo: motion
-      roteiro: {titulo: cinco, modelo: campo, cenas: [{tipo: contador, objeto: anel, marcas: 60, anel: esvazia, rotulo: "06 — AUTOMAÇÃO",
-                prefixo: "<", numero: 5, casas: 1, unidade: "anos", script: "para automatizar", sub: "recepção · CRC · gerência", dur: 3.0}]}
-    # 6) "os próximos 10 anos da odontologia é um mar azul" — oceano de pontos
+      roteiro: {titulo: automacao, modelo: produto, cenas: [{tipo: automacao, dur: 7.0, virada: 5.2,
+                itens: [{nome: Recepção, t: 1.85}, {nome: CRC, t: 2.55}, {nome: Gerência, t: 3.6}, {nome: Confirmações, t: 4.05}, {nome: Follow-up, t: 4.45}]}]}
     - contem: "é um mar azul"
       tipo: motion
-      roteiro: {titulo: mar, modelo: campo, cenas: [{tipo: mar, titulo: "mar azul.", script: "para quem souber aproveitar.",
-                sub: "marketing · gestão · IA", dur: 3.2}]}
+      roteiro: {titulo: mar, modelo: produto, cenas: [{tipo: mar, dur: 3.2}]}
 cor: {look: azul_cinema}
 estudio:
   # sala clara + moletom branco: look azul mais leve e legenda com contorno/sombra fortes (branco sobre branco)
