@@ -96,6 +96,14 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   itálico), objetos 3D de PONTOS com luz e halo. `hyperframes/modelos/campo.html` + cenas em
   `hyperframes/modelos/cenas_campo/*.js` (`headline`, `contador` com objeto `galaxia|grade|anel`, `tres`, `mar`),
   montador `editor/motion_campo.py`, `modelo: campo` no roteiro. Cada cena: HUD e 3D são função pura do tempo.
+- **Motion ATUAL (vídeo 4, 2ª rodada — o "campo" foi reprovado: "não gostei dos motions") = modelo "produto"**:
+  referência `referencias/motion4/ref.mp4` (lançamento de produto "Alan"): fundo claro #f4f4f1 com grade sutil, rótulo
+  com ponto ciano em caixa alta espaçada (JetBrains Mono), título Rubik Bold cujas palavras escurecem uma a uma,
+  marca-texto ciano claro (`*várias palavras*`), cards de interface com estado ativo que caminha, setas que se
+  desenham, hub com nós, listas com barras e selo "automatizado", explosão (anel + raios), barra ciano que varre a tela
+  na entrada de cada motion. `hyperframes/modelos/produto.html` + `cenas_produto/*.js` (`headline, clinicas, dez,
+  experiencia, fluxo, hub, automacao, mar`), montador `editor/motion_produto.py`, `modelo: produto`. Motions longos
+  sincronizados com a fala (itens com `t` por palavra).
 - **Headline de abertura** (pedido do vídeo 4): cena `headline` + `formato: janela` (orador numa janela embaixo, sem
   borda; cantos do HUD em volta; a janela abre para tela cheia no fim). Ótimo para gravações em selfie (rosto ocupa
   a zona segura inteira).
