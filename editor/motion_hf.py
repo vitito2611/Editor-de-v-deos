@@ -189,9 +189,14 @@ def renderizar(roteiro: dict | Path, saida: Path, W: int = 1080, H: int = 1920, 
     from .motion_premium import MODELO_PREMIUM, montar_premium
     nome_modelo = roteiro.get("modelo", "premium")        # padrão: premium (nível agência, identidade Zeal)
     from .motion_cinema3d import MODELO as MODELO_3D, CENAS as CENAS_3D, montar_cinema3d
+    from .motion_campo import MODELO as MODELO_CAMPO, CENAS as CENAS_CAMPO, montar_campo
     modelo, montador = {"premium": (MODELO_PREMIUM, montar_premium), "cinema": (MODELO_CINEMA, montar_cinema),
-                        "claro": (MODELO, montar), "cinema3d": (MODELO_3D, montar_cinema3d)}.get(nome_modelo, (MODELO_PREMIUM, montar_premium))
-    extra_mtime = sorted((f.name, f.stat().st_mtime) for f in CENAS_3D.glob("*.js")) if nome_modelo == "cinema3d" else []
+                        "claro": (MODELO, montar), "cinema3d": (MODELO_3D, montar_cinema3d),
+                        "campo": (MODELO_CAMPO, montar_campo)}.get(nome_modelo, (MODELO_PREMIUM, montar_premium))
+    pasta_cenas = {"cinema3d": CENAS_3D, "campo": CENAS_CAMPO}.get(nome_modelo)
+    extra_mtime = sorted((f.name, f.stat().st_mtime) for f in pasta_cenas.glob("*.js")) if pasta_cenas else []
+    if nome_modelo == "campo":
+        extra_mtime.append((HF.parent / "editor" / "motion_campo.py").stat().st_mtime)
     chave = hashlib.sha1(json.dumps([roteiro, W, H, rapido, modelo.stat().st_mtime, str(arquivo_black_jack()),
                                      Path(__file__).stat().st_mtime, (HF.parent / "editor" / "motion_premium.py").stat().st_mtime,
                                      (HF.parent / "editor" / "motion_cinema3d.py").stat().st_mtime, extra_mtime],

@@ -1,0 +1,75 @@
+# Plano do vídeo "1013" — "Como vão ser os próximos 10 anos na odontologia" — estilo referencia1 (docs/MODELO_EDICAO.md).
+# Uso: python editar.py entrada/video4.mov --estilo referencia1 --plataforma reels --config config/planos/video4_10anos.yaml
+# Cliente: legendas/ênfases/SFX iguais ao vídeo 3 (aprovados); motions NOVOS no modelo "campo" (referência
+# referencias/motion3/ref.mp4 — "ONE SECOND"): HUD, número gigante contando, script, objetos de pontos.
+# Gravação em selfie (rosto ocupa a zona segura) → a headline abre num fundo preto com o orador numa janela embaixo.
+transcricao:
+  correcoes: {"a10": "a 10", "de90": "de 90", "que10%": "que 10%", "de100": "de 100", "de20,30": "de 20, 30",
+              "dou5": "dou 5", "próximos10": "próximos 10", "Ineligência": "Inteligência", "Vitor": "Victor"}
+cortes:
+  jump_zoom: {ativo: true, modo: variado, zoom_niveis: [1.0, 1.07, 1.0, 1.12, 1.04], dividir_max_s: 2.6}
+legendas:
+  estilos:
+    cinetico: {posicao: peito}
+sfx:                                    # nível aprovado (vídeo 3)
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
+silencio:
+  pausa_preservada_s: 0.22
+motion:
+  contador: {ativo: false}              # números entram como motion (modelo campo)
+dinamismo:
+  ativo: true
+  intervalo_s: 2.6
+  gap_min_s: 0.9
+  inicio_livre_s: 0.0                   # a headline abre o vídeo
+  auto_palavras: false
+  fotos_entidades: false
+  cards_max: 0
+  plano:
+    # 0) headline: HUD + "Como vão ser os próximos | 10 anos | na odontologia." e o orador numa janela que abre
+    - t: 0.0
+      tipo: motion
+      formato: janela
+      janela:
+        borda: false
+        foco: [0.5, 0.36]
+        quadros:
+          - {t: 0.0, x: 0.5, y: 0.6927, w: 0.8, h: 0.3333, r: 0.02}
+          - {t: 2.8, x: 0.5, y: 0.6927, w: 0.8, h: 0.3333, r: 0.02}
+          - {t: 3.3, x: 0.5, y: 0.5, w: 1.0, h: 1.0, r: 0.0}
+      roteiro: {titulo: headline, modelo: campo, pre_roll: 0, cenas: [{tipo: headline, dur: 3.4,
+                janela_px: [108, 1010, 864, 640]}]}
+    # 1) "hoje existem mais de 90 mil clínicas" — galáxia de pontos que cresce com o número
+    - contem: "hoje existem mais"
+      tipo: motion
+      roteiro: {titulo: clinicas, modelo: campo, cenas: [{tipo: contador, objeto: galaxia, rotulo: "02 — HOJE",
+                numero: 90000, casas: 5, script: "clínicas odontológicas", sub: "e o número só cresce", barra: "contando", dur: 2.9}]}
+    # 2) "menos do que 10% fatura acima de 100 mil" — matriz 10×10, só 10 acendem
+    - contem: "menos do que"
+      tipo: motion
+      roteiro: {titulo: dezporcento, modelo: campo, cenas: [{tipo: contador, objeto: grade, acesos: 10, rotulo: "03 — QUEM FATURA",
+                prefixo: "<", numero: 10, casas: 2, unidade: "%", script: "acima de R$100 mil", sub: "segundo uma estimativa", dur: 3.3}]}
+    # 3) "dentistas com mais de 20, 30 anos de mercado" — anel de anos que enche
+    - contem: "anos de mercado"
+      tipo: motion
+      roteiro: {titulo: experiencia, modelo: campo, cenas: [{tipo: contador, objeto: anel, marcas: 30, rotulo: "04 — EXPERIÊNCIA",
+                numero: 30, casas: 2, unidade: "anos", script: "de mercado…", sub: "e resultados piores que recém-formados", dur: 2.9}]}
+    # 4) "dominar três coisas: marketing, gestão e inteligência artificial" — cada item no tempo da fala
+    - contem: "dominar três coisas"
+      tipo: motion
+      roteiro: {titulo: tres, modelo: campo, cenas: [{tipo: tres, rotulo: "05 — O DENTISTA DE 2036",
+                itens: [{nome: Marketing, obj: ondas, t: 2.1}, {nome: Gestão, obj: estrutura, t: 2.9},
+                        {nome: "Inteligência artificial", obj: rede, t: 3.6, tam: 54}], dur: 4.7}]}
+    # 5) "eu não dou 5 anos para alguns desses processos serem automatizados" — anel que esvazia
+    - contem: "não dou"
+      tipo: motion
+      roteiro: {titulo: cinco, modelo: campo, cenas: [{tipo: contador, objeto: anel, marcas: 60, anel: esvazia, rotulo: "06 — AUTOMAÇÃO",
+                prefixo: "<", numero: 5, casas: 1, unidade: "anos", script: "para automatizar", sub: "recepção · CRC · gerência", dur: 3.0}]}
+    # 6) "os próximos 10 anos da odontologia é um mar azul" — oceano de pontos
+    - contem: "é um mar azul"
+      tipo: motion
+      roteiro: {titulo: mar, modelo: campo, cenas: [{tipo: mar, titulo: "mar azul.", script: "para quem souber aproveitar.",
+                sub: "marketing · gestão · IA", dur: 3.2}]}
+cor: {look: azul_cinema}

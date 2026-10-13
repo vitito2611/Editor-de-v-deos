@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=__W__, height=__H__" />
+    <title>__TITULO__</title>
+    <!-- Modelo "campo" do editor (vídeo 4 em diante). Referência: referencias/motion3/ref.mp4 ("ONE SECOND — a field
+         guide"): preto profundo com estrelas, HUD de documentário científico (cantos de enquadramento, rótulos em mono,
+         timecode, barra de progresso), NÚMERO GIGANTE contando com zero-fantasma, legenda em script (Black Jack, a
+         fonte de destaque do cliente, no lugar do itálico serifado), objetos 3D feitos de PONTOS com halo
+         (globo, dente, ondas de voz, partículas) e título com brilho e grão.
+         Cada cena é hyperframes/modelos/cenas_campo/<tipo>.js com `montarCena(ctx)` → `desenhar(t)`: TUDO (3D e HUD)
+         é função pura do tempo do HyperFrames (hf-seek) → render determinístico. Gerado por editor/motion_campo.py.
+         Zona segura do Reels: nada importante nos 420 px de cima/baixo nem na coluna de botões à direita. -->
+    <script src="gsap.min.js"></script>
+    <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/" } }</script>
+    <style>
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Medium.ttf"); font-weight: 500; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Rubik"; src: url("fonts/Rubik-Black.ttf"); font-weight: 900; }
+      @font-face { font-family: "Mono"; src: url("fonts/JetBrainsMono-Regular.ttf"); font-weight: 400; }
+      @font-face { font-family: "Mono"; src: url("fonts/JetBrainsMono-Bold.ttf"); font-weight: 700; }
+      @font-face { font-family: "Noto Serif"; src: url("fonts/NotoSerif-Italic.ttf"); font-style: italic; font-weight: 400; }
+      __FONTE_DEST_FACE__
+      :root { --acento: #24d0dc; --quente: #ff6a3d; --u: calc(min(__W__px, __H__px) / 1080); }
+      html, body { margin: 0; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #020205; font-family: "Rubik", sans-serif; color: #f4f1ea; }
+      #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      #hud { position: absolute; inset: 0; pointer-events: none; }
+      .abs { position: absolute; white-space: nowrap; will-change: transform, opacity; }
+      .mono { font-family: "Mono", monospace; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(244, 241, 234, 0.42); }
+      .mono.ac { color: var(--acento); font-weight: 700; }
+      .mono.qt { color: var(--quente); font-weight: 700; }
+      .num { font-weight: 900; letter-spacing: -0.045em; line-height: 0.86; font-variant-numeric: tabular-nums; color: #f4f1ea; }
+      .num .fant { color: rgba(244, 241, 234, 0.14); }
+      .num .un { font-weight: 700; letter-spacing: -0.01em; font-size: 0.24em; margin-left: 0.12em; color: #f4f1ea; }
+      .script { font-family: __FONTE_DEST_CSS__; color: #f4f1ea; text-shadow: 0 0 calc(28 * var(--u)) rgba(255, 255, 255, 0.25); }
+      .tit { font-weight: 700; letter-spacing: -0.02em; line-height: 1.02; color: #f4f1ea; }
+      .canto { position: absolute; width: calc(34 * var(--u)); height: calc(34 * var(--u)); border-color: rgba(244, 241, 234, 0.55); border-style: solid; border-width: 0; }
+      .barra { position: absolute; height: calc(2 * var(--u)); background: rgba(244, 241, 234, 0.14); }
+      .barra i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--acento); box-shadow: 0 0 calc(12 * var(--u)) var(--acento); transform-origin: 0 50%; }
+      .barra b { position: absolute; top: 50%; width: calc(10 * var(--u)); height: calc(10 * var(--u)); margin: calc(-5 * var(--u)); border-radius: 50%; background: #fff;
+        box-shadow: 0 0 calc(10 * var(--u)) #fff, 0 0 calc(26 * var(--u)) var(--acento); }
+      .mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0.06em 0.06em 0.12em; margin: -0.06em -0.06em -0.12em; }
+      .mask > span { display: inline-block; will-change: transform; }
+      #vinheta { position: absolute; inset: 0; background: radial-gradient(ellipse 85% 70% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.7) 100%); pointer-events: none; }
+      #grao { position: absolute; inset: 0; opacity: 0.07; mix-blend-mode: screen; pointer-events: none; background-size: 256px 256px; }
+      __CSS_CENA__
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="motion" data-start="0" data-width="__W__" data-height="__H__" data-duration="__DUR__">
+      <canvas id="gl" width="__W__" height="__H__"></canvas>
+      <div id="vinheta"></div>
+      <div id="hud"></div>
+      <div id="grao"></div>
+    </div>
+    <script>
+      // timeline nominal (a cena é desenhada a partir do tempo do HyperFrames no módulo abaixo)
+      const D0 = __DADOS__;
+      window.__timelines = window.__timelines || {};
+      const tl0 = gsap.timeline({ paused: true });
+      tl0.to({}, { duration: D0.dur }, 0);
+      window.__timelines["motion"] = tl0;
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+
+      const D = __DADOS__;
+      const W = __W__, H = __H__, U = Math.min(W, H) / 1080, AY = H / U, X0 = (W / U - 1080) / 2;
+      const PRE = D.pre_roll || 0;
+      const ACENTO = new THREE.Color("#24d0dc"), QUENTE = new THREE.Color("#ff6a3d");
+
+      // ------------------------------------------------------------------ tempo / easing (puro)
+      let semente = 11;
+      const rnd = () => { semente = (semente * 16807) % 2147483647; return (semente - 1) / 2147483646; };
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const lerp = (a, b, k) => a + (b - a) * k;
+      const E = {
+        lin: (k) => k,
+        expo: (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k)),
+        expoIn: (k) => (k <= 0 ? 0 : Math.pow(2, 10 * k - 10)),
+        inOut: (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+        out3: (k) => 1 - Math.pow(1 - k, 3),
+        out5: (k) => 1 - Math.pow(1 - k, 5),
+        in3: (k) => k * k * k,
+        sine: (k) => -(Math.cos(Math.PI * k) - 1) / 2,
+        back: (k) => { const c = 1.6; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); },
+      };
+      const fase = (t, a, b, e = E.inOut) => e(clamp((t - a) / Math.max(1e-6, b - a)));
+
+      // ------------------------------------------------------------------ HUD (DOM desenhado por tempo)
+      const hud = document.getElementById("hud");
+      const px = (v) => v * U + "px";
+      const el = (cls, html, x, y, estilo = {}) => {
+        const e = document.createElement("div"); e.className = "abs " + cls; e.innerHTML = html ?? "";
+        e.style.left = px(X0 + x); e.style.top = px(y); Object.assign(e.style, estilo); hud.appendChild(e); return e;
+      };
+      const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      // texto que sobe de dentro de uma máscara (palavra a palavra)
+      function palavras(e, txt) {
+        e.innerHTML = String(txt).split(" ").map((w) => `<span class="mask"><span>${esc(w)}</span></span>`).join(" ");
+        return [...e.querySelectorAll(".mask > span")];
+      }
+      const sobe = (spans, t, t0, passo = 0.05, dur = 0.7, sai = null) => spans.forEach((s, i) => {
+        const k = fase(t, t0 + i * passo, t0 + i * passo + dur, E.expo);
+        const o = sai == null ? 0 : fase(t, sai + i * 0.02, sai + i * 0.02 + 0.35, E.in3);
+        s.style.transform = `translateY(${(1 - k) * 110 - o * 110}%)`;
+      });
+      // texto mono "digitado" com cursor de bloco (como o HUD da referência)
+      const digita = (e, txt, t, t0, cps = 38) => {
+        const n = Math.floor(clamp((t - t0) * cps, 0, txt.length));
+        e.textContent = txt.slice(0, n) + (n < txt.length && t >= t0 ? "▍" : "");
+      };
+      // cantos de enquadramento (L) — abrem a partir do centro do retângulo
+      function cantos(x, y, w, h, tam = 34) {
+        const cs = [[0, 0, "Top", "Left"], [1, 0, "Top", "Right"], [0, 1, "Bottom", "Left"], [1, 1, "Bottom", "Right"]].map(([a, b, v, hz]) => {
+          const c = document.createElement("div"); c.className = "canto";
+          c.style.width = c.style.height = px(tam);
+          c.style["border" + v + "Width"] = c.style["border" + hz + "Width"] = px(2);
+          hud.appendChild(c); return { c, a, b };
+        });
+        return (t, k, o = 1) => cs.forEach(({ c, a, b }) => {
+          const cx = x + w / 2, cy = y + h / 2;
+          const xx = lerp(cx, x + a * w, k) - a * tam, yy = lerp(cy, y + b * h, k) - b * tam;
+          c.style.left = px(X0 + xx); c.style.top = px(yy); c.style.opacity = o * clamp(k * 1.5);
+        });
+      }
+      // número que conta, com zeros-fantasma à esquerda (casas fixas) e unidade pequena
+      function contador(e, casas, un = "", dec = 0, sep = ".") {
+        return (v) => {
+          let s = dec ? v.toFixed(dec).replace(".", ",") : Math.round(v).toString();
+          if (!dec) s = s.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+          const pad = Math.max(0, casas - s.replace(/\D/g, "").length);
+          e.innerHTML = `<span class="fant">${"0".repeat(pad)}</span>${s}${un ? `<span class="un">${esc(un)}</span>` : ""}`;
+        };
+      }
+      // barra de progresso do HUD (linha + ponto brilhante)
+      function barra(x, y, w) {
+        const b = document.createElement("div"); b.className = "barra"; b.innerHTML = "<i></i><b></b>";
+        b.style.left = px(X0 + x); b.style.top = px(y); b.style.width = px(w); hud.appendChild(b);
+        const i = b.querySelector("i"), p = b.querySelector("b");
+        return (k, o = 1) => { i.style.width = "100%"; i.style.transform = `scaleX(${k})`; p.style.left = k * 100 + "%"; b.style.opacity = o; };
+      }
+
+      // ------------------------------------------------------------------ 3D
+      const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, alpha: false, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+      renderer.setClearColor(0x020205, 1);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(30, W / H, 0.1, 400);
+      camera.position.set(0, 0, 12);
+
+      function texturaBrilho() {
+        const c = document.createElement("canvas"); c.width = c.height = 128;
+        const g = c.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+        gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.18, "rgba(255,255,255,0.75)"); gr.addColorStop(0.45, "rgba(255,255,255,0.18)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      }
+      const PONTO = texturaBrilho();
+      function brilho(cor, escala, opac = 1) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: PONTO, color: cor, transparent: true, opacity: opac, blending: THREE.AdditiveBlending, depthWrite: false }));
+        s.scale.setScalar(escala); return s;
+      }
+      // nuvem de pontos com cor por vértice (base de todos os objetos "feitos de pontos")
+      function pontos(pos, cores, tam = 0.05, opac = 1) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        if (cores) geo.setAttribute("color", new THREE.BufferAttribute(cores, 3));
+        const m = new THREE.PointsMaterial({ size: tam, map: PONTO, transparent: true, opacity: opac, vertexColors: !!cores,
+          blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+        return new THREE.Points(geo, m);
+      }
+      // campo de estrelas (fundo do "espaço"): 3 camadas com paralaxe e cintilância
+      function estrelas(n = 900) {
+        const pos = new Float32Array(n * 3), cor = new Float32Array(n * 3), fase0 = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+          pos[i * 3] = (rnd() - 0.5) * 60; pos[i * 3 + 1] = (rnd() - 0.5) * 90; pos[i * 3 + 2] = -20 - rnd() * 60;
+          const b = 0.35 + rnd() * 0.65; cor[i * 3] = b; cor[i * 3 + 1] = b; cor[i * 3 + 2] = b * (0.95 + rnd() * 0.1); fase0[i] = rnd() * 6.28;
+        }
+        const p = pontos(pos, cor, 0.16, 0.85);
+        const base = cor.slice();
+        p.userData.mover = (t) => {
+          const c = p.geometry.attributes.color.array;
+          for (let i = 0; i < n; i++) { const k = 0.6 + 0.4 * Math.sin(t * (1.5 + (i % 7) * 0.3) + fase0[i]); c[i * 3] = base[i * 3] * k; c[i * 3 + 1] = base[i * 3 + 1] * k; c[i * 3 + 2] = base[i * 3 + 2] * k; }
+          p.geometry.attributes.color.needsUpdate = true; p.rotation.z = t * 0.004;
+        };
+        return p;
+      }
+      // projeta um ponto do projeto (x em 1080 de largura útil, y em px de H) para coordenadas 3D no plano z
+      function noPlano(xp, yp, z = 0) {
+        const dist = camera.position.z - z, meiaH = Math.tan((camera.fov * Math.PI) / 360) * dist, meiaW = meiaH * camera.aspect;
+        return new THREE.Vector3(((X0 + xp) * U / W * 2 - 1) * meiaW, (1 - yp * U / H * 2) * meiaH, z);
+      }
+
+      const ctx = { THREE, scene, camera, renderer, D, W, H, U, AY, X0, PRE, ACENTO, QUENTE, rnd, clamp, lerp, E, fase,
+        el, palavras, sobe, digita, cantos, contador, barra, px, esc, brilho, pontos, estrelas, noPlano, PONTO, hud };
+
+      // grão de filme determinístico
+      (() => {
+        const c = document.createElement("canvas"); c.width = c.height = 256;
+        const g = c.getContext("2d"), im = g.createImageData(256, 256);
+        let s = 3; const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+        for (let i = 0; i < 256 * 256; i++) { const v = (r() * 255) | 0; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
+        g.putImageData(im, 0, 0);
+        document.getElementById("grao").style.backgroundImage = `url(${c.toDataURL()})`;
+      })();
+      const grao = document.getElementById("grao");
+
+      // ------------------------------------------------------------------ cena
+      __CENA_JS__
+
+      await document.fonts.ready;
+      const desenhar = montarCena(ctx);
+      const renderAt = (t0) => {
+        const t = t0 + PRE;
+        const f = Math.floor(t * 30); grao.style.backgroundPosition = `${(f * 97) % 256}px ${(f * 61) % 256}px`;
+        desenhar(t);
+        renderer.render(scene, camera);
+      };
+      window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+      renderAt(window.__hfThreeTime || 0);
+    </script>
+  </body>
+</html>
