@@ -83,6 +83,18 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 
 ## Habilidades extras
 
+- **Receita de edição aprovada: `docs/MODELO_EDICAO.md`** (vídeo 3 = padrão: cortes, legendas/ênfases, SFX, cor, entrega).
+  Ler antes de editar qualquer vídeo novo; o que muda por vídeo é só o plano (motions, headline, glossário).
+- **Motion padrão a partir do vídeo 4 = modelo "campo"** (pedido: "nível profissional", referência
+  `referencias/motion3/ref.mp4` — "ONE SECOND", field guide): preto com estrelas, HUD (cantos, rótulos JetBrains Mono,
+  timecode, barra de progresso), NÚMERO GIGANTE contando com zero-fantasma, script (Black Jack; reserva Noto Serif
+  itálico), objetos 3D de PONTOS com luz e halo. `hyperframes/modelos/campo.html` + cenas em
+  `hyperframes/modelos/cenas_campo/*.js` (`headline`, `contador` com objeto `galaxia|grade|anel`, `tres`, `mar`),
+  montador `editor/motion_campo.py`, `modelo: campo` no roteiro. Cada cena: HUD e 3D são função pura do tempo.
+- **Headline de abertura** (pedido do vídeo 4): cena `headline` + `formato: janela` (orador numa janela embaixo, sem
+  borda; cantos do HUD em volta; a janela abre para tela cheia no fim). Ótimo para gravações em selfie (rosto ocupa
+  a zona segura inteira).
+
 - **Motion nível cinema = modelo "cinema3d"** (pedido do cliente no vídeo 3 v4: "nível cinema", MENOS TEXTO nos
   motions — no máximo 1–3 palavras —, mais animação, "formatos bons"). HyperFrames + Three.js local
   (`hyperframes/modelos/cinema3d.html` + cenas em `hyperframes/modelos/cenas3d/*.js`, montador
