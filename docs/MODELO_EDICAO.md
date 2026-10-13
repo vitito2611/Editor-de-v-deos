@@ -41,10 +41,8 @@ vídeo é só o **plano** (`config/planos/<video>.yaml`): motions, headline e gl
 - Formatos com a filmagem (Remotion): `formato: janela` (o cliente numa janela/círculo sobre o motion),
   `efeito: multiplica` (grade de clones ×N) e `efeito: monitor` (o cliente dentro de um editor de vídeo).
 - Reprovado: esteira 3D "muito feia", motions "de amador", paletas rosa/lilás claro, motions só de letras.
-- **Padrão novo (vídeo 4 em diante): modelo `campo`** — linguagem "ONE SECOND / field guide"
-  (`referencias/motion3/ref.mp4`): preto profundo com estrelas, HUD (cantos, rótulos mono, timecode, barra de progresso
-  vermelha), **número gigante contando** + legenda em itálico serifado, objetos 3D de pontos com halo
-  (globo, dente, ondas de voz, partículas). Ver `docs/MODELOS.md` e `editor/motion_campo.py`.
+- **Padrão atual: modelo `produto`** (referência `referencias/motion4/ref.mp4`; o `campo` foi reprovado) — ver
+  `CONTEXTO.md` para as cenas, a sincronização com a fala e o fluxo completo (estúdio + página de entrega).
 - **Headline de abertura** nos primeiros ~2,5 s (dentro da zona segura), no mesmo idioma visual do motion.
 
 ## 6. Zeal (conteúdo)
@@ -57,5 +55,5 @@ cartão "Briefing da consulta" (Perfil · Objeção · Rapport).
 ## 7. Entrega
 
 - Conferir contact sheet antes de entregar.
-- Na nuvem: pelo chat, 1080x1920 2-pass ~28 MB cada (com e sem trilha). No Mac: 4K na pasta do Drive.
+- Na nuvem: **página de entrega** (link, ~6,3 Mbps, sem o limite de 30 MB do chat) — ver `CONTEXTO.md`. No Mac: 4K na pasta do Drive.
 - Publicar o **estúdio** do vídeo (Artifact) para o cliente ajustar sem digitar.
