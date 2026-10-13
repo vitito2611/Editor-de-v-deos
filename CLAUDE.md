@@ -53,7 +53,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   `config/planos/<video>_estudio.json` e apontar `estudio.alteracoes` no plano do vídeo (commit + push): assim o
   render em 4K no Mac (`--pasta`) sai idêntico ao aprovado no estúdio.
 - Estúdios: vídeo 2 (Santa Cruz) https://claude.ai/artifact/WscyQZuN2PqWBJztGS4y7p (formato antigo) ·
-  vídeo 3 (IA e emprego, estúdio completo v3) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1
+  vídeo 3 (IA e emprego, estúdio completo v3) https://claude.ai/artifact/WAvvGHiag1c68Zp9zKyFy1 ·
+  vídeo 4 (10 anos na odontologia) https://claude.ai/artifact/P2pFdYnKqiKUbiuUvjutjc (vídeo base do estúdio em 540p para
+  caber no limite de 15 MB por arquivo do Artifact)
 - No Mac do cliente (Claude Code local): `cd remotion && npm i && npx remotion studio` abre o Studio de verdade
   em localhost:3000 com cada vídeo como composição `Edicao-<nome>`.
 
