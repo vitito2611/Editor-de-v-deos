@@ -22,6 +22,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   mantidos): o render em outra máquina/resolução NÃO retranscreve (o Mac transcreveu diferente e mudou legendas/cortes).
 - Última entrega do vídeo 3 (v5, motion "Repetição" novo = cena premium `repeticao`): pelo chat, 1080x1920 2-pass
   ~28 MB cada (pedido do cliente: "mandar na conversa com o máximo de qualidade").
+- Vídeo 4 ("1013", 10 anos na odontologia, 118 s): plano `config/planos/video4_10anos.yaml` (modelo campo + headline),
+  entregue pelo chat em 1080x1920 2-pass ~29 MB (1,8 Mbps). Disco da nuvem enche fácil: limpar `remotion/public/projetos`
+  e `hyperframes/projetos` antigos antes de renderizar (com o disco cheio o Remotion falha e cai na composição FFmpeg).
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
