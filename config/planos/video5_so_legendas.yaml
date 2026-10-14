@@ -1,0 +1,29 @@
+# Vídeo "1014" — pedido ESPECÍFICO do cliente (só este vídeo; depois voltar ao CONTEXTO.md):
+# SOMENTE as legendas aprovadas (Rubik Bold branca + ênfases). Nada de cortes, motion, SFX, trilha, filtro ou
+# tratamento de áudio. As legendas começam DEPOIS da frase de efeito inicial ("a odontologia vai morrer nos próximos
+# 10 anos") — os blocos dessa frase ficam ocultos (config/planos/video5_estudio.json). O áudio final é o ORIGINAL.
+silencio: {ativo: false}
+erros: {ativo: false}
+cortes:
+  j_cut: {ativo: false}
+  l_cut: {ativo: false}
+  match_cut: {ativo: false}
+  smash_cut: {ativo: false}
+  jump_zoom: {ativo: false}
+  beat_cut: {ativo: false}
+  reaction_cut: {ativo: false}
+legendas:
+  comecar_apos: "A odontologia vai morrer nos próximos 10 anos."   # frase de efeito sem legenda
+  estilos:
+    cinetico: {posicao: peito}
+sfx: {ativo: false}
+musica: {ativo: false}
+cor: {ativo: false}
+motion: {ativo: false}
+dinamismo: {ativo: false}
+remotion: {elementos: []}
+geral: {versao_sem_trilha: false}
+transcricao:
+  correcoes: {"próximos10": "próximos 10", "descorto": "discordo", "externativa,": "estimativa,", "apenas10%": "apenas 10%",
+              "de90": "de 90", "de100": "de 100", "de20,30": "de 20, 30", "dou5": "dou 5", "nessesâmbitos,": "nesses âmbitos,",
+              "Vitor": "Victor", "Rodrigues,": "Rodriguez,", "estão": "gestão"}

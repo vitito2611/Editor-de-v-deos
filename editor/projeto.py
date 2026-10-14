@@ -42,6 +42,21 @@ def _legendas(words_out, g, faces, cfg, pular, estilos_log=None) -> list[dict]:
     por_t = {round(r["t"], 2): r["estilo"] for r in (estilos_log or [])}
     placer = Placer(g, faces, lc)
     size = st.get("tamanho", 64) * (g.canvas_w / 1080 if g.canvas_h > g.canvas_w else g.canvas_h / 1080)
+    # `legendas.comecar_apos: "frase"`: nada de legenda até o fim dessa frase (ex.: frase de efeito de abertura)
+    if lc.get("comecar_apos"):
+        import re as _re
+        norm = lambda x: _re.sub(r"[^\w%]", "", x.lower())
+        alvo = norm(str(lc["comecar_apos"]))          # compara sem espaços: "próximos10" (ASR) == "próximos 10"
+        texto, fim_de = "", []
+        for w in words_out:
+            texto += norm(w["w"])
+            fim_de.append(len(texto))
+        pos = texto.find(alvo)
+        if alvo and pos >= 0:
+            i = next(k for k, f in enumerate(fim_de) if f >= pos + len(alvo))
+            pular = list(pular) + [(0.0, words_out[i]["e"] + 0.02)]
+        else:
+            log.warning("  legendas.comecar_apos: frase não encontrada na transcrição (%s)", lc["comecar_apos"])
     ws = [w for w in words_out if not any(a - 0.05 <= w["s"] < b for a, b in pular)]
     grupos = group_words(ws, lc, st)
     out = []
