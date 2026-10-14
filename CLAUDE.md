@@ -37,6 +37,7 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - **"1014" no Drive foi trocado** (14/10 19:22): o arquivo novo é outro vídeo (57 s, "Startup é caro?") →
   `entrada/video6.mov`, plano `config/planos/video6_startup.yaml` — termina DE PROPÓSITO em
   "Agora, se você ainda acha que startup é caro," (cliente: não reordenar/cortar a fala final).
+  Estúdio: https://claude.ai/artifact/PjVnTpPuUmwbUJr2Tua2oo · entrega: https://claude.ai/artifact/Q65AgPV8B7VyRDie12c1uR
   Sempre conferir data/tamanho do arquivo no Drive antes de reaproveitar um bruto já baixado.
 - Vídeo 5 ("1014", "A odontologia vai morrer", 105 s) — EXCEÇÃO pedida pelo cliente só para ele: SOMENTE legendas (sem
   cortes, motion, SFX, trilha, filtro; áudio original), legendas a partir do fim da frase de abertura (o bruto já traz
