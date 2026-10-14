@@ -35,7 +35,8 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   entrega/<video>/web "Título" com.mp4 sem.mp4` → publicar `index.html` + `manifesto.json` + `partes/*` em lotes de
   ≤ 64 MB (limite por publicação; 15 MB por arquivo; 256 MB por versão). Vídeo 4: https://claude.ai/artifact/DrgPFupa5guSmYi8mDntdJ
 - **"1014" no Drive foi trocado** (14/10 19:22): o arquivo novo é outro vídeo (57 s, "Startup é caro?") →
-  `entrada/video6.mov`, plano `config/planos/video6_startup.yaml` (fim reordenado em `entrada/video6_ordem.mov`).
+  `entrada/video6.mov`, plano `config/planos/video6_startup.yaml` — termina DE PROPÓSITO em
+  "Agora, se você ainda acha que startup é caro," (cliente: não reordenar/cortar a fala final).
   Sempre conferir data/tamanho do arquivo no Drive antes de reaproveitar um bruto já baixado.
 - Vídeo 5 ("1014", "A odontologia vai morrer", 105 s) — EXCEÇÃO pedida pelo cliente só para ele: SOMENTE legendas (sem
   cortes, motion, SFX, trilha, filtro; áudio original), legendas a partir do fim da frase de abertura (o bruto já traz

@@ -1,8 +1,8 @@
 # Vídeo "1014" (versão do Drive de 14/10 19:22, 57 s) — "Startup é caro?": 3 passos para validar a ideia gastando pouco.
 # Padrão do CONTEXTO.md (headline + motions "produto" + receita do vídeo 3 + estúdio + página de entrega).
-# Uso: python editar.py entrada/video6_ordem.mov --estilo referencia1 --plataforma reels --config config/planos/video6_startup.yaml
-# entrada/video6_ordem.mov = bruto com o fim reordenado: a frase "Agora, se você ainda acha que startup é caro," estava
-# gravada DEPOIS do "Já me segue... vai te ajudar" e foi colocada antes dele (o vídeo terminava numa frase cortada).
+# Uso: python editar.py entrada/video6.mov --estilo referencia1 --plataforma reels --config config/planos/video6_startup.yaml
+# O vídeo TERMINA de propósito em "Agora, se você ainda acha que startup é caro," (pedido do cliente: não reordenar
+# nem cortar essa última fala).
 # Pedido desta edição: motions mais CENTRALIZADOS (na edição anterior ficavam à esquerda e "perdiam" a borda na entrada).
 cortes:
   jump_zoom: {ativo: true, modo: variado, zoom_niveis: [1.0, 1.07, 1.0, 1.12, 1.04], dividir_max_s: 2.6}
