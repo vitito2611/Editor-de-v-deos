@@ -33,6 +33,10 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   a página junta as partes e salva UM .mp4 idêntico (conferido por sha256). `python -m editor.entrega_web
   entrega/<video>/web "Título" com.mp4 sem.mp4` → publicar `index.html` + `manifesto.json` + `partes/*` em lotes de
   ≤ 64 MB (limite por publicação; 15 MB por arquivo; 256 MB por versão). Vídeo 4: https://claude.ai/artifact/DrgPFupa5guSmYi8mDntdJ
+- Vídeo 5 ("1014", "A odontologia vai morrer", 105 s) — EXCEÇÃO pedida pelo cliente só para ele: SOMENTE legendas (sem
+  cortes, motion, SFX, trilha, filtro; áudio original), legendas a partir do fim da frase de abertura (o bruto já traz
+  esse texto) via `legendas.comecar_apos`. Plano `config/planos/video5_so_legendas.yaml`. Entrega:
+  https://claude.ai/artifact/TUkUoGgdaPMp5CJ2V72msR. Próximos vídeos: voltar ao CONTEXTO.md.
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
