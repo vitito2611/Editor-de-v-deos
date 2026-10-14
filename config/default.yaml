@@ -32,7 +32,7 @@ transcricao:
   bloco_max_s: 24               # áudio é fatiado em blocos <= isso, cortando em pausas
   duracao_palavra_max_s: 1.2    # limita o "fim" de uma palavra quando o motor não informa
   # Glossário: corrige palavras que o ASR erra (nomes, marcas, termos). Ex.: {Paranoia: Pronoia}
-  correcoes: {}
+  correcoes: {"vitor": "Victor", "rodrigues": "Rodriguez", "rodriges": "Rodriguez", "rodrigez": "Rodriguez"}   # nome do cliente: Victor Hugo Rodriguez (com Z) — SEMPRE
 
 # -----------------------------------------------------------------------------
 # CORTE INTELIGENTE DE SILÊNCIOS (Etapa 3)

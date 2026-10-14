@@ -3,6 +3,12 @@
 Este é o fluxo-padrão aprovado. Em todo vídeo novo, executar tudo abaixo **automaticamente**, sem esperar pedido.
 Receita de corte/legenda/som: `docs/MODELO_EDICAO.md`. Preferências gerais e a Zeal: `CLAUDE.md`.
 
+## 0. Nome do cliente (regra fixa, nunca esquecer)
+
+- O nome é **Victor Hugo Rodriguez** — "Victor" com **c** e "Rodriguez" com **Z**. Em toda legenda, título, card ou
+  motion em que o nome aparecer, escrever exatamente assim. O ASR costuma errar ("Vitor", "Rodrigues"): a correção já
+  é automática para todos os vídeos (`transcricao.correcoes` em `config/default.yaml`), mas conferir na revisão.
+
 ## 1. Edição (padrão do vídeo 4, aprovado)
 
 - **Corte, legendas, ênfases e SFX** = receita do vídeo 3 (`docs/MODELO_EDICAO.md`): pausas ≥ 0,22 s e erros de gravação

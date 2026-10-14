@@ -2,6 +2,7 @@
 
 **LER PRIMEIRO: `CONTEXTO.md`** — padrão fixo de toda edição (motions modelo `produto` + headline, estúdio em tempo
 real e página de entrega sem limite de 30 MB). O cliente pediu: fazer sempre, sem que ele peça.
+Nome do cliente: **Victor Hugo Rodriguez** (com Z) — sempre assim em legendas e textos.
 
 Pipeline de edição automatizada (FFmpeg + Python). Entrada: `python editar.py bruto.mp4 --estilo <estilo> --plataforma reels`.
 Documentação: `README.md`, `docs/MODELOS.md` (catálogo de estilos), `docs/ETAPA1_briefing.md`, `docs/RESULTADOS.md`. Configuração: `config/default.yaml`,
