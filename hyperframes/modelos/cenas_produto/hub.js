@@ -2,9 +2,9 @@
 // acendem no tempo de cada palavra, ligados por linhas tracejadas que correm; chips de função em cada nó.
 function cena() {
   varredura(T(-0.25));
-  rotulo(C.rotulo || "O DENTISTA DOS PRÓXIMOS 10 ANOS", 60, 455, T(0.05));
-  titulo(C.titulo || "Domine *três* coisas.", { x: 60, y: 495, tam: 90, t: T(0.1), passo: 0.08 });
-  const cx = 470, cy = 1040;
+  rotulo(C.rotulo || "O DENTISTA DOS PRÓXIMOS 10 ANOS", 0, 455, T(0.05), true);
+  titulo(C.titulo || "Domine *três* coisas.", { y: 495, tam: 90, centro: true, larg: 940, t: T(0.1), passo: 0.08 });
+  const cx = 540, cy = 1040;
   const centro = mk("div", "abs"); pos(centro, cx - 90, cy - 90);
   Object.assign(centro.style, { width: px(180), height: px(180), borderRadius: px(44), background: "#111214", padding: px(42),
     boxShadow: `0 ${px(26)} ${px(60)} rgba(17,18,20,0.25)` });
@@ -14,7 +14,7 @@ function cena() {
   Object.assign(anel.style, { width: px(340), height: px(340), borderRadius: "50%", border: `2px dashed #c9cac6` });
   tl.fromTo(anel, { opacity: 0, scale: 0.7, rotation: 0 }, { opacity: 1, scale: 1, duration: 0.6, ease: EXPO }, T(0.35));
   tl.to(anel, { rotation: 40, duration: D.dur, ease: "none" }, T(0.35));
-  const itens = C.itens || [{ nome: "Marketing", sub: "atrair pacientes", ic: "mega", t: 2.1, x: 470, y: 720 }, { nome: "Gestão", sub: "clínica sem depender de você", ic: "grafico", t: 2.9, x: 150, y: 1320 }, { nome: "IA", sub: "automatizar processos", ic: "chip", t: 3.6, x: 760, y: 1300 }];
+  const itens = C.itens || [{ nome: "Marketing", sub: "atrair pacientes", ic: "mega", t: 2.1, x: 540, y: 720 }, { nome: "Gestão", sub: "clínica sem depender de você", ic: "grafico", t: 2.9, x: 265, y: 1320 }, { nome: "IA", sub: "automatizar processos", ic: "chip", t: 3.6, x: 800, y: 1320 }];
   itens.forEach((it) => {
     const no = mk("div", "card"); no.style.width = px(250); no.style.height = px(112); pos(no, it.x - 125, it.y - 56);
     no.innerHTML = `<div class="ativo"></div><div style="position:relative;display:flex;align-items:center;gap:${px(14)};padding:${px(18)} ${px(20)}">` +

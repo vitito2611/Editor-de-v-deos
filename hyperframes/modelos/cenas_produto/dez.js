@@ -1,9 +1,9 @@
 // "Menos do que 10% fatura acima de 100 mil": grade 10×10; 90 apagam, 10 acendem e sobem; barra 10% × 90%.
 function cena() {
   varredura(T(-0.25));
-  rotulo(C.rotulo || "SEGUNDO UMA ESTIMATIVA", 60, 455, T(0.05));
-  titulo(C.titulo || "Menos de *10%* passa de R$100 mil.", { x: 60, y: 495, tam: 78, larg: 900, t: T(0.1), passo: 0.06 });
-  const n = 10, tam = 58, gap = 14, x0 = 60, y0 = 720, sel = new Set();
+  rotulo(C.rotulo || "SEGUNDO UMA ESTIMATIVA", 0, 455, T(0.05), true);
+  titulo(C.titulo || "Menos de *10%* passa de R$100 mil.", { y: 495, tam: 78, centro: true, larg: 940, t: T(0.1), passo: 0.06 });
+  const n = 10, tam = 54, gap = 12, x0 = 540 - (10 * 66 - 12) / 2, y0 = 720, sel = new Set();
   while (sel.size < 10) sel.add(Math.floor(rnd() * 100));
   const qs = [];
   for (let i = 0; i < 100; i++) {
@@ -21,10 +21,10 @@ function cena() {
     } else tl.to(q, { opacity: 0.28, duration: 0.4 }, T(1.1));
   });
   // barra empilhada
-  const b = mk("div", "abs"); pos(b, 60, 1470 - 40); Object.assign(b.style, { width: px(720), height: px(18), borderRadius: px(9), background: "#e4e4e0", overflow: "hidden" });
+  const b = mk("div", "abs"); pos(b, x0, 1430); Object.assign(b.style, { width: px(648), height: px(18), borderRadius: px(9), background: "#e4e4e0", overflow: "hidden" });
   const f = mk("div", "abs", b); Object.assign(f.style, { left: 0, top: 0, bottom: 0, width: "10%", background: "#24d0dc", transformOrigin: "0 50%" });
   tl.fromTo(b, { opacity: 0 }, { opacity: 1, duration: 0.3 }, T(1.2)); tl.fromTo(f, { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: Q }, T(1.4));
-  const lb = mk("div", "abs rot", null, "<i></i>10% FATURA &gt; R$100 MIL"); pos(lb, 60, 1470 - 84);
+  const lb = mk("div", "abs rot", null, "<i></i>10% FATURA &gt; R$100 MIL"); pos(lb, x0, 1390);
   tl.fromTo(lb, { opacity: 0, y: 10 * U }, { opacity: 1, y: 0, duration: 0.4, ease: Q }, T(1.5));
   camera(1.04, -10);
 }

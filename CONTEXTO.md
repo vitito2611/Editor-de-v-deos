@@ -25,6 +25,9 @@ Receita de corte/legenda/som: `docs/MODELO_EDICAO.md`. Preferências gerais e a 
     `automacao` (lista que vira "automatizado"), `mar` (frase final + pilares). Criar cenas novas no mesmo idioma
     quando o conteúdo pedir. Conferir cada cena num quadro antes de montar o vídeo.
   - Pouco texto por motion; nada fora da zona segura do Reels (420 px em cima/embaixo, coluna de botões à direita).
+  - **Motions CENTRALIZADOS** (pedido do cliente no 1014: "estavam muito para a esquerda, perdendo um pouco quando
+    abriam"): rótulo e título com `centro: true`, cards/grades/listas simétricos em torno de x = 540 (largura ≤ 720 abaixo
+    de y ≈ 1100 por causa da coluna de botões), e a entrada (`varredura`) só faz fade, sem deslizar o palco de lado.
 - **Headline na abertura (sempre)**: cena `headline` com `formato: janela` — título no topo e o orador num cartão
   embaixo que abre para a tela cheia em ~3 s. Exemplo: plano `config/planos/video4_10anos.yaml`.
 - Plano por vídeo em `config/planos/<video>.yaml`; conferir contact sheet do render antes de entregar.

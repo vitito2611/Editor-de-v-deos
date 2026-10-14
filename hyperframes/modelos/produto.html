@@ -185,7 +185,7 @@
       function varredura(t, cor = "#24d0dc") {
         const v = mk("div", "varre"); v.style.background = cor; v.style.width = px(260); v.style.left = px(X0 - 300);
         tl.fromTo(v, { x: 0 }, { x: (W / U + 340) * U, duration: 0.55, ease: "power2.inOut" }, t);
-        tl.fromTo(palco, { x: 40 * U, opacity: 0.0 }, { x: 0, opacity: 1, duration: 0.45, ease: Q }, t + 0.18);
+        tl.fromTo(palco, { x: 0, opacity: 0.0 }, { x: 0, opacity: 1, duration: 0.45, ease: Q }, t + 0.18);   // entra no centro (antes vinha da direita e "perdia" a borda)
       }
       // explosão: anel + raios + flash (momento de impacto)
       function explosao(x, y, t, r = 170, cor = "#24d0dc") {
