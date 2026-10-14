@@ -43,7 +43,8 @@ vídeo é só o **plano** (`config/planos/<video>.yaml`): motions, headline e gl
 - Reprovado: esteira 3D "muito feia", motions "de amador", paletas rosa/lilás claro, motions só de letras.
 - **Padrão atual: modelo `produto`** (referência `referencias/motion4/ref.mp4`; o `campo` foi reprovado) — ver
   `CONTEXTO.md` para as cenas, a sincronização com a fala e o fluxo completo (estúdio + página de entrega).
-- **Headline de abertura** nos primeiros ~2,5 s (dentro da zona segura), no mesmo idioma visual do motion.
+- **Headline de abertura** nos primeiros ~2,5–3 s (dentro da zona segura), no mesmo idioma visual do motion —
+  só o texto em tela cheia, sem o rosto numa janela (pedido do cliente depois do 1014).
 
 ## 6. Zeal (conteúdo)
 

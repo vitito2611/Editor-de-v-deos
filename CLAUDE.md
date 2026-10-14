@@ -122,7 +122,8 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   na entrada de cada motion. `hyperframes/modelos/produto.html` + `cenas_produto/*.js` (`headline, clinicas, dez,
   experiencia, fluxo, hub, automacao, mar`), montador `editor/motion_produto.py`, `modelo: produto`. Motions longos
   sincronizados com a fala (itens com `t` por palavra).
-- **Headline de abertura** (pedido do vídeo 4): cena `headline` + `formato: janela` (orador numa janela embaixo, sem
+- **Headline de abertura** — desde o 1014 SÓ a headline em tela cheia, SEM o rosto na janela (pedido do cliente;
+  ver CONTEXTO.md). Antes (vídeo 4): cena `headline` + `formato: janela` (orador numa janela embaixo, sem
   borda; cantos do HUD em volta; a janela abre para tela cheia no fim). Ótimo para gravações em selfie (rosto ocupa
   a zona segura inteira).
 

@@ -1,11 +1,14 @@
 // Abertura: rótulo + título que escurece palavra a palavra com marca-texto em "10 anos", régua tracejada 2026 → 2036
 // que corre, e o orador numa janela (formato janela do Remotion) que no fim abre para a tela cheia.
 function cena() {
-  rotulo(C.rotulo || "ODONTOLOGIA · O FUTURO", 0, 455, T(0.0), true);
-  titulo(C.titulo || "Como vão ser os próximos *10 anos* na odontologia?", { y: 500, tam: C.tam || 80, centro: true, larg: 940, t: T(0.08), passo: 0.06 });
+  // sem janela_px = SÓ a headline (padrão desde o 1014: o cliente não quer o recorte do rosto na abertura) →
+  // o bloco desce para o meio da tela; com janela_px o orador entra numa janela embaixo (vídeos 4 e 1014).
+  const j = C.janela_px, oy = j ? 0 : 250;
+  rotulo(C.rotulo || "ODONTOLOGIA · O FUTURO", 0, 455 + oy, T(0.0), true);
+  titulo(C.titulo || "Como vão ser os próximos *10 anos* na odontologia?", { y: 500 + oy, tam: C.tam || 80, centro: true, larg: 940, t: T(0.08), passo: 0.06 });
   // régua de anos: tracejado que corre + marcadores (regua: false desliga; anos: ["IDEIA", "VENDA"] troca os rótulos)
   if (C.regua !== false) {
-    const y = 812, ns = "http://www.w3.org/2000/svg";
+    const y = 812 + oy, ns = "http://www.w3.org/2000/svg";
     const s = document.createElementNS(ns, "svg");
     s.setAttribute("width", px(1080)); s.setAttribute("height", px(40)); s.setAttribute("viewBox", "0 -20 1080 40");
     Object.assign(s.style, { position: "absolute", left: px(X0), top: px(y - 20) }); palco.appendChild(s);
@@ -19,9 +22,10 @@ function cena() {
     pos(marca, 102, y - 8); tl.fromTo(marca, { x: 0 }, { x: 860 * U, duration: 1.6, ease: "power2.inOut" }, T(0.6));
   }
   // sombra/moldura atrás da janela do orador (o vídeo entra por cima, pelo Remotion)
-  const j = C.janela_px || [108, 866, 864, 600];
-  const sombra = mk("div", "card"); pos(sombra, j[0], j[1]); sombra.style.width = px(j[2]); sombra.style.height = px(j[3]);
-  tl.fromTo(sombra, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, ease: EXPO }, T(0.0));
+  if (j) {
+    const sombra = mk("div", "card"); pos(sombra, j[0], j[1]); sombra.style.width = px(j[2]); sombra.style.height = px(j[3]);
+    tl.fromTo(sombra, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, ease: EXPO }, T(0.0));
+  }
   // saída: tudo sobe e some enquanto a janela abre
   const sai = C.sai ?? (D.dur - 0.6);
   tl.to(palco, { y: -90 * U, opacity: 0, duration: 0.45, ease: "power2.in" }, T(sai));
