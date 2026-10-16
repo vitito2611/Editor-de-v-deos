@@ -147,6 +147,12 @@ const BlocoLegenda: React.FC<{ b: Legenda; p: Efetivo; estilo: string }> = ({ b,
     : [ws.map((_, i) => i)];
   const altura = linhas.reduce((h, ln) => h + (destaque && ln.length === 1 && ln[0] === kwi ? base * 1.7 * 1.3 : base) * 1.12, 0);
   const cx = caixaSegura(p.W, p.H, b.y + e.deslocY + (b.dy ?? 0), altura, zonaDe(p), 0.86);
+  // palavra gigante do destaque nunca passa da caixa segura (ex.: "inadimplência" vazava pela esquerda no 1016):
+  // largura estimada ≈ letras × 0,62 em → encolhe a fonte até caber
+  const escDest = estiloDestaque(p.tema.fonte_titulo, 900, false).escala;
+  const kwTxt = ws[kwi]?.w ?? "";
+  const bigMax = (cx.width * p.W * 0.96) / Math.max(1, kwTxt.length * 0.62 * escDest);
+  const bigTam = Math.min(base * 1.7, bigMax);
   return (
     <AbsoluteFill>
       <div style={{
@@ -170,7 +176,7 @@ const BlocoLegenda: React.FC<{ b: Legenda; p: Efetivo; estilo: string }> = ({ b,
                   color: "#FFFFFF", textShadow: sombraTexto(e),
                   WebkitTextStroke: e.contorno > 0 ? `${Math.max(1, 4.3 * e.contorno * k)}px rgba(0,0,0,${0.2 + e.contorno * 0.45})` : undefined,
                   paintOrder: "stroke fill",
-                  fontSize: (big ? base * 1.7 : base) * (dest ? estiloDestaque(p.tema.fonte_titulo, 900, false).escala : 1),
+                  fontSize: (big ? bigTam : base) * (dest ? estiloDestaque(p.tema.fonte_titulo, 900, false).escala : 1),
                   lineHeight: 1.08,
                   opacity: f < 0 ? 0 : 1, transform: `scale(${0.82 + 0.18 * pop})`, display: "inline-block",
                 }}>{txt}</span>
