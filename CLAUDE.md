@@ -43,6 +43,9 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   cortes, motion, SFX, trilha, filtro; áudio original), legendas a partir do fim da frase de abertura (o bruto já traz
   esse texto) via `legendas.comecar_apos`. Plano `config/planos/video5_so_legendas.yaml`. Entrega:
   https://claude.ai/artifact/TUkUoGgdaPMp5CJ2V72msR. Próximos vídeos: voltar ao CONTEXTO.md.
+- Vídeo 7 ("1016", "Boleto em clínica é burrada?", 79 s): cliente pediu "mesma pegada do 1014, só com a legenda" →
+  igual ao vídeo 5 (só legendas, áudio original, legendas depois da frase já escrita no bruto). Plano
+  `config/planos/video7_boleto.yaml`. Entrega: https://claude.ai/artifact/JCqHGMsiLN8pjoF9qqGYDA
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
