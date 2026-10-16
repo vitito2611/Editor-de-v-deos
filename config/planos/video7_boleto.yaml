@@ -1,0 +1,31 @@
+# Vídeo "1016" — "Boleto em clínica é burrada?" (79 s) — pedido do cliente: "mesma pegada do 1014, sem muita
+# alteração, só com a legenda" → igual ao video5_so_legendas.yaml: SOMENTE as legendas aprovadas (Rubik Bold branca +
+# ênfases), sem cortes, motion, SFX, trilha, filtro ou tratamento de áudio (áudio original). O bruto já traz a frase de
+# abertura escrita ("Boleto em clínica é BURRADA") → as legendas começam depois dela.
+# Uso: python editar.py entrada/video7.mov --estilo referencia1 --plataforma reels --config config/planos/video7_boleto.yaml
+silencio: {ativo: false}
+erros: {ativo: false}
+cortes:
+  j_cut: {ativo: false}
+  l_cut: {ativo: false}
+  match_cut: {ativo: false}
+  smash_cut: {ativo: false}
+  jump_zoom: {ativo: false}
+  beat_cut: {ativo: false}
+  reaction_cut: {ativo: false}
+legendas:
+  comecar_apos: "Boleto em clínica odontológica é burrada."   # já está escrita no bruto
+  estilos:
+    cinetico: {posicao: peito}
+sfx: {ativo: false}
+musica: {ativo: false}
+cor: {ativo: false}
+motion: {ativo: false}
+dinamismo: {ativo: false}
+geral: {versao_sem_trilha: false}
+transcricao:
+  correcoes: {"burrado": "burrada", "inadplência": "inadimplência", "inadapência": "inadimplência",
+              "inadipliência": "inadimplência", "inadipia": "inadimplência", "a vista": "à vista"}
+estudio:
+  # mesmo acabamento das legendas do 1014 (contorno/sombra fortes, um pouco maior)
+  alteracoes: config/planos/video5_estudio.json
