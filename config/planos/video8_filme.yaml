@@ -44,3 +44,5 @@ filme:
   pool: ["man running at night", "man looking out window", "mountain climber", "man walking city night",
          "weightlifting gym", "running stairs", "rain on window", "man thinking dark", "basketball player training",
          "lonely man street"]
+estudio:
+  alteracoes: config/planos/video8_filme_estudio.json   # ajustes do cliente no estúdio (tirou a subida do smash cut)
