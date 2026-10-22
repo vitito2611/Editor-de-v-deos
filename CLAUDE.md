@@ -46,6 +46,12 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
 - Vídeo 7 ("1016", "Boleto em clínica é burrada?", 79 s): cliente pediu "mesma pegada do 1014, só com a legenda" →
   igual ao vídeo 5 (só legendas, áudio original, legendas depois da frase já escrita no bruto). Plano
   `config/planos/video7_boleto.yaml`. Entrega: https://claude.ai/artifact/JCqHGMsiLN8pjoF9qqGYDA
+- Vídeo 8 ("1022", "Por que você desiste?", 77 s): NÃO mexer nos primeiros 29,7 s (o cliente altera essa parte; é um clipe
+  de terceiros + tela preta) → `work/video8_parteA.mp4` intacto + edição só de `entrada/video8_b.mov` com o **layout
+  "filme"** (referência `referencias/motion5/ref.mp4`: cenas Mixkit P&B no card de cima, orador no card de baixo, legenda
+  tipográfica em vários lugares da cena — `editor/filme.py` + `remotion/src/Filme.tsx`, plano `config/planos/video8_filme.yaml`).
+  Final = concat(parte A, parte B). Fotos de pessoas citadas só com licença comercial (Openverse trouxe pessoas erradas →
+  cenas temáticas). Estúdio: https://claude.ai/artifact/25ELPHFxV9CoHq8c2FUZ5Q · entrega: https://claude.ai/artifact/TD8R2dcM5PF6TXcMh6mWqc
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
