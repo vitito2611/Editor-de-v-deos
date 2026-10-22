@@ -1,0 +1,45 @@
+# Vídeo "1022" — "Por que você desiste?" (77 s). Pedido do cliente:
+#  - NÃO mexer nos primeiros 30 s (ele vai alterar essa parte): o trecho 0–29,7 s entra intacto no final;
+#    a edição é feita só em entrada/video8_b.mov (do 29,7 s até o fim; o corte fica na tela preta antes da fala).
+#  - Estilo da referência referencias/motion5/ref.mp4 (Drive: snapinsta-1792681685774): o orador num card embaixo e,
+#    em cima, cenas de filme motivacionais trocando no ritmo da fala; legenda tipográfica grande em vários lugares
+#    da cena (editor/filme.py + remotion/src/Filme.tsx). Cor não precisa ser igual → P&B cinematográfico (editável).
+# Uso: python editar.py entrada/video8_b.mov --estilo referencia1 --plataforma reels --config config/planos/video8_filme.yaml
+transcricao:
+  correcoes: {"UFC": "KFC", "níx": "dias", "Cris": "né"}
+cortes:
+  jump_zoom: {ativo: false}            # o orador fica num card pequeno: sem zoom
+sfx:
+  intervalo_min_s: 0.9
+  max_por_minuto: 30
+  volume_rel_voz_db: -9
+silencio:
+  pausa_preservada_s: 0.22
+motion:
+  contador: {ativo: false}
+dinamismo:
+  ativo: false                         # as cenas vêm do layout filme
+cor: {look: azul_cinema}               # substituído pelo P&B do layout filme
+filme:
+  ativo: true
+  cena_min_s: 1.8
+  cenas:
+    - {contem: "planejou", busca: "man writing in notebook"}
+    - {contem: "família", busca: "family dinner"}
+    - {contem: "dinheiro", busca: "counting money"}
+    - {contem: "Coronel Sanders", foto: "Colonel Sanders"}
+    - {contem: "receita", busca: "chef cooking fried chicken"}
+    - {contem: "Walt Disney", foto: "Walt Disney"}
+    - {contem: "não desistiram", busca: "boxer training"}
+    - {contem: "motivação", busca: "sunrise mountain man"}
+    - {contem: "acordar", busca: "alarm clock morning"}
+    - {contem: "talento", busca: "pianist hands"}
+    - {contem: "dormiram", busca: "man working late at night"}
+    - {contem: "alimentam", busca: "healthy food preparation"}
+    - {contem: "desiste", busca: "athlete exhausted"}
+    - {contem: "Tenta de novo", busca: "runner sprinting"}
+    - {contem: "startup", busca: "startup team office"}
+    - {contem: "amigo", busca: "friends talking"}
+  pool: ["man running at night", "man looking out window", "mountain climber", "man walking city night",
+         "weightlifting gym", "running stairs", "rain on window", "man thinking dark", "basketball player training",
+         "lonely man street"]

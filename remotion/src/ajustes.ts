@@ -41,7 +41,7 @@ export type AudioProj = {
 export type EstiloLegendas = {
   escala: number;          // 1 = tamanho do modelo
   deslocY: number;         // fração da altura (+ desce)
-  estilo: "auto" | "dinamico" | "simples" | "cinetico";
+  estilo: "auto" | "dinamico" | "simples" | "cinetico" | "filme";
   caixaAlta: boolean;
   contorno: number;        // 0–1
   sombra: number;          // 0–1

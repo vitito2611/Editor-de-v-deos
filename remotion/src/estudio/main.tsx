@@ -385,7 +385,7 @@ const PainelLegendas: React.FC<PProps & { ef: EfP; sel: Sel; setSel: (s: Sel) =>
           <label htmlFor="leg-estilo">Animação</label>
           <select id="leg-estilo" value={e.estilo} onChange={(ev) => set("estilo")(ev.target.value)}>
             <option value="auto">Do modelo</option><option value="dinamico">Dinâmica (palavra a palavra)</option>
-            <option value="simples">Simples (frase inteira)</option><option value="cinetico">Cinética (destaque grande)</option>
+            <option value="simples">Simples (frase inteira)</option><option value="cinetico">Cinética (destaque grande)</option><option value="filme">Filme (tipografia na cena)</option>
           </select>
         </div>
         <label className="check"><input id="leg-caixa" type="checkbox" checked={e.caixaAlta} onChange={(ev) => set("caixaAlta")(ev.target.checked)} /> Caixa alta</label>
@@ -441,7 +441,7 @@ const FichaLegenda: React.FC<{ l: Legenda; base: Window["PROJETO"]; alt: Alterac
         <div className="campo-linha">
           <label htmlFor={"est-" + l.id}>Animação</label>
           <select id={"est-" + l.id} value={cur.estilo_fixo ?? ""} onChange={(e) => mudarLegenda(l.id, { estilo_fixo: e.target.value || undefined })}>
-            <option value="">Igual às outras</option><option value="dinamico">Dinâmica</option><option value="simples">Simples</option><option value="cinetico">Cinética</option>
+            <option value="">Igual às outras</option><option value="dinamico">Dinâmica</option><option value="simples">Simples</option><option value="cinetico">Cinética</option><option value="filme">Filme</option>
           </select>
         </div>
         <Deslizante id={"dy-" + l.id} rotulo="Altura desta" v={cur.dy ?? 0} min={-0.3} max={0.3} passo={0.005} fmt={(v) => (v * 100).toFixed(1) + "%"} padrao={0}

@@ -5,6 +5,7 @@ import {
 } from "remotion";
 import { Elemento, Tema, useFontes, estiloDestaque, SCRIPT } from "./Elemento";
 import { FormatoJanela, FormatoMonitor, FormatoMultiplica, Janela } from "./Formatos";
+import { Card, LayoutFilme, LegendaFilme } from "./Filme";
 import {
   Alteracoes, AudioProj, COR_NEUTRA, Cor, dbLin, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, filtroCor, mapaCortes,
   normalizar, Palavra, remapear, Seg, caixaSegura, Zona, ZONA_REELS,
@@ -22,8 +23,9 @@ import {
 export type { Palavra };
 export type Legenda = {
   id: string; t: number; dur: number; palavras: Palavra[]; y: number; oculto?: boolean;
-  estilo?: "dinamico" | "cinetico" | "simples";   // segue o modelo (ex.: referencia1 = simples + cinetico)
-  estilo_fixo?: "dinamico" | "cinetico" | "simples";   // escolhido no estúdio (vence o estilo geral)
+  estilo?: "dinamico" | "cinetico" | "simples" | "filme";   // segue o modelo (ex.: referencia1 = simples + cinetico)
+  estilo_fixo?: "dinamico" | "cinetico" | "simples" | "filme";   // escolhido no estúdio (vence o estilo geral)
+  pos?: number;                                      // layout filme: posição do bloco na cena
   sem_destaque?: boolean;
   tamanho?: number; dy?: number;
 };
@@ -56,6 +58,7 @@ export type Projeto = {
   sem_audio?: boolean;                       // render final: o áudio é mixado à parte (Python) e entra depois
   zona_segura?: Zona | null;                 // zona segura da plataforma (Reels); null = sem restrição
   cor_pronta?: boolean;                      // a base já vem com a cor aplicada (FFmpeg/LUT): pula o filtro SVG no render final
+  layout?: LayoutFilme | null;               // "filme": cena no card de cima + orador no card de baixo (Filme.tsx)
 };
 
 type Efetivo = Omit<Projeto, "cor" | "estilo_legendas"> & {
@@ -312,17 +315,27 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
       durationInFrames={Math.max(1, Math.round(c.dur * fps))} layout="none">{filho}</Sequence>
   );
   const e = p.estilo_legendas;
+  const lf = p.layout?.tipo === "filme" ? p.layout : null;
+  const kL = p.W / 1080;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {!p.cor_pronta && <FiltroCor id={idFiltro} c={p.cor} />}
       <AbsoluteFill style={{ filter: p.cor_pronta ? undefined : `url(#${idFiltro})` }}>
-        {p.segs.map((s, i) => (
-          <Sequence key={"b" + i} name={`Vídeo ${i + 1}`} from={Math.round(s.o * fps)}
-            durationInFrames={Math.max(1, Math.round((s.b - s.a) * fps))} layout="none">
-            <AbsoluteFill><OffthreadVideo src={midia(p, p.base)} muted={!!p.audio || !!p.sem_audio} trimBefore={Math.round(s.a * fps)} /></AbsoluteFill>
-          </Sequence>
-        ))}
-        {comCor.map((c) => seq(c, <Insercao c={c} p={p} />))}
+        {(() => {
+          const base = p.segs.map((s, i) => (
+            <Sequence key={"b" + i} name={`Vídeo ${i + 1}`} from={Math.round(s.o * fps)}
+              durationInFrames={Math.max(1, Math.round((s.b - s.a) * fps))} layout="none">
+              <AbsoluteFill><OffthreadVideo src={midia(p, p.base)} muted={!!p.audio || !!p.sem_audio} trimBefore={Math.round(s.a * fps)}
+                style={lf ? { width: "100%", height: "100%", objectFit: "cover", objectPosition: `50% ${(lf.foco_y ?? 0.4) * 100}%` } : undefined} /></AbsoluteFill>
+            </Sequence>
+          ));
+          const ins = comCor.map((c) => seq(c, <Insercao c={c} p={p} />));
+          if (!lf) return <>{base}{ins}</>;
+          return <>
+            <Card c={lf.topo} k={kL} raio={lf.raio ?? 34}>{ins}</Card>
+            <Card c={lf.baixo} k={kL} raio={lf.raio ?? 34}>{base}</Card>
+          </>;
+        })()}
       </AbsoluteFill>
       {p.cor.vinheta > 0 && <AbsoluteFill style={{ pointerEvents: "none",
         background: `radial-gradient(ellipse 78% 70% at 50% 48%, transparent 50%, rgba(0,0,0,${0.75 * p.cor.vinheta}) 100%)` }} />}
@@ -344,7 +357,9 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
         return (
           <Sequence key={b.id} name={`Legenda: ${b.palavras.map((w) => w.w).join(" ")}`} from={Math.round(b.t * fps)}
             durationInFrames={Math.max(1, Math.round(b.dur * fps))} layout="none">
-            {estilo === "simples" ? <LegendaSimples b={b} p={p} /> : <BlocoLegenda b={b} p={p} estilo={estilo} />}
+            {estilo === "filme" && lf ? <LegendaFilme b={b} W={p.W} layout={lf} fonteTitulo={p.tema.fonte_titulo} escala={e.escala}
+              dy={(e.deslocY + (b.dy ?? 0)) * p.H / kL} caixaAlta={e.caixaAlta} />
+              : estilo === "simples" ? <LegendaSimples b={b} p={p} /> : <BlocoLegenda b={b} p={p} estilo={estilo === "filme" ? "cinetico" : estilo} />}
           </Sequence>
         );
       })}

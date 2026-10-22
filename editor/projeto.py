@@ -166,6 +166,10 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
         "zona_segura": (cfg["legendas"].get("zona_segura") if g.canvas_h > g.canvas_w else None),
         "audio": audio_proj,
     }
+    # layout "filme" (vídeo 1022): cenas de filme no card de cima + orador embaixo, P&B, legenda tipográfica
+    if (cfg.get("filme") or {}).get("ativo"):
+        from . import filme
+        filme.aplicar(proj, cfg, d)
     # ajustes feitos no estúdio e guardados no plano do vídeo (ex.: render em 4K no Mac sai igual ao aprovado)
     alt_arq = (cfg.get("estudio") or {}).get("alteracoes")
     if alt_arq:
