@@ -6,7 +6,7 @@
 #    da cena (editor/filme.py + remotion/src/Filme.tsx). Cor não precisa ser igual → P&B cinematográfico (editável).
 # Uso: python editar.py entrada/video8_b.mov --estilo referencia1 --plataforma reels --config config/planos/video8_filme.yaml
 transcricao:
-  correcoes: {"UFC": "KFC", "níx": "dias", "Cris": "né"}
+  correcoes: {"UFC": "KFC", "GFC": "KFC", "KGC": "KFC", "níx": "dias", "Cris": "né"}
 cortes:
   jump_zoom: {ativo: false}            # o orador fica num card pequeno: sem zoom
 sfx:
