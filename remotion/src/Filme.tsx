@@ -17,7 +17,7 @@ export type LayoutFilme = {
 };
 
 export const LAYOUT_FILME_PADRAO: LayoutFilme = {
-  tipo: "filme", topo: [40, 150, 1000, 860], baixo: [40, 1040, 1000, 470], raio: 34, foco_y: 0.38,
+  tipo: "filme", topo: [40, 140, 1000, 820], baixo: [40, 990, 1000, 540], raio: 34, foco_y: 0.47,
 };
 
 export const Card: React.FC<{ c: Caixa; k: number; raio: number; children: React.ReactNode }> = ({ c, k, raio, children }) => (
@@ -70,18 +70,25 @@ export const LegendaFilme: React.FC<{
   const largBloco = P.larg * cw * k;
   const esc = (b.tamanho ?? 1) * escala;
   const destaque = estiloDestaque(fonteTitulo, 900, true);
+  const ehKwLinha = (ln: number[]) => temKw && ln.length === 1 && ln[0] === kwi;
   const tamLinha = (ln: number[]) => {
     const txt = ln.map((i) => ws[i].w).join(" ");
-    const ehKw = temKw && ln.length === 1 && ln[0] === kwi;
-    const car = ehKw ? 0.5 * destaque.escala : CAR;
-    // a linha tenta ocupar a largura do bloco (efeito "justificado" da referência), com limites
-    return Math.max(54 * k, Math.min((ehKw ? 190 : 150) * k, largBloco / Math.max(3, txt.length * car))) * esc;
+    const car = ehKwLinha(ln) ? 0.6 * destaque.escala : CAR;
+    // a linha tenta ocupar a largura do bloco (efeito "justificado" da referência), com limites; nunca passa da
+    // largura do bloco (palavras longas encolhem em vez de sair do card)
+    const cabe = largBloco / Math.max(3, txt.length * car);
+    return Math.min(cabe, Math.max(54 * k, Math.min((ehKwLinha(ln) ? 190 : 150) * k, cabe)) * esc);
   };
-  const alturas = linhas.map((ln) => tamLinha(ln) * 0.98);
-  const altura = alturas.reduce((a, b2) => a + b2, 0);
+  // altura real da linha: a palavra manuscrita é maior (escala da fonte de destaque)
   // âncora dentro do card; o bloco nunca sai do card nem sobe para a zona de cima do Reels (420 px)
   const topoMin = Math.max(cy * k + 30 * k, 430 * k);
   const fundoMax = (cy + ch) * k - 30 * k;
+  // bloco alto demais para o espaço livre: encolhe tudo por igual
+  const alt0 = linhas.reduce((a, ln) => a + tamLinha(ln) * (ehKwLinha(ln) ? destaque.escala * 1.05 : 0.98), 0);
+  const fit = Math.min(1, (fundoMax - topoMin) / Math.max(1, alt0));
+  const tamFinal = (ln: number[]) => tamLinha(ln) * fit;
+  const alturas = linhas.map((ln) => tamFinal(ln) * (ehKwLinha(ln) ? destaque.escala * 1.05 : 0.98));
+  const altura = alturas.reduce((a, b2) => a + b2, 0);
   const y0 = Math.min(fundoMax - altura, Math.max(topoMin, (cy + ch * P.y) * k - altura / 2 + dy * k));
   const xA = (cx + cw * P.x) * k;
   const left = P.al === "left" ? xA : P.al === "right" ? xA - largBloco : xA - largBloco / 2;
@@ -90,7 +97,7 @@ export const LegendaFilme: React.FC<{
   return (
     <div style={{ position: "absolute", inset: 0, opacity: sai, pointerEvents: "none" }}>
       {linhas.map((ln, li) => {
-        const fs = tamLinha(ln);
+        const fs = tamFinal(ln);
         const top = y;
         y += alturas[li];
         return (

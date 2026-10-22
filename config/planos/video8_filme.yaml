@@ -23,13 +23,14 @@ cor: {look: azul_cinema}               # substituído pelo P&B do layout filme
 filme:
   ativo: true
   cena_min_s: 1.8
+  layout: {foco_y: 0.52}                # rosto do orador no centro do card de baixo
   cenas:
     - {contem: "planejou", busca: "man writing in notebook"}
     - {contem: "família", busca: "family dinner"}
     - {contem: "dinheiro", busca: "counting money"}
-    - {contem: "Coronel Sanders", foto: "Colonel Sanders"}
+    - {contem: "Coronel Sanders", busca: "old man cooking"}   # sem foto real com licença comercial
     - {contem: "receita", busca: "chef cooking fried chicken"}
-    - {contem: "Walt Disney", foto: "Walt Disney"}
+    - {contem: "Walt Disney", busca: "artist drawing sketch"}
     - {contem: "não desistiram", busca: "boxer training"}
     - {contem: "motivação", busca: "sunrise mountain man"}
     - {contem: "acordar", busca: "alarm clock morning"}

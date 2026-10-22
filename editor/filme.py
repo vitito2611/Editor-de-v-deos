@@ -8,7 +8,7 @@ Trechos de filmes de verdade (Hollywood) têm direitos autorais e não são usad
 Plano do vídeo:
   filme:
     ativo: true
-    layout: {topo: [40, 150, 1000, 860], baixo: [40, 1040, 1000, 470], raio: 34, foco_y: 0.38}
+    layout: {topo: [40, 140, 1000, 820], baixo: [40, 990, 1000, 540], raio: 34, foco_y: 0.47}
     cena_min_s: 1.8                      # troca de cena no começo de um bloco de legenda depois de ≥ 1,8 s
     cenas:                               # cenas ligadas a falas (a 1ª palavra-chave que aparece no bloco)
       - {contem: "Walt Disney", foto: "Walt Disney portrait"}
@@ -25,7 +25,7 @@ from pathlib import Path
 from . import stock
 from .utils import ffmpeg, log
 
-LAYOUT = {"tipo": "filme", "topo": [40, 150, 1000, 860], "baixo": [40, 1040, 1000, 470], "raio": 34, "foco_y": 0.38}
+LAYOUT = {"tipo": "filme", "topo": [40, 140, 1000, 820], "baixo": [40, 990, 1000, 540], "raio": 34, "foco_y": 0.47}
 COR_PB = {"look": "nenhum", "intensidade": 1.0, "exposicao": 0.0, "contraste": 0.22, "saturacao": 0.0, "vibrance": 0.0,
           "temperatura": 0.0, "tint": 0.0, "pretos": 0.06, "sombras": [0, 0, 0], "luzes": [0, 0, 0], "vinheta": 0.35, "grao": 0.35}
 # ordem das posições dos blocos (índices de POSICOES em remotion/src/Filme.tsx): esquerda, direita, centro…
@@ -46,7 +46,8 @@ def _blocos(legendas: list[dict], max_pal: int = 5, max_s: float = 2.4) -> list[
             blocos.append(cur)
             cur = []
         cur.append(w)
-        if re.search(r"[.!?,;:]$", w["w"]) and len(cur) >= 2:
+        # fim de frase fecha o bloco (mesmo com 1 palavra: "Rodriguez." não se junta à frase seguinte)
+        if re.search(r"[.!?]$", w["w"]) or (re.search(r"[,;:]$", w["w"]) and len(cur) >= 2):
             blocos.append(cur)
             cur = []
     if cur:
@@ -98,8 +99,12 @@ def aplicar(proj: dict, cfg: dict, d: Path) -> dict:
         lig = next((c for i, c in enumerate(ligadas) if i not in usadas and _norm(c["contem"]) in txt), None)
         if lig:
             usadas.add(ligadas.index(lig))
-        if not cortes or lig or b["t"] - cortes[-1][0] >= cmin:
-            cortes.append((max(0.0, b["t"] if cortes else 0.0), lig))
+        if not cortes:
+            cortes.append((0.0, lig))
+        elif lig and b["t"] - cortes[-1][0] < 1.2 and cortes[-1][1] is None:
+            cortes[-1] = (cortes[-1][0], lig)          # cena ligada logo depois de um corte: troca a cena em vez de piscar
+        elif (lig and b["t"] - cortes[-1][0] >= 1.2) or b["t"] - cortes[-1][0] >= cmin:
+            cortes.append((b["t"], lig))
     camadas = [c for c in proj.get("camadas") or [] if c.get("tipo") != "broll" or c.get("formato")]
     ip, skip = 0, {}
     (d / "midia").mkdir(exist_ok=True)
@@ -108,7 +113,7 @@ def aplicar(proj: dict, cfg: dict, d: Path) -> dict:
         dur = max(0.4, t1 - t0)
         arq, nome, foto = None, "", False
         if lig and lig.get("foto"):
-            r = stock.openverse_photo(lig["foto"])
+            r = stock.openverse_photo(lig["foto"]) or stock.openverse_photo(lig["foto"])   # 2ª tentativa: Openverse oscila
             if r:
                 arq, nome, foto = r[0], f"Foto: {lig['foto']}", True
         if arq is None:
