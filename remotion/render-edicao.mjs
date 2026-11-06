@@ -2,7 +2,7 @@
 // Uso: node render-edicao.mjs <projeto.json> <saida.mp4> [crf]
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, readdirSync } from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -10,7 +10,16 @@ import { fileURLToPath } from "url";
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const [, , projFile, saida, crf] = process.argv;
 const props = JSON.parse(readFileSync(projFile, "utf-8"));
-const headless = "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell";
+const headless = (() => {   // Chromium headless do ambiente (qualquer versão do Playwright em /opt/pw-browsers)
+  try {
+    for (const d of readdirSync("/opt/pw-browsers").filter((x) => x.startsWith("chromium_headless_shell-")).sort().reverse())
+      for (const sub of ["chrome-linux", "chrome-headless-shell-linux64"]) {
+        const f = `/opt/pw-browsers/${d}/${sub}/` + (sub === "chrome-linux" ? "headless_shell" : "chrome-headless-shell");
+        if (existsSync(f)) return f;
+      }
+  } catch { /* fora da nuvem */ }
+  return "";
+})();
 const browserExecutable = existsSync(headless) ? headless : null;
 // público mínimo: só as fontes + o projeto deste render (o bundle copiava TODOS os projetos para /tmp a cada render
 // e nunca apagava — 29 cópias encheram o disco). Tudo é apagado no fim.

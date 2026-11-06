@@ -13,8 +13,17 @@ Config.setOverwriteOutput(true);
 
 // Ambiente de nuvem: usa o Chromium headless já instalado (o download automático do Remotion
 // é bloqueado pela rede). Em outra máquina, se o caminho não existir, o Remotion baixa o seu.
-import { existsSync } from "fs";
-const headless = "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell";
+import { existsSync, readdirSync } from "fs";
+const headless = (() => {   // Chromium headless do ambiente (qualquer versão do Playwright em /opt/pw-browsers)
+  try {
+    for (const d of readdirSync("/opt/pw-browsers").filter((x) => x.startsWith("chromium_headless_shell-")).sort().reverse())
+      for (const sub of ["chrome-linux", "chrome-headless-shell-linux64"]) {
+        const f = `/opt/pw-browsers/${d}/${sub}/` + (sub === "chrome-linux" ? "headless_shell" : "chrome-headless-shell");
+        if (existsSync(f)) return f;
+      }
+  } catch { /* fora da nuvem */ }
+  return "";
+})();
 if (existsSync(headless)) {
   Config.setBrowserExecutable(headless);
 }
