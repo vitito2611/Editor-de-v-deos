@@ -329,6 +329,8 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
         </Sequence>
       ))}
       {comCor.map((c) => seq(c, <Insercao c={c} p={p} />))}
+      {/* degradê na base da tela do software: a legenda fica sempre legível e o software "funde" na headline */}
+      <AbsoluteFill style={{ background: `linear-gradient(180deg, transparent 72%, ${lf.fundo ?? "#120a26"}e6 88%, ${lf.fundo ?? "#120a26"} 100%)` }} />
     </Card>
   ) : null;
   return (

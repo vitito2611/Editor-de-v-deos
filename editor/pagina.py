@@ -338,6 +338,9 @@ def estudio(pj: Path, saida_dir: Path, titulo: str, sub: str, cfg: dict | None =
         return rel
 
     leve(pj.parent / proj["base"], "base.mp4", not proj.get("audio"))
+    # tela dividida: o vídeo de cima (software) também vai para a página
+    if (proj.get("layout") or {}).get("video_topo"):
+        leve(pj.parent / proj["layout"]["video_topo"], proj["layout"]["video_topo"], False)
     for c in proj["camadas"]:
         if c.get("arquivo"):
             leve(pj.parent / c["arquivo"], c["arquivo"], False)
