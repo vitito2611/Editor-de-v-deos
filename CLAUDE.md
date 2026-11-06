@@ -52,6 +52,12 @@ presets em `config/estilos/`, planos por vídeo em `config/planos/`.
   tipográfica em vários lugares da cena — `editor/filme.py` + `remotion/src/Filme.tsx`, plano `config/planos/video8_filme.yaml`).
   Final = concat(parte A, parte B). Fotos de pessoas citadas só com licença comercial (Openverse trouxe pessoas erradas →
   cenas temáticas). Estúdio: https://claude.ai/artifact/25ELPHFxV9CoHq8c2FUZ5Q · entrega: https://claude.ai/artifact/TD8R2dcM5PF6TXcMh6mWqc
+- Vídeo 9 (Drive "19455F9A…", 60 s, nov/2026): **tela dividida** — tela do software da Zeal em cima (vídeo enviado pelo
+  cliente, sincronizado com a fala → SEM cortes de pausa), o cliente embaixo e a headline "Quer aumentar a sua conversão?"
+  numa faixa entre os dois (layout `dividida`: `editor/filme.py::aplicar_dividida` + `HeadlineDividida` em
+  `remotion/src/Filme.tsx`; plano `config/planos/video9_dividida.yaml`). Legenda no fundo escuro do software, logo acima da
+  headline (não cobre o rosto). Estúdio: https://claude.ai/artifact/5GFM9nZ2VRXmzYpUEv18vm · entrega:
+  https://claude.ai/artifact/5aQeXgkpaJp7TdtzrGYXTQ
 - Sempre entregar **duas versões**: com trilha e sem trilha (para áudio em alta no Instagram).
 - Conferir frames (contact sheet) do render antes de entregar. Não rodar `--preview` separado (dobra o tempo):
   a revisão é feita pelo **estúdio** (abaixo). A versão sem trilha sai no mesmo render (`geral.versao_sem_trilha`).
