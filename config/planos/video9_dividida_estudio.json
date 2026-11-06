@@ -2,27 +2,27 @@
  "audio": {},
  "camadas": {},
  "cor": {
-  "contraste": 0.06,
+  "look": "nenhum",
+  "intensidade": 0,
   "exposicao": 0,
-  "grao": 0,
-  "intensidade": 0.75,
-  "look": "quente_ref1",
-  "luzes": [
-   0.03,
-   0.01,
-   -0.03
-  ],
-  "pretos": 0.05,
-  "saturacao": 0.95,
-  "sombras": [
-   0.02,
-   0,
-   -0.02
-  ],
-  "temperatura": 0.07,
-  "tint": 0.01,
+  "contraste": 0,
+  "saturacao": 1,
   "vibrance": 0,
-  "vinheta": 0
+  "temperatura": 0,
+  "tint": 0,
+  "pretos": 0,
+  "sombras": [
+   0,
+   0,
+   0
+  ],
+  "luzes": [
+   0,
+   0,
+   0
+  ],
+  "vinheta": 0,
+  "grao": 0
  },
  "cortes": [],
  "estilo_legendas": {

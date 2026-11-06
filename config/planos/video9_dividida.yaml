@@ -25,7 +25,7 @@ motion:
   contador: {ativo: false}
 dinamismo:
   ativo: false
-cor: {look: azul_cinema}        # substituído pelos ajustes abaixo (mesmo acabamento aprovado no vídeo 4)
+cor: {ativo: false}             # cliente tirou a cor no estúdio: vídeo sem look
 dividida:
   ativo: true
   video_topo: entrada/video9_software.mp4
