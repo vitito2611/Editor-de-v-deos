@@ -9,7 +9,11 @@ import { estiloDestaque } from "./Elemento";
 
 export type Caixa = [number, number, number, number];   // x, y, w, h em unidades de 1080 de largura
 export type LayoutFilme = {
-  tipo: "filme";
+  tipo: "filme" | "dividida";   // "dividida": vídeo sincronizado (ex.: tela do software) em cima + orador embaixo + headline no meio
+  video_topo?: string;       // dividida: vídeo que acompanha a fala (mesmos cortes da base), no card de cima
+  topo_foco_y?: number;      // 0..1: que altura do vídeo de cima fica visível no card
+  fundo?: string;            // cor de fundo (atrás dos cards)
+  headline?: { texto: string; y: number; h: number };   // faixa com a headline entre os dois vídeos ("*x*" = destaque)
   topo: Caixa;               // card da cena de filme
   baixo: Caixa;              // card do orador
   raio?: number;             // arredondamento dos cards
@@ -125,6 +129,59 @@ export const LegendaFilme: React.FC<{
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// Headline da tela dividida (pedido do vídeo 1105): faixa entre o software (em cima) e o orador (embaixo), com a
+// pergunta em Rubik Black e a palavra-chave na fonte manuscrita do cliente sobre um marca-texto ciano; duas linhas
+// com o degradê da Zeal (roxo → ciano) se desenham do centro para fora e um brilho varre a faixa de tempos em tempos.
+export const HeadlineDividida: React.FC<{ texto: string; y: number; h: number; W: number; fonteTitulo: string }> = ({ texto, y, h, W, fonteTitulo }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const k = W / 1080;
+  const t = frame / fps;
+  const abre = interpolate(t, [0.05, 0.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: (x) => 1 - Math.pow(1 - x, 3) });
+  const partes: { w: string; dest: boolean }[] = [];
+  let em = false;
+  texto.split(/\s+/).forEach((w) => {
+    if (w.startsWith("*")) { em = true; w = w.slice(1); }
+    const fecha = /\*[?!.,]*$/.test(w);
+    partes.push({ w: w.replace(/\*(?=[?!.,]*$)/, ""), dest: em });
+    if (fecha) em = false;
+  });
+  const dest = estiloDestaque(fonteTitulo, 900, true);
+  const chars = partes.reduce((n, p) => n + p.w.length + 1, 0);
+  const tam = Math.min(h * 0.42 * k, (W * 0.84) / Math.max(8, chars * 0.6));   // cabe numa linha
+  const brilho = ((t - 1.2) % 4.5) / 1.1;   // varredura de luz a cada 4,5 s
+  const grad = "linear-gradient(90deg, rgba(93,46,140,0) 0%, #5d2e8c 22%, #24d0dc 50%, #5d2e8c 78%, rgba(93,46,140,0) 100%)";
+  const linha = (topo: boolean) => (
+    <div style={{ position: "absolute", left: "50%", [topo ? "top" : "bottom"]: 0, height: 3 * k, width: `${abre * 100}%`,
+      transform: "translateX(-50%)", background: grad, boxShadow: `0 0 ${18 * k}px rgba(36,208,220,0.55)` }} />
+  );
+  return (
+    <div style={{ position: "absolute", left: 0, top: y * k, width: W, height: h * k, overflow: "hidden",
+      background: "linear-gradient(180deg, #120a26 0%, #1a0f36 50%, #120a26 100%)" }}>
+      {linha(true)}{linha(false)}
+      {brilho >= 0 && brilho <= 1 && <div style={{ position: "absolute", top: 0, bottom: 0, width: 220 * k, left: (-220 + brilho * 1300) * k,
+        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)", transform: "skewX(-18deg)" }} />}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.26 * tam, whiteSpace: "nowrap" }}>
+        {partes.map((p, i) => {
+          const f = frame - Math.round((0.25 + i * 0.09) * fps);
+          const pop = f < 0 ? 0 : spring({ frame: f, fps, config: { damping: 14, stiffness: 200, mass: 0.5 } });
+          const mt = p.dest ? interpolate(frame, [Math.round((0.25 + partes.length * 0.09 + 0.15) * fps), Math.round((0.25 + partes.length * 0.09 + 0.6) * fps)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 0;
+          return (
+            <span key={i} style={{ position: "relative", display: "inline-block", opacity: Math.min(1, pop * 1.4),
+              transform: `translateY(${(1 - pop) * 30 * k}px)`, color: "#fff",
+              ...(p.dest ? { fontFamily: dest.fontFamily, fontWeight: dest.fontWeight, fontStyle: dest.fontStyle, fontSize: tam * dest.escala * 1.12 }
+                : { fontFamily: "Rubik", fontWeight: 900, fontSize: tam, letterSpacing: "-0.01em" }) }}>
+              {p.dest && <span style={{ position: "absolute", left: "-4%", right: "-4%", bottom: "8%", height: "34%", background: "#24d0dc",
+                opacity: 0.85, transformOrigin: "0 50%", transform: `scaleX(${mt})`, borderRadius: 4 * k, zIndex: 0 }} />}
+              <span style={{ position: "relative", zIndex: 1, textShadow: "0 2px 12px rgba(0,0,0,0.45)" }}>{p.w}</span>
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 };

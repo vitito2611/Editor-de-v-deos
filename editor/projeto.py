@@ -170,6 +170,10 @@ def exportar(nome: str, g, total: float, base: Path, lut: str, cfg: dict, words_
     if (cfg.get("filme") or {}).get("ativo"):
         from . import filme
         filme.aplicar(proj, cfg, d)
+    # tela dividida (vídeo 1105): software sincronizado em cima, orador embaixo, headline no meio
+    if (cfg.get("dividida") or {}).get("ativo"):
+        from . import filme
+        filme.aplicar_dividida(proj, cfg, d)
     # ajustes feitos no estúdio e guardados no plano do vídeo (ex.: render em 4K no Mac sai igual ao aprovado)
     alt_arq = (cfg.get("estudio") or {}).get("alteracoes")
     if alt_arq:

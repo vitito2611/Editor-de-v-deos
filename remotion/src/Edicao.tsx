@@ -5,7 +5,7 @@ import {
 } from "remotion";
 import { Elemento, Tema, useFontes, estiloDestaque, SCRIPT } from "./Elemento";
 import { FormatoJanela, FormatoMonitor, FormatoMultiplica, Janela } from "./Formatos";
-import { Card, LayoutFilme, LegendaFilme } from "./Filme";
+import { Card, HeadlineDividida, LayoutFilme, LegendaFilme } from "./Filme";
 import {
   Alteracoes, AudioProj, COR_NEUTRA, Cor, dbLin, ESTILO_LEGENDAS_PADRAO, EstiloLegendas, filtroCor, mapaCortes,
   normalizar, Palavra, remapear, Seg, caixaSegura, Zona, ZONA_REELS,
@@ -315,10 +315,24 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
       durationInFrames={Math.max(1, Math.round(c.dur * fps))} layout="none">{filho}</Sequence>
   );
   const e = p.estilo_legendas;
-  const lf = p.layout?.tipo === "filme" ? p.layout : null;
+  const lf = p.layout?.tipo === "filme" || p.layout?.tipo === "dividida" ? p.layout : null;
   const kL = p.W / 1080;
+  // dividida: o vídeo de cima (tela do software) acompanha a fala com os mesmos trechos da base e fica FORA do
+  // filtro de cor (o look é só da filmagem do orador)
+  const topoDividida = lf?.video_topo ? (
+    <Card c={lf.topo} k={kL} raio={lf.raio ?? 0}>
+      {p.segs.map((s, i) => (
+        <Sequence key={"t" + i} name={`Software ${i + 1}`} from={Math.round(s.o * fps)}
+          durationInFrames={Math.max(1, Math.round((s.b - s.a) * fps))} layout="none">
+          <AbsoluteFill><OffthreadVideo src={midia(p, lf.video_topo ?? "")} muted trimBefore={Math.round(s.a * fps)}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `50% ${(lf.topo_foco_y ?? 0.5) * 100}%` }} /></AbsoluteFill>
+        </Sequence>
+      ))}
+      {comCor.map((c) => seq(c, <Insercao c={c} p={p} />))}
+    </Card>
+  ) : null;
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000" }}>
+    <AbsoluteFill style={{ backgroundColor: lf?.fundo ?? "#000" }}>
       {!p.cor_pronta && <FiltroCor id={idFiltro} c={p.cor} />}
       <AbsoluteFill style={{ filter: p.cor_pronta ? undefined : `url(#${idFiltro})` }}>
         {(() => {
@@ -332,7 +346,7 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
           const ins = comCor.map((c) => seq(c, <Insercao c={c} p={p} />));
           if (!lf) return <>{base}{ins}</>;
           return <>
-            <Card c={lf.topo} k={kL} raio={lf.raio ?? 34}>{ins}</Card>
+            {!lf.video_topo && <Card c={lf.topo} k={kL} raio={lf.raio ?? 34}>{ins}</Card>}
             <Card c={lf.baixo} k={kL} raio={lf.raio ?? 34}>{base}</Card>
           </>;
         })()}
@@ -352,6 +366,8 @@ export const Edicao: React.FC<Projeto> = (bruto) => {
       </>))}
       {comCor.filter((c) => c.tipo === "card").map((c) => seq({ ...c, id: c.id + "-txt" },
         <AbsoluteFill><Elemento tipo="card" {...el(c)} /></AbsoluteFill>))}
+      {topoDividida}
+      {lf?.headline && <HeadlineDividida texto={lf.headline.texto} y={lf.headline.y} h={lf.headline.h} W={p.W} fonteTitulo={p.tema.fonte_titulo} />}
       {!e.ocultas && p.legendas.filter((b) => !b.oculto).map((b) => {
         const estilo = b.estilo_fixo ?? (e.estilo !== "auto" ? e.estilo : b.estilo ?? "dinamico");
         return (

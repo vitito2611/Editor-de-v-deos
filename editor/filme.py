@@ -136,3 +136,36 @@ def aplicar(proj: dict, cfg: dict, d: Path) -> dict:
     proj["camadas"] = sorted(camadas, key=lambda c: c["t"])
     log.info("  layout filme: %d cenas, %d blocos de legenda", len(cortes), len(blocos))
     return proj
+
+
+def aplicar_dividida(proj: dict, cfg: dict, d: Path) -> dict:
+    """Tela dividida (pedido do vídeo 1105): um vídeo sincronizado com a fala em cima (ex.: tela do software, mesmo
+    tamanho/duração do bruto, sem cortes de pausa para não perder a sincronia), o orador embaixo e a headline numa
+    faixa entre os dois. Legenda na parte de baixo do card do orador (acima da zona do Reels).
+
+    Plano:  dividida: {ativo: true, video_topo: caminho.mp4, headline: "Quer aumentar a sua *conversão?*",
+                       topo: [0,0,1080,900], baixo: [0,1040,1080,880], faixa: [900,140], foco_y: .4, topo_foco_y: .56,
+                       legenda_y: 0.745}
+    """
+    from .utils import ROOT
+    dc = cfg.get("dividida") or {}
+    src = Path(dc["video_topo"])
+    src = src if src.is_absolute() else ROOT / src
+    (d / "midia").mkdir(exist_ok=True)
+    dst = d / "midia" / "topo.mp4"
+    fps = proj.get("fps", 30)
+    # mesma duração da base (cortada ou estendida com o último quadro), fps da edição, sem áudio
+    ffmpeg("-i", str(src), "-an", "-vf", f"fps={fps},tpad=stop_mode=clone:stop_duration=5,scale=1080:-2",
+           "-t", f"{float(proj['dur']):.3f}", "-c:v", "libx264", "-crf", "14", "-preset", "veryfast",
+           "-pix_fmt", "yuv420p", str(dst))
+    fy, fh = dc.get("faixa", [900, 140])
+    proj["layout"] = {"tipo": "dividida", "topo": dc.get("topo", [0, 0, 1080, fy]),
+                      "baixo": dc.get("baixo", [0, fy + fh, 1080, 1920 - fy - fh]), "raio": dc.get("raio", 0),
+                      "foco_y": dc.get("foco_y", 0.4), "video_topo": "midia/topo.mp4",
+                      "topo_foco_y": dc.get("topo_foco_y", 0.56), "fundo": dc.get("fundo", "#120a26"),
+                      "headline": {"texto": dc.get("headline", ""), "y": fy, "h": fh} if dc.get("headline") else None}
+    ly = float(dc.get("legenda_y", 0.745))
+    for l in proj.get("legendas") or []:
+        l["y"] = ly
+    log.info("  tela dividida: topo=%s, headline=%r", src.name, dc.get("headline"))
+    return proj

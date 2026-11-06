@@ -1,0 +1,38 @@
+# Vídeo "19455F9A…" (Drive, 60 s) — tela dividida: tela do software da Zeal em cima (vídeo enviado pelo cliente:
+# entrada/video9_software.mp4, mesma duração e sincronizado com a fala), o cliente embaixo e a headline
+# "Quer aumentar a sua conversão?" na faixa entre os dois. Legenda + trilha envolvente.
+# Formato de referência: reel do Instagram que o cliente mandou (só o FORMATO de tela dividida, não o conteúdo).
+# Uso: python editar.py entrada/video9.mp4 --estilo referencia1 --plataforma reels --config config/planos/video9_dividida.yaml
+# SEM cortes de pausa/erros: o vídeo do software foi montado no tempo da fala original (cortar dessincroniza).
+transcricao:
+  correcoes: {"ZIL": "Zeal", "próximos30": "próximos 30", "contorne": "contorna", "fez": "feche", "preenchem": "preenche"}
+silencio: {ativo: false}
+erros: {ativo: false}
+cortes:
+  jump_zoom: {ativo: false}
+  smash_cut: {ativo: false}
+legendas:
+  estilos:
+    cinetico: {posicao: peito}
+sfx:
+  intervalo_min_s: 2.0
+  max_por_minuto: 8
+  volume_rel_voz_db: -12
+musica:
+  humor: informativo            # trilha envolvente (inspiring / tecnologia)
+  ducking_db: -12
+motion:
+  contador: {ativo: false}
+dinamismo:
+  ativo: false
+cor: {look: azul_cinema}        # substituído pelos ajustes abaixo (mesmo acabamento aprovado no vídeo 4)
+dividida:
+  ativo: true
+  video_topo: entrada/video9_software.mp4
+  headline: "Quer aumentar a sua *conversão?*"
+  faixa: [900, 140]             # headline entre y 900 e 1040
+  foco_y: 0.5                   # rosto do cliente no meio-baixo do card de baixo
+  topo_foco_y: 0.56             # faixa da interface do software
+  legenda_y: 0.59               # legenda logo abaixo da headline, acima da cabeça (fora da zona de baixo do Reels)
+estudio:
+  alteracoes: config/planos/video9_dividida_estudio.json
